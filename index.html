@@ -1126,9 +1126,9 @@
                 <input type="text" class="form-input" id="reg-phone" placeholder="请输入手机号码">
             </div>
             <div class="form-group">
-                <label class="form-label"><span class="required">*</span>施工单位</label>
+                <label class="form-label">施工单位（可选）</label>
                 <select class="form-select" id="reg-unit">
-                    <option value="">请选择</option>
+                    <option value="">不选择</option>
                     <option>湖南省通信建设有限公司</option>
                     <option>湖南天辰建设有限责任公司</option>
                     <option>湖南省康普通信技术有限责任公司</option>
@@ -1162,6 +1162,7 @@
         const SESSION_KEY = 'construction_resistance_session';
         const ADMIN_ACCOUNT = 'yydxlily';
         const ADMIN_PASSWORD = 'yydxvip8216109';
+        const MANAGER_NAMES = ['陈凌','丰中山','蒋志昭','李力','刘益锴','孙志祥','曹毅','赵亚秀'];
 
         let currentUser = null;
 
@@ -1262,7 +1263,8 @@
                 return;
             }
             if (user.status === 'approved') {
-                currentUser = { account: user.account, name: user.name, role: 'user', unit: user.unit, phone: user.phone };
+                const role = MANAGER_NAMES.includes(user.name) ? 'manager' : 'user';
+                currentUser = { account: user.account, name: user.name, role: role, unit: user.unit || '', phone: user.phone };
                 saveSession(currentUser);
                 onLoginSuccess();
                 return;
@@ -1276,8 +1278,8 @@
             const unit = document.getElementById('reg-unit').value;
             const errEl = document.getElementById('register-error');
 
-            if (!name || !password || !phone || !unit) {
-                errEl.textContent = '请填写所有必填项';
+            if (!name || !password || !phone) {
+                errEl.textContent = '请填写姓名、密码和手机号';
                 errEl.classList.add('show');
                 return;
             }
@@ -1341,9 +1343,16 @@
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'inline-flex';
+            } else if (currentUser.role === 'manager') {
+                badge.className = 'user-badge admin';
+                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（工程管理员）';
+                btnCreate.style.display = 'inline-flex';
+                btnExport.style.display = 'inline-flex';
+                btnAdmin.style.display = 'none';
             } else {
                 badge.className = 'user-badge';
-                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + ' · ' + currentUser.unit;
+                const badgeText = currentUser.unit ? (currentUser.name + ' · ' + currentUser.unit) : currentUser.name;
+                badge.innerHTML = '<span class="dot"></span>' + badgeText;
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'none';
@@ -1660,8 +1669,9 @@
 
         function getActionButtons(r) {
             let btns = `<button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>`;
-            if (currentUser && currentUser.role === 'admin') {
-                // 管理员：受理、反馈、删除
+            const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
+            if (canManage) {
+                // 管理员/工程管理员：受理、反馈
                 switch(r.status) {
                     case 'pending':
                         btns += `<button class="btn btn-info btn-sm" onclick="openProcess('${r.id}')">受理</button>`;
@@ -1673,16 +1683,18 @@
                         btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
                         break;
                 }
-                btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
-            } else {
-                // 填报人：仅自己填报的记录、且已反馈待确认状态才能确认
-                if (r.status === 'feedback' && r.reporter === currentUser.name) {
-                    btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
+                // 仅管理员可删除
+                if (currentUser.role === 'admin') {
+                    btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
                 }
-                // 填报人：仅自己填报的待受理记录可以编辑
-                if (r.status === 'pending' && r.reporter === currentUser.name) {
-                    btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
-                }
+            }
+            // 填报人：仅自己填报的记录、且已反馈待确认状态才能确认
+            if (currentUser && r.status === 'feedback' && r.reporter === currentUser.name) {
+                btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
+            }
+            // 填报人：仅自己填报的待受理记录可以编辑
+            if (currentUser && r.status === 'pending' && r.reporter === currentUser.name) {
+                btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
             }
             return btns;
         }
@@ -1758,12 +1770,12 @@
             document.getElementById('f-code').value = '';
             document.getElementById('f-name').value = '';
             // Pre-fill unit from logged-in user
-            if (currentUser && currentUser.role === 'user' && currentUser.unit) {
+            if (currentUser && currentUser.unit) {
                 document.getElementById('f-unit').value = currentUser.unit;
             } else {
                 document.getElementById('f-unit').value = '';
             }
-            document.getElementById('f-phone').value = (currentUser && currentUser.role === 'user') ? (currentUser.phone || '') : '';
+            document.getElementById('f-phone').value = (currentUser && currentUser.phone) ? currentUser.phone : '';
             document.getElementById('f-hopetime').value = '';
             document.getElementById('f-region').value = '';
             document.getElementById('f-area').value = '';
@@ -1776,7 +1788,7 @@
         function openEdit(id) {
             const r = findRecord(id);
             if (!r) return;
-            if (!currentUser || currentUser.role !== 'user' || r.reporter !== currentUser.name || r.status !== 'pending') {
+            if (!currentUser || r.reporter !== currentUser.name || r.status !== 'pending') {
                 showToast('只能编辑自己填报的待受理记录', true);
                 return;
             }
@@ -1936,7 +1948,7 @@
         function openConfirm(id) {
             const r = findRecord(id);
             if (!r) return;
-            if (!currentUser || currentUser.role !== 'user' || r.reporter !== currentUser.name) {
+            if (!currentUser || r.reporter !== currentUser.name) {
                 showToast('只有该阻力的填报人才能确认', true);
                 return;
             }
@@ -2108,6 +2120,11 @@
         // Check session
         currentUser = loadSession();
         if (currentUser) {
+            // 修正角色：工程管理员名单中的用户始终为 manager（除非是 admin）
+            if (currentUser.role !== 'admin' && MANAGER_NAMES.includes(currentUser.name)) {
+                currentUser.role = 'manager';
+                saveSession(currentUser);
+            }
             updateHeaderForUser();
         } else {
             showLogin();
