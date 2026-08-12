@@ -809,20 +809,14 @@
                 <label class="form-label"><span class="required">*</span>工程名称</label>
                 <input type="text" class="form-input" id="f-name" placeholder="请输入工程名称">
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>施工单位</label>
-                    <select class="form-select" id="f-unit">
-                        <option value="">请选择</option>
-                        <option>湖南省通信建设有限公司</option>
-                        <option>湖南天辰建设有限责任公司</option>
-                        <option>湖南省康普通信技术有限责任公司</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>填报人</label>
-                    <input type="text" class="form-input" id="f-reporter1" placeholder="请输入填报人姓名">
-                </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>施工单位</label>
+                <select class="form-select" id="f-unit">
+                    <option value="">请选择</option>
+                    <option>湖南省通信建设有限公司</option>
+                    <option>湖南天辰建设有限责任公司</option>
+                    <option>湖南省康普通信技术有限责任公司</option>
+                </select>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -1680,7 +1674,6 @@
             } else {
                 document.getElementById('f-unit').value = '';
             }
-            document.getElementById('f-reporter1').value = (currentUser && currentUser.role === 'user') ? currentUser.name : '';
             document.getElementById('f-phone').value = (currentUser && currentUser.role === 'user') ? (currentUser.phone || '') : '';
             document.getElementById('f-hopetime').value = '';
             document.getElementById('f-region').value = '';
@@ -1695,7 +1688,6 @@
             const code = document.getElementById('f-code').value.trim();
             const name = document.getElementById('f-name').value.trim();
             const unit = document.getElementById('f-unit').value;
-            const reporter1 = document.getElementById('f-reporter1').value.trim();
             const phone = document.getElementById('f-phone').value.trim();
             const hopeRaw = document.getElementById('f-hopetime').value;
             const region = document.getElementById('f-region').value;
@@ -1703,7 +1695,7 @@
             const type = document.getElementById('f-type').value;
             const desc = document.getElementById('f-desc').value.trim();
 
-            if (!code || !name || !unit || !reporter1 || !phone || !hopeRaw || !region || !area || !type || !desc) {
+            if (!code || !name || !unit || !phone || !hopeRaw || !region || !area || !type || !desc) {
                 showToast('请填写所有必填项', true);
                 return;
             }
@@ -1713,7 +1705,7 @@
             const hopeText = hopeRaw.replace('T', ' ');
             const record = {
                 id: 'R' + now,
-                code, name, unit, reporter: reporter1, phone, hopeText, region, area, type, desc,
+                code, name, unit, reporter: currentUser.name, phone, hopeText, region, area, type, desc,
                 status: 'pending',
                 timeline: [{ action: 'create', time: now, text: '施工单位填报施工阻力' }]
             };
