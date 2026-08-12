@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施工阻力协调系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #22c55e;
+            --success-hover: #16a34a;
+            --warning: #f59e0b;
+            --warning-hover: #d97706;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --info: #06b6d4;
+            --info-hover: #0891b2;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 20px 28px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-warning { background: var(--warning); }
+        .btn-warning:hover { background: var(--warning-hover); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-info { background: var(--info); }
+        .btn-info:hover { background: var(--info-hover); }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+        }
+
+        .stat-card.pending::before { background: var(--warning); }
+        .stat-card.processing::before { background: var(--info); }
+        .stat-card.feedback::before { background: var(--primary); }
+        .stat-card.done::before { background: var(--success); }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .stat-card.pending .stat-value { color: var(--warning); }
+        .stat-card.processing .stat-value { color: var(--info); }
+        .stat-card.feedback .stat-value { color: var(--primary); }
+        .stat-card.done .stat-value { color: var(--success); }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Form elements */
+        .filter-select, .filter-input {
+            padding: 9px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            border-color: var(--primary);
+        }
+
+        .filter-select option {
+            background: var(--bg);
+        }
+
+        /* Table */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: #1a2332;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #2a3a4e;
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover {
+            background: #243044;
+        }
+
+        tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .col-serial { width: 50px; text-align: center; color: var(--text-muted); }
+        .col-code { width: 140px; }
+        .col-name { width: 170px; }
+        .col-unit { width: 130px; }
+        .col-reporter { width: 80px; }
+        .col-phone { width: 120px; }
+        .col-hope { width: 145px; color: var(--text-muted); font-size: 12px; }
+        .col-region { width: 90px; }
+        .col-area { width: 90px; }
+        .col-type { width: 90px; }
+        .col-desc { min-width: 200px; max-width: 300px; }
+        .col-status { width: 100px; }
+        .col-time { width: 145px; color: var(--text-muted); font-size: 12px; }
+        .col-actions { width: 120px; text-align: center; white-space: nowrap; }
+        .col-actions button {
+            margin: 0 2px;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-processing { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
+        .badge-feedback { background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); }
+        .badge-resolved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+        .badge-unresolved { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+
+        /* Description truncation */
+        .desc-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 16px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            padding: 28px 32px;
+            margin-bottom: 40px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        /* Form fields */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-right: 2px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select option {
+            background: var(--bg);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Detail modal */
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--info);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .detail-field {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .detail-field-label {
+            width: 130px;
+            flex-shrink: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .detail-field-value {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .detail-field-value.highlight {
+            color: var(--warning);
+        }
+
+        .detail-timeline {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--input-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 16px;
+            position: relative;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 20px;
+            bottom: 0;
+            width: 2px;
+            background: var(--card-border);
+        }
+
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+            border: 3px solid;
+        }
+
+        .timeline-dot.pending { border-color: var(--warning); background: rgba(245,158,11,0.2); }
+        .timeline-dot.processing { border-color: var(--info); background: rgba(6,182,212,0.2); }
+        .timeline-dot.feedback { border-color: var(--primary); background: rgba(59,130,246,0.2); }
+        .timeline-dot.resolved { border-color: var(--success); background: rgba(34,197,94,0.2); }
+        .timeline-dot.unresolved { border-color: var(--danger); background: rgba(239,68,68,0.2); }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .timeline-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header { flex-direction: column; gap: 16px; align-items: flex-start; }
+            .header-actions { width: 100%; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-left, .toolbar-right { flex-direction: column; }
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-value { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>施工阻力协调系统</h1>
+                <p>施工单位填报施工阻力 · 建设单位受理反馈 · 闭环跟踪管理</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openCreateModal()">+ 新增阻力填报</button>
+                <button class="btn btn-success" onclick="exportExcel()">导出Excel</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card pending">
+                <div class="stat-label">待受理</div>
+                <div class="stat-value" id="stat-pending">0</div>
+            </div>
+            <div class="stat-card processing">
+                <div class="stat-label">受理中</div>
+                <div class="stat-value" id="stat-processing">0</div>
+            </div>
+            <div class="stat-card feedback">
+                <div class="stat-label">已反馈待确认</div>
+                <div class="stat-value" id="stat-feedback">0</div>
+            </div>
+            <div class="stat-card done">
+                <div class="stat-label">已闭环</div>
+                <div class="stat-value" id="stat-done">0</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <select class="filter-select" id="filter-status" onchange="renderTable()">
+                    <option value="">全部状态</option>
+                    <option value="pending">待受理</option>
+                    <option value="processing">受理中</option>
+                    <option value="feedback">已反馈待确认</option>
+                    <option value="resolved">已解决</option>
+                    <option value="unresolved">未解决</option>
+                </select>
+                <select class="filter-select" id="filter-region" onchange="renderTable()">
+                    <option value="">全部区域</option>
+                </select>
+                <select class="filter-select" id="filter-area" onchange="renderTable()">
+                    <option value="">全部工程管理员</option>
+                </select>
+                <select class="filter-select" id="filter-unit" onchange="renderTable()">
+                    <option value="">全部施工单位</option>
+                </select>
+                <input type="text" class="filter-input" id="filter-search" placeholder="搜索工程名称/编码/描述..." oninput="renderTable()">
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-ghost btn-sm" onclick="clearAllFilters()">清除筛选</button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table id="main-table">
+                <thead>
+                    <tr>
+                        <th class="col-serial">#</th>
+                        <th class="col-code">工程编码</th>
+                        <th class="col-name">工程名称</th>
+                        <th class="col-unit">施工单位</th>
+                        <th class="col-reporter">填报人</th>
+                        <th class="col-phone">联系电话</th>
+                        <th class="col-hope">希望解决时间</th>
+                        <th class="col-region">区域</th>
+                        <th class="col-area">工程管理员</th>
+                        <th class="col-type">问题类型</th>
+                        <th class="col-desc">阻力描述</th>
+                        <th class="col-status">状态</th>
+                        <th class="col-time">填报时间</th>
+                        <th class="col-actions">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div class="modal-overlay" id="modal-create">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>新增施工阻力填报</h2>
+                <button class="modal-close" onclick="closeModal('modal-create')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工程编码</label>
+                <input type="text" class="form-input" id="f-code" placeholder="请输入工程编码">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工程名称</label>
+                <input type="text" class="form-input" id="f-name" placeholder="请输入工程名称">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>施工单位</label>
+                    <select class="form-select" id="f-unit">
+                        <option value="">请选择</option>
+                        <option>湖南省通信建设有限公司</option>
+                        <option>湖南天辰建设有限责任公司</option>
+                        <option>湖南省康普通信技术有限责任公司</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>联系电话</label>
+                    <input type="text" class="form-input" id="f-phone" placeholder="请输入手机号码">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>填报人1</label>
+                    <input type="text" class="form-input" id="f-reporter1" placeholder="请输入填报人姓名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">填报人2（可选）</label>
+                    <input type="text" class="form-input" id="f-reporter2" placeholder="请输入第二位填报人姓名">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>区域</label>
+                    <select class="form-select" id="f-region">
+                        <option value="">请选择</option>
+                        <option>湘阴县</option>
+                        <option>临湘市</option>
+                        <option>华容县</option>
+                        <option>汨罗市</option>
+                        <option>平江县</option>
+                        <option>岳阳县</option>
+                        <option>云溪区</option>
+                        <option>君山区</option>
+                        <option>岳阳楼区</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>工程管理员</label>
+                    <select class="form-select" id="f-area">
+                        <option value="">请选择</option>
+                        <option>陈凌</option>
+                        <option>丰中山</option>
+                        <option>蒋志昭</option>
+                        <option>李力</option>
+                        <option>刘益锴</option>
+                        <option>孙志祥</option>
+                        <option>曹毅</option>
+                        <option>赵亚秀</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>希望解决时间</label>
+                <input type="datetime-local" class="form-input" id="f-hopetime" style="color:var(--text-secondary);">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>问题类型</label>
+                <select class="form-select" id="f-type">
+                    <option value="">请选择</option>
+                    <option>外部协调</option>
+                    <option>用地纠纷</option>
+                    <option>管线冲突</option>
+                    <option>居民阻工</option>
+                    <option>交通疏导</option>
+                    <option>材料供应</option>
+                    <option>其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>阻力描述</label>
+                <textarea class="form-textarea" id="f-desc" placeholder="请详细描述施工过程中碰到的阻力情况..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-create')">取消</button>
+                <button class="btn btn-primary" onclick="submitCreate()">提交填报</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Modal (建设单位受理) -->
+    <div class="modal-overlay" id="modal-process">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>受理阻力 - <span id="proc-title"></span></h2>
+                <button class="modal-close" onclick="closeModal('modal-process')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">阻力信息</div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程编码</div>
+                    <div class="detail-field-value" id="proc-code"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程名称</div>
+                    <div class="detail-field-value" id="proc-name"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">施工单位</div>
+                    <div class="detail-field-value" id="proc-unit"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">填报人</div>
+                    <div class="detail-field-value" id="proc-reporter"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">联系电话</div>
+                    <div class="detail-field-value" id="proc-phone"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">希望解决时间</div>
+                    <div class="detail-field-value" id="proc-hope"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">区域</div>
+                    <div class="detail-field-value" id="proc-region"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程管理员</div>
+                    <div class="detail-field-value" id="proc-area"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">问题类型</div>
+                    <div class="detail-field-value" id="proc-type"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">阻力描述</div>
+                    <div class="detail-field-value" id="proc-desc"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>受理意见</label>
+                <textarea class="form-textarea" id="f-receive" placeholder="请填写受理意见，说明初步判断和拟采取的措施..."></textarea>
+                <div class="form-hint">受理后状态变为"受理中"，随后可填写反馈意见</div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-process')">取消</button>
+                <button class="btn btn-info" onclick="submitReceive()">确认受理</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal (建设单位反馈) -->
+    <div class="modal-overlay" id="modal-feedback">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>反馈处理意见 - <span id="fb-title"></span></h2>
+                <button class="modal-close" onclick="closeModal('modal-feedback')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">阻力信息</div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程编码</div>
+                    <div class="detail-field-value" id="fb-code"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程名称</div>
+                    <div class="detail-field-value" id="fb-name"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">施工单位</div>
+                    <div class="detail-field-value" id="fb-unit"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">阻力描述</div>
+                    <div class="detail-field-value" id="fb-desc"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">受理意见</div>
+                    <div class="detail-field-value" id="fb-receive"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>反馈/处理意见</label>
+                <textarea class="form-textarea" id="f-feedback" placeholder="请填写具体处理措施和反馈意见..."></textarea>
+                <div class="form-hint">反馈后状态变为"已反馈待确认"，等待施工单位确认是否解决</div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-feedback')">取消</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">提交反馈</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal (施工单位确认) -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>确认阻力是否解决 - <span id="cf-title"></span></h2>
+                <button class="modal-close" onclick="closeModal('modal-confirm')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">阻力信息</div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程编码</div>
+                    <div class="detail-field-value" id="cf-code"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">工程名称</div>
+                    <div class="detail-field-value" id="cf-name"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">阻力描述</div>
+                    <div class="detail-field-value" id="cf-desc"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">受理意见</div>
+                    <div class="detail-field-value" id="cf-receive"></div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-field-label">反馈意见</div>
+                    <div class="detail-field-value" id="cf-feedback"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>是否已解决</label>
+                <div style="display:flex; gap:16px; margin-top:8px;">
+                    <label style="cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px;">
+                        <input type="radio" name="cf-resolved" value="resolved" checked style="accent-color: #22c55e; width:18px; height:18px;">
+                        已解决
+                    </label>
+                    <label style="cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px;">
+                        <input type="radio" name="cf-resolved" value="unresolved" style="accent-color: #ef4444; width:18px; height:18px;">
+                        未解决
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">确认说明（可选）</label>
+                <textarea class="form-textarea" id="f-confirm" placeholder="可填写补充说明..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">取消</button>
+                <button class="btn btn-success" onclick="submitConfirm()">提交确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modal-detail">
+        <div class="modal" style="max-width: 720px;">
+            <div class="modal-header">
+                <h2>阻力详情 - <span id="dt-title"></span></h2>
+                <button class="modal-close" onclick="closeModal('modal-detail')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">基本信息</div>
+                <div class="detail-field"><div class="detail-field-label">工程编码</div><div class="detail-field-value" id="dt-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工程名称</div><div class="detail-field-value" id="dt-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="dt-unit"></div></div>
+                <div class="detail-field"><div class="detail-field-label">填报人</div><div class="detail-field-value" id="dt-reporter"></div></div>
+                <div class="detail-field"><div class="detail-field-label">联系电话</div><div class="detail-field-value" id="dt-phone"></div></div>
+                <div class="detail-field"><div class="detail-field-label">希望解决时间</div><div class="detail-field-value" id="dt-hope"></div></div>
+                <div class="detail-field"><div class="detail-field-label">区域</div><div class="detail-field-value" id="dt-region"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="dt-area"></div></div>
+                <div class="detail-field"><div class="detail-field-label">问题类型</div><div class="detail-field-value" id="dt-type"></div></div>
+                <div class="detail-field"><div class="detail-field-label">阻力描述</div><div class="detail-field-value" id="dt-desc"></div></div>
+                <div class="detail-field"><div class="detail-field-label">当前状态</div><div class="detail-field-value" id="dt-status"></div></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">流转记录</div>
+                <div class="detail-timeline" id="dt-timeline"></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ========== Data Layer ==========
+        const STORAGE_KEY = 'construction_resistance_data';
+        let records = [];
+
+        function loadData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try { records = JSON.parse(raw); } catch(e) { records = []; }
+            }
+            // Seed demo data if empty
+            if (records.length === 0) {
+                seedDemoData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        function seedDemoData() {
+            const now = Date.now();
+            records = [
+                {
+                    id: 'R' + (now - 600000),
+                    code: 'YY-2026-GC-0012',
+                    name: '岳阳大道光纤敷设工程',
+                    unit: '中通一局',
+                    reporter: '张明',
+                    reporter2: '陈军',
+                    phone: '13807301111',
+                    hopeText: '2026-08-15 10:00',
+                    region: '岳阳楼区',
+                    area: '曹毅',
+                    type: '外部协调',
+                    desc: '施工至K12+800处，需穿越铁路，铁路部门要求提供专项施工方案并暂停施工，已停工3天。',
+                    status: 'pending',
+                    timeline: [{ action: 'create', time: now - 600000, text: '施工单位填报施工阻力' }]
+                },
+                {
+                    id: 'R' + (now - 400000),
+                    code: 'YY-2026-GC-0023',
+                    name: '君山区5G基站配套光缆工程',
+                    unit: '湖南邮电工程公司',
+                    reporter: '王建国',
+                    reporter2: '',
+                    phone: '13907302222',
+                    hopeText: '2026-08-16 14:00',
+                    region: '君山区',
+                    area: '李力',
+                    type: '用地纠纷',
+                    desc: '基站用地与当地村民存在争议，村民阻挡施工人员进场，要求提高补偿标准。',
+                    status: 'processing',
+                    timeline: [
+                        { action: 'create', time: now - 400000, text: '施工单位填报施工阻力' },
+                        { action: 'receive', time: now - 300000, text: '建设单位受理，意见：已联系属地政府协调，拟下周组织协商会议。' }
+                    ]
+                },
+                {
+                    id: 'R' + (now - 200000),
+                    code: 'YY-2026-GC-0045',
+                    name: '云溪区管道通信工程',
+                    unit: '中通三局',
+                    reporter: '刘洋',
+                    reporter2: '赵磊',
+                    phone: '13707303333',
+                    hopeText: '2026-08-14 09:00',
+                    region: '云溪区',
+                    area: '孙志祥',
+                    type: '管线冲突',
+                    desc: '开挖沟槽时发现不明地下管线，与设计图纸不符，需设计单位现场确认路由调整方案。',
+                    status: 'feedback',
+                    timeline: [
+                        { action: 'create', time: now - 200000, text: '施工单位填报施工阻力' },
+                        { action: 'receive', time: now - 180000, text: '建设单位受理，意见：已通知设计单位到场，同时协调管线权属单位确认。' },
+                        { action: 'feedback', time: now - 100000, text: '建设单位反馈：设计单位已出变更方案（路由北移15米），管线权属单位确认无影响，可恢复施工。' }
+                    ]
+                },
+                {
+                    id: 'R' + (now - 80000),
+                    code: 'YY-2026-GC-0067',
+                    name: '南湖新区FTTH改造工程',
+                    unit: '中兴工程局',
+                    reporter: '李伟',
+                    reporter2: '',
+                    phone: '13607304444',
+                    hopeText: '2026-08-13 15:00',
+                    region: '岳阳县',
+                    area: '陈凌',
+                    type: '居民阻工',
+                    desc: '小区居民因施工噪音和路面开挖问题阻挡施工，要求调整施工时间并修复路面。',
+                    status: 'resolved',
+                    timeline: [
+                        { action: 'create', time: now - 80000, text: '施工单位填报施工阻力' },
+                        { action: 'receive', time: now - 70000, text: '建设单位受理，意见：联合物业与业委会沟通，调整施工时段。' },
+                        { action: 'feedback', time: now - 50000, text: '建设单位反馈：已与物业达成协议，施工调整为工作日9:00-17:00，完工后24小时内恢复路面。' },
+                        { action: 'confirm', time: now - 30000, text: '施工单位确认：已解决。施工已恢复正常，居民无异议。' }
+                    ]
+                }
+            ];
+            saveData();
+        }
+
+        // ========== Status Definitions ==========
+        const STATUS_MAP = {
+            pending:    { label: '待受理',       badge: 'badge-pending',    dot: 'pending' },
+            processing: { label: '受理中',       badge: 'badge-processing', dot: 'processing' },
+            feedback:   { label: '已反馈待确认', badge: 'badge-feedback',   dot: 'feedback' },
+            resolved:   { label: '已解决',       badge: 'badge-resolved',   dot: 'resolved' },
+            unresolved: { label: '未解决',       badge: 'badge-unresolved', dot: 'unresolved' }
+        };
+
+        const ACTION_MAP = {
+            create: '施工单位填报',
+            receive: '建设单位受理',
+            feedback: '建设单位反馈',
+            confirm: '施工单位确认'
+        };
+
+        // ========== Render ==========
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function getFilteredRecords() {
+            const status = document.getElementById('filter-status').value;
+            const region = document.getElementById('filter-region').value;
+            const area = document.getElementById('filter-area').value;
+            const unit = document.getElementById('filter-unit').value;
+            const search = document.getElementById('filter-search').value.trim().toLowerCase();
+
+            return records.filter(r => {
+                if (status && r.status !== status) return false;
+                if (region && r.region !== region) return false;
+                if (area && r.area !== area) return false;
+                if (unit && r.unit !== unit) return false;
+                if (search) {
+                    const hay = `${r.code} ${r.name} ${r.desc} ${r.unit} ${r.reporter || ''} ${r.reporter2 || ''} ${r.phone || ''} ${r.hopeText || ''} ${r.region || ''}`.toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderStats() {
+            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0, unresolved: 0 };
+            records.forEach(r => {
+                if (stats[r.status] !== undefined) stats[r.status]++;
+            });
+            document.getElementById('stat-pending').textContent = stats.pending;
+            document.getElementById('stat-processing').textContent = stats.processing;
+            document.getElementById('stat-feedback').textContent = stats.feedback;
+            document.getElementById('stat-done').textContent = stats.resolved + stats.unresolved;
+        }
+
+        function renderTable() {
+            const filtered = getFilteredRecords();
+            const tbody = document.getElementById('table-body');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2zm-7 4h10"/></svg>
+                    <p>暂无阻力记录</p>
+                </div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r, i) => {
+                const s = STATUS_MAP[r.status];
+                return `<tr>
+                    <td class="col-serial">${i + 1}</td>
+                    <td class="col-code">${r.code}</td>
+                    <td class="col-name">${r.name}</td>
+                    <td class="col-unit">${r.unit}</td>
+                    <td class="col-reporter">${r.reporter || ''}${r.reporter2 ? '<br>' + r.reporter2 : ''}</td>
+                    <td class="col-phone">${r.phone || ''}</td>
+                    <td class="col-hope">${r.hopeText || ''}</td>
+                    <td class="col-region">${r.region || ''}</td>
+                    <td class="col-area">${r.area}</td>
+                    <td class="col-type">${r.type}</td>
+                    <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
+                    <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
+                    <td class="col-time">${formatTime(r.timeline[0].time)}</td>
+                    <td class="col-actions">${getActionButtons(r)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function getActionButtons(r) {
+            let btns = `<button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>`;
+            switch(r.status) {
+                case 'pending':
+                    btns += `<button class="btn btn-info btn-sm" onclick="openProcess('${r.id}')">受理</button>`;
+                    break;
+                case 'processing':
+                    btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
+                    break;
+                case 'feedback':
+                    btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
+                    break;
+            }
+            return btns;
+        }
+
+        function renderFilters() {
+            const regions = [...new Set(records.map(r => r.region).filter(Boolean))].sort();
+            const areas = [...new Set(records.map(r => r.area))].sort();
+            const units = [...new Set(records.map(r => r.unit))].sort();
+            const regionSel = document.getElementById('filter-region');
+            const areaSel = document.getElementById('filter-area');
+            const unitSel = document.getElementById('filter-unit');
+
+            const regionVal = regionSel.value;
+            const areaVal = areaSel.value;
+            const unitVal = unitSel.value;
+
+            regionSel.innerHTML = '<option value="">全部区域</option>' + regions.map(r => `<option>${r}</option>`).join('');
+            areaSel.innerHTML = '<option value="">全部工程管理员</option>' + areas.map(a => `<option>${a}</option>`).join('');
+            unitSel.innerHTML = '<option value="">全部施工单位</option>' + units.map(u => `<option>${u}</option>`).join('');
+
+            regionSel.value = regionVal;
+            areaSel.value = areaVal;
+            unitSel.value = unitVal;
+        }
+
+        function renderAll() {
+            renderStats();
+            renderFilters();
+            renderTable();
+        }
+
+        // ========== Modal Helpers ==========
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        function showToast(msg, isError) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.className = 'toast'; }, 2500);
+        }
+
+        function findRecord(id) {
+            return records.find(r => r.id === id);
+        }
+
+        // ========== Create ==========
+        function openCreateModal() {
+            document.getElementById('f-code').value = '';
+            document.getElementById('f-name').value = '';
+            document.getElementById('f-unit').value = '';
+            document.getElementById('f-reporter1').value = '';
+            document.getElementById('f-reporter2').value = '';
+            document.getElementById('f-phone').value = '';
+            document.getElementById('f-hopetime').value = '';
+            document.getElementById('f-region').value = '';
+            document.getElementById('f-area').value = '';
+            document.getElementById('f-type').value = '';
+            document.getElementById('f-desc').value = '';
+            openModal('modal-create');
+            setTimeout(() => document.getElementById('f-code').focus(), 100);
+        }
+
+        function submitCreate() {
+            const code = document.getElementById('f-code').value.trim();
+            const name = document.getElementById('f-name').value.trim();
+            const unit = document.getElementById('f-unit').value;
+            const reporter1 = document.getElementById('f-reporter1').value.trim();
+            const reporter2 = document.getElementById('f-reporter2').value.trim();
+            const phone = document.getElementById('f-phone').value.trim();
+            const hopeRaw = document.getElementById('f-hopetime').value;
+            const region = document.getElementById('f-region').value;
+            const area = document.getElementById('f-area').value;
+            const type = document.getElementById('f-type').value;
+            const desc = document.getElementById('f-desc').value.trim();
+
+            if (!code || !name || !unit || !reporter1 || !phone || !hopeRaw || !region || !area || !type || !desc) {
+                showToast('请填写所有必填项', true);
+                return;
+            }
+
+            // datetime-local returns "2026-08-15T10:00", convert to "2026-08-15 10:00"
+            const now = Date.now();
+            const hopeText = hopeRaw.replace('T', ' ');
+            const record = {
+                id: 'R' + now,
+                code, name, unit, reporter: reporter1, reporter2, phone, hopeText, region, area, type, desc,
+                status: 'pending',
+                timeline: [{ action: 'create', time: now, text: '施工单位填报施工阻力' }]
+            };
+            records.unshift(record);
+            saveData();
+            renderAll();
+            closeModal('modal-create');
+            showToast('阻力填报已提交');
+        }
+
+        // ========== Receive (受理) ==========
+        function openProcess(id) {
+            const r = findRecord(id);
+            if (!r) return;
+            document.getElementById('proc-title').textContent = r.name;
+            document.getElementById('proc-code').textContent = r.code;
+            document.getElementById('proc-name').textContent = r.name;
+            document.getElementById('proc-unit').textContent = r.unit;
+            document.getElementById('proc-reporter').textContent = [r.reporter, r.reporter2].filter(Boolean).join('、');
+            document.getElementById('proc-phone').textContent = r.phone || '';
+            document.getElementById('proc-hope').textContent = r.hopeText || '';
+            document.getElementById('proc-region').textContent = r.region || '';
+            document.getElementById('proc-area').textContent = r.area;
+            document.getElementById('proc-type').textContent = r.type;
+            document.getElementById('proc-desc').textContent = r.desc;
+            document.getElementById('f-receive').value = '';
+            openModal('modal-process');
+            setTimeout(() => document.getElementById('f-receive').focus(), 100);
+        }
+
+        function submitReceive() {
+            const text = document.getElementById('f-receive').value.trim();
+            if (!text) { showToast('请填写受理意见', true); return; }
+
+            const titleEl = document.getElementById('proc-title');
+            const r = records.find(x => x.name === titleEl.textContent);
+            if (!r) return;
+
+            r.status = 'processing';
+            r.timeline.push({ action: 'receive', time: Date.now(), text: text });
+            saveData();
+            renderAll();
+            closeModal('modal-process');
+            showToast('已受理，状态变更为"受理中"');
+        }
+
+        // ========== Feedback (反馈) ==========
+        function openFeedback(id) {
+            const r = findRecord(id);
+            if (!r) return;
+            document.getElementById('fb-title').textContent = r.name;
+            document.getElementById('fb-code').textContent = r.code;
+            document.getElementById('fb-name').textContent = r.name;
+            document.getElementById('fb-unit').textContent = r.unit;
+            document.getElementById('fb-desc').textContent = r.desc;
+            const recvItem = r.timeline.find(t => t.action === 'receive');
+            document.getElementById('fb-receive').textContent = recvItem ? recvItem.text : '';
+            document.getElementById('f-feedback').value = '';
+            openModal('modal-feedback');
+            setTimeout(() => document.getElementById('f-feedback').focus(), 100);
+        }
+
+        function submitFeedback() {
+            const text = document.getElementById('f-feedback').value.trim();
+            if (!text) { showToast('请填写反馈意见', true); return; }
+
+            const titleEl = document.getElementById('fb-title');
+            const r = records.find(x => x.name === titleEl.textContent);
+            if (!r) return;
+
+            r.status = 'feedback';
+            r.timeline.push({ action: 'feedback', time: Date.now(), text: text });
+            saveData();
+            renderAll();
+            closeModal('modal-feedback');
+            showToast('反馈已提交，等待施工单位确认');
+        }
+
+        // ========== Confirm (确认) ==========
+        function openConfirm(id) {
+            const r = findRecord(id);
+            if (!r) return;
+            document.getElementById('cf-title').textContent = r.name;
+            document.getElementById('cf-code').textContent = r.code;
+            document.getElementById('cf-name').textContent = r.name;
+            document.getElementById('cf-desc').textContent = r.desc;
+            const recvItem = r.timeline.find(t => t.action === 'receive');
+            document.getElementById('cf-receive').textContent = recvItem ? recvItem.text : '';
+            const fbItem = r.timeline.find(t => t.action === 'feedback');
+            document.getElementById('cf-feedback').textContent = fbItem ? fbItem.text : '';
+            document.getElementById('f-confirm').value = '';
+            openModal('modal-confirm');
+        }
+
+        function submitConfirm() {
+            const resolved = document.querySelector('input[name="cf-resolved"]:checked').value;
+            const text = document.getElementById('f-confirm').value.trim();
+            const titleEl = document.getElementById('cf-title');
+            const r = records.find(x => x.name === titleEl.textContent);
+            if (!r) return;
+
+            r.status = resolved; // 'resolved' or 'unresolved'
+            const confirmText = `施工单位确认：${resolved === 'resolved' ? '已解决' : '未解决'}。` + (text ? text : '');
+            r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
+            saveData();
+            renderAll();
+            closeModal('modal-confirm');
+            showToast(resolved === 'resolved' ? '已确认解决，阻力闭环' : '已确认未解决');
+        }
+
+        // ========== Detail ==========
+        function openDetail(id) {
+            const r = findRecord(id);
+            if (!r) return;
+            const s = STATUS_MAP[r.status];
+
+            document.getElementById('dt-title').textContent = r.name;
+            document.getElementById('dt-code').textContent = r.code;
+            document.getElementById('dt-name').textContent = r.name;
+            document.getElementById('dt-unit').textContent = r.unit;
+            document.getElementById('dt-reporter').textContent = [r.reporter, r.reporter2].filter(Boolean).join('、');
+            document.getElementById('dt-phone').textContent = r.phone || '';
+            document.getElementById('dt-hope').textContent = r.hopeText || '';
+            document.getElementById('dt-region').textContent = r.region || '';
+            document.getElementById('dt-area').textContent = r.area;
+            document.getElementById('dt-type').textContent = r.type;
+            document.getElementById('dt-desc').textContent = r.desc;
+            document.getElementById('dt-status').innerHTML = `<span class="badge ${s.badge}">${s.label}</span>`;
+
+            const timelineEl = document.getElementById('dt-timeline');
+            timelineEl.innerHTML = r.timeline.map(t => {
+                return `<div class="timeline-item">
+                    <div class="timeline-dot ${s.dot}"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${ACTION_MAP[t.action]}</div>
+                        <div class="timeline-time">${formatTime(t.time)}</div>
+                        <div class="timeline-text">${t.text}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            openModal('modal-detail');
+        }
+
+        // ========== Export Excel ==========
+        function exportExcel() {
+            const filtered = getFilteredRecords();
+            if (filtered.length === 0) {
+                showToast('没有可导出的数据', true);
+                return;
+            }
+
+            // Summary sheet
+            const summaryData = filtered.map((r, i) => {
+                const recvItem = r.timeline.find(t => t.action === 'receive');
+                const fbItem = r.timeline.find(t => t.action === 'feedback');
+                const cfItem = r.timeline.find(t => t.action === 'confirm');
+                return {
+                    '序号': i + 1,
+                    '工程编码': r.code,
+                    '工程名称': r.name,
+                    '施工单位': r.unit,
+                    '填报人': [r.reporter, r.reporter2].filter(Boolean).join('、'),
+                    '联系电话': r.phone || '',
+                    '希望解决时间': r.hopeText || '',
+                    '区域': r.region || '',
+                    '工程管理员': r.area,
+                    '问题类型': r.type,
+                    '当前状态': STATUS_MAP[r.status].label,
+                    '阻力描述': r.desc,
+                    '填报时间': formatTime(r.timeline[0].time),
+                    '受理时间': recvItem ? formatTime(recvItem.time) : '',
+                    '受理意见': recvItem ? recvItem.text : '',
+                    '反馈时间': fbItem ? formatTime(fbItem.time) : '',
+                    '反馈意见': fbItem ? fbItem.text : '',
+                    '确认时间': cfItem ? formatTime(cfItem.time) : '',
+                    '确认结果': cfItem ? cfItem.text : ''
+                };
+            });
+
+            const ws1 = XLSX.utils.json_to_sheet(summaryData);
+            // Set column widths
+            ws1['!cols'] = [
+                {wch: 5}, {wch: 18}, {wch: 25}, {wch: 18}, {wch: 10},
+                {wch: 14}, {wch: 18}, {wch: 10}, {wch: 10}, {wch: 10},
+                {wch: 12}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 30},
+                {wch: 18}, {wch: 40}, {wch: 18}, {wch: 30}
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws1, '阻力记录明细');
+
+            // Stats sheet
+            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0, unresolved: 0 };
+            records.forEach(r => { if (stats[r.status] !== undefined) stats[r.status]++; });
+            const statsData = [
+                { '状态': '待受理', '数量': stats.pending },
+                { '状态': '受理中', '数量': stats.processing },
+                { '状态': '已反馈待确认', '数量': stats.feedback },
+                { '状态': '已解决', '数量': stats.resolved },
+                { '状态': '未解决', '数量': stats.unresolved },
+                { '状态': '总计', '数量': records.length }
+            ];
+            const ws2 = XLSX.utils.json_to_sheet(statsData);
+            ws2['!cols'] = [{wch: 15}, {wch: 8}];
+            XLSX.utils.book_append_sheet(wb, ws2, '统计汇总');
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `施工阻力记录_${dateStr}.xlsx`);
+            showToast('Excel已导出');
+        }
+
+        // ========== Helpers ==========
+        function clearAllFilters() {
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-region').value = '';
+            document.getElementById('filter-area').value = '';
+            document.getElementById('filter-unit').value = '';
+            document.getElementById('filter-search').value = '';
+            renderTable();
+        }
+
+        // ========== Init ==========
+        loadData();
+        renderAll();
+    </script>
+</body>
+</html>
