@@ -708,18 +708,140 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
+            .header-left h1 { font-size: 18px; }
+            .header-left p { font-size: 12px; }
+            .header { padding: 16px 18px; }
+            .header-actions { gap: 8px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
         }
 
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .header { flex-direction: column; gap: 16px; align-items: flex-start; }
-            .header-actions { width: 100%; }
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .toolbar-left, .toolbar-right { flex-direction: column; }
-            .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .stat-card { padding: 14px; }
-            .stat-card .stat-value { font-size: 24px; }
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+
+            /* Header */
+            .header { flex-direction: column; gap: 12px; align-items: stretch; padding: 14px 16px; }
+            .header-left h1 { font-size: 17px; }
+            .header-left p { font-size: 11px; }
+            .header-actions { flex-wrap: wrap; gap: 8px; }
+            .header-actions .btn { font-size: 12px; padding: 7px 12px; }
+            .user-badge { font-size: 12px; padding: 5px 10px; }
+
+            /* Stats */
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .stat-label { font-size: 11px; }
+            .stat-card .stat-value { font-size: 22px; }
+
+            /* Toolbar */
+            .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .toolbar-left { flex-direction: column; gap: 8px; }
+            .toolbar-right { justify-content: flex-end; }
+            .filter-select, .filter-input { width: 100%; font-size: 13px; padding: 8px 12px; }
+
+            /* Hide table, show cards */
+            .table-wrap { display: none; }
+            .mobile-cards { display: block !important; }
+
+            .m-card {
+                background: var(--card-bg);
+                border: 1px solid var(--card-border);
+                border-radius: 10px;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+            }
+            .m-card-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            .m-card-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text);
+                flex: 1;
+                line-height: 1.5;
+            }
+            .m-card-status { flex-shrink: 0; }
+            .m-card-status .badge { font-size: 11px; padding: 3px 10px; }
+            .m-card-sub {
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-bottom: 2px;
+                line-height: 1.6;
+            }
+            .m-card-sub b { color: var(--text-secondary); font-weight: 600; }
+            .m-card-desc {
+                font-size: 12px;
+                color: var(--text-secondary);
+                line-height: 1.6;
+                margin: 8px 0;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                cursor: pointer;
+            }
+            .m-card-bottom {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid var(--card-border);
+            }
+            .m-card-countdown {
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .m-card-actions {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .m-card-actions .btn { padding: 5px 10px; font-size: 12px; }
+
+            .mobile-empty {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-muted);
+            }
+
+            /* Modal */
+            .modal-overlay { padding: 12px 8px; }
+            .modal { padding: 18px 16px; border-radius: 10px; margin-bottom: 20px; }
+            .modal-header { margin-bottom: 16px; padding-bottom: 12px; }
+            .modal-header h2 { font-size: 16px; }
+            .form-label { font-size: 12px; }
+            .form-input, .form-select, .form-textarea { padding: 9px 12px; font-size: 13px; }
+            .form-actions { gap: 8px; margin-top: 16px; padding-top: 14px; }
+            .form-actions .btn { font-size: 13px; padding: 9px 16px; }
+
+            /* Auth */
+            .auth-box { padding: 28px 20px; }
+            .auth-box h2 { font-size: 18px; }
+
+            /* Review table */
+            .review-table { font-size: 12px; }
+            .review-table th { padding: 8px 10px; }
+            .review-table td { padding: 8px 10px; }
+
+            /* Detail */
+            .detail-field-label { width: 90px; font-size: 12px; }
+            .detail-field-value { font-size: 12px; }
+            .detail-section-title { font-size: 12px; }
+
+            /* Change password modal */
+            #modal-changepwd .modal { max-width: 100% !important; }
         }
+
+        /* Mobile cards container - hidden by default */
+        .mobile-cards { display: none; }
+
     </style>
 </head>
 <body>
@@ -809,6 +931,8 @@
                 <tbody id="table-body"></tbody>
             </table>
         </div>
+        <!-- Mobile cards -->
+        <div class="mobile-cards" id="mobile-cards"></div>
     </div>
 
     <!-- Create Modal -->
@@ -1810,12 +1934,14 @@
         function renderTable() {
             const filtered = getFilteredRecords();
             const tbody = document.getElementById('table-body');
+            const mobileEl = document.getElementById('mobile-cards');
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2zm-7 4h10"/></svg>
                     <p>暂无阻力记录</p>
                 </div></td></tr>`;
+                mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无阻力记录</p></div>';
                 return;
             }
 
@@ -1835,13 +1961,37 @@
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
-                    <td class="col-actions">${getActionButtons(r)}</td>
+                    <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
                 </tr>`;
+            }).join('');
+
+            // Mobile cards
+            mobileEl.innerHTML = filtered.map((r, i) => {
+                const s = STATUS_MAP[r.status];
+                const cd = getCountdown(r.hopeText);
+                return `<div class="m-card">
+                    <div class="m-card-top">
+                        <div class="m-card-title">${r.name}</div>
+                        <div class="m-card-status"><span class="badge ${s.badge}">${s.label}</span></div>
+                    </div>
+                    <div class="m-card-sub"><b>编码</b> ${r.code}</div>
+                    <div class="m-card-sub"><b>施工</b> ${r.unit} | <b>填报</b> ${r.reporter || ''}</div>
+                    <div class="m-card-sub"><b>区域</b> ${r.region || ''} | <b>支撑</b> ${r.area} | <b>类型</b> ${r.type}</div>
+                    <div class="m-card-sub"><b>希望</b> ${r.hopeText || ''}</div>
+                    <div class="m-card-desc" onclick="openDetail('${r.id}')">${r.desc}</div>
+                    <div class="m-card-bottom">
+                        <div class="m-card-countdown" style="color:${cd.color}">${cd.text}</div>
+                        <div class="m-card-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>
+                            ${getActionButtons(r)}
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
         function getActionButtons(r) {
-            let btns = `<button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>`;
+            let btns = '';
             const isAdmin = currentUser && currentUser.role === 'admin';
             const isAssignedSupport = currentUser && currentUser.role === 'manager' && currentUser.name === r.area;
             // 管理员或被指派的支撑人员可受理/反馈
