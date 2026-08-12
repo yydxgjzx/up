@@ -1609,8 +1609,8 @@
                 }
                 btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
             } else {
-                // 填报人：确认（仅已反馈待确认状态）
-                if (r.status === 'feedback') {
+                // 填报人：仅自己填报的记录、且已反馈待确认状态才能确认
+                if (r.status === 'feedback' && r.reporter === currentUser.name) {
                     btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
                 }
             }
@@ -1801,6 +1801,10 @@
         function openConfirm(id) {
             const r = findRecord(id);
             if (!r) return;
+            if (!currentUser || currentUser.role !== 'user' || r.reporter !== currentUser.name) {
+                showToast('只有该阻力的填报人才能确认', true);
+                return;
+            }
             document.getElementById('cf-title').textContent = r.name;
             document.getElementById('cf-code').textContent = r.code;
             document.getElementById('cf-name').textContent = r.name;
