@@ -1085,8 +1085,8 @@
             <p class="auth-sub">请登录后使用</p>
             <div class="auth-error" id="login-error"></div>
             <div class="form-group">
-                <label class="form-label">账号</label>
-                <input type="text" class="form-input" id="login-account" placeholder="请输入账号" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-input" id="login-account" placeholder="请输入姓名" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
             </div>
             <div class="form-group">
                 <label class="form-label">密码</label>
@@ -1104,16 +1104,12 @@
             <p class="auth-sub">注册后需管理员审核通过方可登录</p>
             <div class="auth-error" id="register-error"></div>
             <div class="form-group">
-                <label class="form-label"><span class="required">*</span>账号</label>
-                <input type="text" class="form-input" id="reg-account" placeholder="请输入登录账号">
+                <label class="form-label"><span class="required">*</span>姓名</label>
+                <input type="text" class="form-input" id="reg-name" placeholder="请输入真实姓名" onkeydown="if(event.key==='Enter')document.getElementById('reg-password').focus()">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>密码</label>
                 <input type="password" class="form-input" id="reg-password" placeholder="请输入密码（至少6位）">
-            </div>
-            <div class="form-group">
-                <label class="form-label"><span class="required">*</span>姓名</label>
-                <input type="text" class="form-input" id="reg-name" placeholder="请输入真实姓名">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>手机号</label>
@@ -1200,12 +1196,11 @@
             document.getElementById('auth-login').classList.remove('active');
             document.getElementById('auth-register').classList.add('active');
             document.getElementById('register-error').classList.remove('show');
-            document.getElementById('reg-account').value = '';
-            document.getElementById('reg-password').value = '';
             document.getElementById('reg-name').value = '';
+            document.getElementById('reg-password').value = '';
             document.getElementById('reg-phone').value = '';
             document.getElementById('reg-unit').value = '';
-            setTimeout(() => document.getElementById('reg-account').focus(), 100);
+            setTimeout(() => document.getElementById('reg-name').focus(), 100);
         }
 
         function doLogin() {
@@ -1214,7 +1209,7 @@
             const errEl = document.getElementById('login-error');
 
             if (!account || !password) {
-                errEl.textContent = '请输入账号和密码';
+                errEl.textContent = '请输入姓名和密码';
                 errEl.classList.add('show');
                 return;
             }
@@ -1233,11 +1228,11 @@
                 }
             }
 
-            // Check regular users
+            // Check regular users (account === name)
             const users = loadUsers();
-            const user = users.find(u => u.account === account);
+            const user = users.find(u => u.name === account);
             if (!user) {
-                errEl.textContent = '账号不存在';
+                errEl.textContent = '该姓名未注册';
                 errEl.classList.add('show');
                 return;
             }
@@ -1265,14 +1260,13 @@
         }
 
         function doRegister() {
-            const account = document.getElementById('reg-account').value.trim();
-            const password = document.getElementById('reg-password').value;
             const name = document.getElementById('reg-name').value.trim();
+            const password = document.getElementById('reg-password').value;
             const phone = document.getElementById('reg-phone').value.trim();
             const unit = document.getElementById('reg-unit').value;
             const errEl = document.getElementById('register-error');
 
-            if (!account || !password || !name || !phone || !unit) {
+            if (!name || !password || !phone || !unit) {
                 errEl.textContent = '请填写所有必填项';
                 errEl.classList.add('show');
                 return;
@@ -1282,21 +1276,21 @@
                 errEl.classList.add('show');
                 return;
             }
-            if (account === ADMIN_ACCOUNT) {
-                errEl.textContent = '该账号已被占用';
+            if (name === ADMIN_ACCOUNT) {
+                errEl.textContent = '该姓名已被占用';
                 errEl.classList.add('show');
                 return;
             }
 
             const users = loadUsers();
-            if (users.find(u => u.account === account)) {
-                errEl.textContent = '该账号已注册';
+            if (users.find(u => u.name === name)) {
+                errEl.textContent = '该姓名已注册';
                 errEl.classList.add('show');
                 return;
             }
 
             users.push({
-                account, password, name, phone, unit,
+                account: name, password, name, phone, unit,
                 status: 'pending',
                 registerTime: Date.now()
             });
@@ -1376,21 +1370,20 @@
             };
 
             body.innerHTML = '<table class="review-table"><thead><tr>'
-                + '<th>账号</th><th>姓名</th><th>手机号</th><th>施工单位</th><th>注册时间</th><th>状态</th><th>操作</th>'
+                + '<th>姓名</th><th>手机号</th><th>施工单位</th><th>注册时间</th><th>状态</th><th>操作</th>'
                 + '</tr></thead><tbody>'
                 + users.map(u => {
                     const s = statusMap[u.status] || statusMap.pending;
                     let actions = '';
                     if (u.status === 'pending') {
-                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.account + '\',\'approved\')">通过</button> '
-                            + '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.account + '\',\'rejected\')">拒绝</button>';
+                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">通过</button> '
+                            + '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">拒绝</button>';
                     } else if (u.status === 'approved') {
-                        actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.account + '\',\'rejected\')">禁用</button>';
+                        actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">禁用</button>';
                     } else {
-                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.account + '\',\'approved\')">恢复</button>';
+                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
                     }
                     return '<tr>'
-                        + '<td>' + u.account + '</td>'
                         + '<td>' + u.name + '</td>'
                         + '<td>' + u.phone + '</td>'
                         + '<td>' + u.unit + '</td>'
@@ -1402,9 +1395,9 @@
                 + '</tbody></table>';
         }
 
-        function reviewUser(account, status) {
+        function reviewUser(name, status) {
             const users = loadUsers();
-            const user = users.find(u => u.account === account);
+            const user = users.find(u => u.name === name);
             if (!user) return;
             user.status = status;
             saveUsers(users);
