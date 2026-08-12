@@ -691,18 +691,18 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>联系电话</label>
-                    <input type="text" class="form-input" id="f-phone" placeholder="请输入手机号码">
+                    <label class="form-label"><span class="required">*</span>填报人</label>
+                    <input type="text" class="form-input" id="f-reporter1" placeholder="请输入填报人姓名">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>填报人1</label>
-                    <input type="text" class="form-input" id="f-reporter1" placeholder="请输入填报人姓名">
+                    <label class="form-label"><span class="required">*</span>联系电话</label>
+                    <input type="text" class="form-input" id="f-phone" placeholder="请输入手机号码">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">填报人2（可选）</label>
-                    <input type="text" class="form-input" id="f-reporter2" placeholder="请输入第二位填报人姓名">
+                    <label class="form-label"><span class="required">*</span>希望解决时间</label>
+                    <input type="datetime-local" class="form-input" id="f-hopetime" style="color:var(--text-secondary);">
                 </div>
             </div>
             <div class="form-row">
@@ -735,10 +735,6 @@
                         <option>赵亚秀</option>
                     </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label"><span class="required">*</span>希望解决时间</label>
-                <input type="datetime-local" class="form-input" id="f-hopetime" style="color:var(--text-secondary);">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>问题类型</label>
@@ -1095,7 +1091,7 @@
                 if (area && r.area !== area) return false;
                 if (unit && r.unit !== unit) return false;
                 if (search) {
-                    const hay = `${r.code} ${r.name} ${r.desc} ${r.unit} ${r.reporter || ''} ${r.reporter2 || ''} ${r.phone || ''} ${r.hopeText || ''} ${r.region || ''}`.toLowerCase();
+                    const hay = `${r.code} ${r.name} ${r.desc} ${r.unit} ${r.reporter || ''} ${r.phone || ''} ${r.hopeText || ''} ${r.region || ''}`.toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -1132,7 +1128,7 @@
                     <td class="col-code">${r.code}</td>
                     <td class="col-name">${r.name}</td>
                     <td class="col-unit">${r.unit}</td>
-                    <td class="col-reporter">${r.reporter || ''}${r.reporter2 ? '<br>' + r.reporter2 : ''}</td>
+                    <td class="col-reporter">${r.reporter || ''}</td>
                     <td class="col-phone">${r.phone || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
                     <td class="col-region">${r.region || ''}</td>
@@ -1228,7 +1224,6 @@
             document.getElementById('f-name').value = '';
             document.getElementById('f-unit').value = '';
             document.getElementById('f-reporter1').value = '';
-            document.getElementById('f-reporter2').value = '';
             document.getElementById('f-phone').value = '';
             document.getElementById('f-hopetime').value = '';
             document.getElementById('f-region').value = '';
@@ -1244,7 +1239,6 @@
             const name = document.getElementById('f-name').value.trim();
             const unit = document.getElementById('f-unit').value;
             const reporter1 = document.getElementById('f-reporter1').value.trim();
-            const reporter2 = document.getElementById('f-reporter2').value.trim();
             const phone = document.getElementById('f-phone').value.trim();
             const hopeRaw = document.getElementById('f-hopetime').value;
             const region = document.getElementById('f-region').value;
@@ -1262,7 +1256,7 @@
             const hopeText = hopeRaw.replace('T', ' ');
             const record = {
                 id: 'R' + now,
-                code, name, unit, reporter: reporter1, reporter2, phone, hopeText, region, area, type, desc,
+                code, name, unit, reporter: reporter1, phone, hopeText, region, area, type, desc,
                 status: 'pending',
                 timeline: [{ action: 'create', time: now, text: '施工单位填报施工阻力' }]
             };
@@ -1281,7 +1275,7 @@
             document.getElementById('proc-code').textContent = r.code;
             document.getElementById('proc-name').textContent = r.name;
             document.getElementById('proc-unit').textContent = r.unit;
-            document.getElementById('proc-reporter').textContent = [r.reporter, r.reporter2].filter(Boolean).join('、');
+            document.getElementById('proc-reporter').textContent = r.reporter || '';
             document.getElementById('proc-phone').textContent = r.phone || '';
             document.getElementById('proc-hope').textContent = r.hopeText || '';
             document.getElementById('proc-region').textContent = r.region || '';
@@ -1383,7 +1377,7 @@
             document.getElementById('dt-code').textContent = r.code;
             document.getElementById('dt-name').textContent = r.name;
             document.getElementById('dt-unit').textContent = r.unit;
-            document.getElementById('dt-reporter').textContent = [r.reporter, r.reporter2].filter(Boolean).join('、');
+            document.getElementById('dt-reporter').textContent = r.reporter || '';
             document.getElementById('dt-phone').textContent = r.phone || '';
             document.getElementById('dt-hope').textContent = r.hopeText || '';
             document.getElementById('dt-region').textContent = r.region || '';
@@ -1425,7 +1419,7 @@
                     '工程编码': r.code,
                     '工程名称': r.name,
                     '施工单位': r.unit,
-                    '填报人': [r.reporter, r.reporter2].filter(Boolean).join('、'),
+                    '填报人': r.reporter || '',
                     '联系电话': r.phone || '',
                     '希望解决时间': r.hopeText || '',
                     '区域': r.region || '',
