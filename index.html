@@ -211,13 +211,14 @@
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius);
-            overflow-x: auto;
+            overflow-x: hidden;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
+            table-layout: fixed;
         }
 
         thead th {
@@ -225,12 +226,14 @@
             color: var(--text-secondary);
             font-weight: 600;
             text-align: left;
-            padding: 14px 16px;
+            padding: 14px 10px;
             border-bottom: 1px solid var(--card-border);
             white-space: nowrap;
             position: sticky;
             top: 0;
             z-index: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         tbody tr {
@@ -243,24 +246,24 @@
         }
 
         tbody td {
-            padding: 12px 16px;
+            padding: 12px 10px;
             vertical-align: middle;
         }
 
-        .col-serial { width: 50px; text-align: center; color: var(--text-muted); }
-        .col-code { width: 140px; }
-        .col-name { width: 170px; }
-        .col-unit { width: 130px; }
-        .col-reporter { width: 80px; }
-        .col-phone { width: 120px; }
-        .col-hope { width: 145px; color: var(--text-muted); font-size: 12px; }
-        .col-region { width: 90px; }
-        .col-area { width: 90px; }
-        .col-type { width: 90px; }
-        .col-desc { min-width: 200px; max-width: 300px; }
-        .col-status { width: 100px; }
-        .col-time { width: 145px; color: var(--text-muted); font-size: 12px; }
-        .col-actions { width: 120px; text-align: center; white-space: nowrap; }
+        .col-serial { width: 45px; text-align: center; color: var(--text-muted); }
+        .col-code { width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-name { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-unit { width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-reporter { width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-phone { width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-hope { width: 120px; color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-region { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-area { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-type { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-desc { overflow: hidden; }
+        .col-status { width: 90px; }
+        .col-time { width: 120px; color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-actions { width: 110px; text-align: center; white-space: nowrap; }
         .col-actions button {
             margin: 0 2px;
         }
@@ -772,7 +775,7 @@
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th class="col-serial">#</th>
+                        <th class="col-serial">序号</th>
                         <th class="col-code">工程编码</th>
                         <th class="col-name">工程名称</th>
                         <th class="col-unit">施工单位</th>
