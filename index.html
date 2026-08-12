@@ -1463,6 +1463,7 @@
                     } else {
                         actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
                     }
+                    actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
                     return '<tr>'
                         + '<td>' + u.name + '</td>'
                         + '<td>' + (u.phone || '') + '</td>'
@@ -1483,6 +1484,16 @@
             saveUsers(users);
             renderAdminReview();
             showToast(status === 'approved' ? '已通过该用户' : '已拒绝该用户');
+        }
+
+        function deleteUser(name) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            if (!confirm('确定删除用户「' + name + '」吗？\n\n删除后该用户将无法登录，且注册信息不可恢复。')) return;
+            const users = loadUsers();
+            const filtered = users.filter(u => u.name !== name);
+            saveUsers(filtered);
+            renderAdminReview();
+            showToast('用户已删除');
         }
 
         // ========== Data Layer ==========
