@@ -728,7 +728,7 @@
         <div class="header">
             <div class="header-left">
                 <h1>施工阻力协调系统</h1>
-                <p>施工单位填报施工阻力 · 建设单位受理反馈 · 闭环跟踪管理</p>
+                <p>施工单位填报施工阻力 · 支撑人员受理反馈 · 闭环跟踪管理</p>
             </div>
             <div class="header-actions">
                 <span class="user-badge" id="user-badge" style="display:none;"></span>
@@ -773,7 +773,7 @@
                     <option value="">全部区域</option>
                 </select>
                 <select class="filter-select" id="filter-area" onchange="renderTable()">
-                    <option value="">全部工程管理员</option>
+                    <option value="">全部支撑人员</option>
                 </select>
                 <select class="filter-select" id="filter-unit" onchange="renderTable()">
                     <option value="">全部施工单位</option>
@@ -798,7 +798,7 @@
                         <th class="col-hope">希望解决时间</th>
                         <th class="col-countdown">倒计时</th>
                         <th class="col-region">区域</th>
-                        <th class="col-area">工程管理员</th>
+                        <th class="col-area">支撑人员</th>
                         <th class="col-type">问题类型</th>
                         <th class="col-desc">阻力描述</th>
                         <th class="col-status">状态</th>
@@ -861,18 +861,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><span class="required">*</span>工程管理员</label>
+                    <label class="form-label"><span class="required">*</span>支撑人员</label>
                     <select class="form-select" id="f-area">
                         <option value="">请选择</option>
-                        <option>陈凌</option>
-                        <option>丰中山</option>
-                        <option>蒋志昭</option>
-                        <option>李力</option>
-                        <option>刘益锴</option>
-                        <option>孙志祥</option>
-                        <option>曹毅</option>
-                        <option>赵亚秀</option>
                     </select>
+                    <div class="form-hint">仅被选中的支撑人员可受理和反馈本条记录</div>
                 </div>
             </div>
             <div class="form-group">
@@ -899,7 +892,7 @@
         </div>
     </div>
 
-    <!-- Processing Modal (建设单位受理) -->
+    <!-- Processing Modal (支撑人员受理) -->
     <div class="modal-overlay" id="modal-process">
         <div class="modal">
             <div class="modal-header">
@@ -937,7 +930,7 @@
                     <div class="detail-field-value" id="proc-region"></div>
                 </div>
                 <div class="detail-field">
-                    <div class="detail-field-label">工程管理员</div>
+                    <div class="detail-field-label">支撑人员</div>
                     <div class="detail-field-value" id="proc-area"></div>
                 </div>
                 <div class="detail-field">
@@ -961,7 +954,7 @@
         </div>
     </div>
 
-    <!-- Feedback Modal (建设单位反馈) -->
+    <!-- Feedback Modal (支撑人员反馈) -->
     <div class="modal-overlay" id="modal-feedback">
         <div class="modal">
             <div class="modal-header">
@@ -1073,7 +1066,7 @@
                 <div class="detail-field"><div class="detail-field-label">联系电话</div><div class="detail-field-value" id="dt-phone"></div></div>
                 <div class="detail-field"><div class="detail-field-label">希望解决时间</div><div class="detail-field-value" id="dt-hope"></div></div>
                 <div class="detail-field"><div class="detail-field-label">区域</div><div class="detail-field-value" id="dt-region"></div></div>
-                <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="dt-area"></div></div>
+                <div class="detail-field"><div class="detail-field-label">支撑人员</div><div class="detail-field-value" id="dt-area"></div></div>
                 <div class="detail-field"><div class="detail-field-label">问题类型</div><div class="detail-field-value" id="dt-type"></div></div>
                 <div class="detail-field"><div class="detail-field-label">阻力描述</div><div class="detail-field-value" id="dt-desc"></div></div>
                 <div class="detail-field"><div class="detail-field-label">当前状态</div><div class="detail-field-value" id="dt-status"></div></div>
@@ -1125,15 +1118,20 @@
                 <label class="form-label"><span class="required">*</span>手机号</label>
                 <input type="text" class="form-input" id="reg-phone" placeholder="请输入手机号码">
             </div>
-            <div class="form-group">
-                <label class="form-label">施工单位（可选）</label>
-                <select class="form-select" id="reg-unit">
-                    <option value="">不选择</option>
-                    <option>湖南省通信建设有限公司</option>
-                    <option>湖南天辰建设有限责任公司</option>
-                    <option>湖南省康普通信技术有限责任公司</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">单位（可选）</label>
+                    <select class="form-select" id="reg-unit-type" onchange="onUnitTypeChange()">
+                        <option value="">不选择</option>
+                        <option value="construction">施工单位</option>
+                        <option value="support">支撑单位</option>
+                    </select>
+                </div>
+                <div class="form-group" id="reg-unit-wrap" style="display:none;">
+                    <label class="form-label"><span class="required">*</span>所在单位</label>
+                    <select class="form-select" id="reg-unit">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
             <button class="btn btn-primary" onclick="doRegister()">提交注册</button>
             <div class="auth-switch">已有账号？<a onclick="showLogin()">返回登录</a></div>
         </div>
@@ -1162,7 +1160,45 @@
         const SESSION_KEY = 'construction_resistance_session';
         const ADMIN_ACCOUNT = 'yydxlily';
         const ADMIN_PASSWORD = 'yydxvip8216109';
-        const MANAGER_NAMES = ['陈凌','丰中山','蒋志昭','李力','刘益锴','孙志祥','曹毅','赵亚秀'];
+
+        const CONSTRUCTION_UNITS = [
+            '湖南省通信建设有限公司',
+            '湖南天辰建设有限责任公司',
+            '湖南省康普通信技术有限责任公司'
+        ];
+        const SUPPORT_UNITS = [
+            '云网工程建设中心',
+            '湖南省邮电规划设计院有限公司',
+            '中通服项目管理咨询有限公司',
+            '湘阴县分公司',
+            '临湘市分公司',
+            '华容县分公司',
+            '汨罗市分公司',
+            '平江县分公司',
+            '岳阳县分公司',
+            '云溪区分公司',
+            '君山区分公司',
+            '综合维护中心',
+            '云网操作维护中心',
+            '云网运营部',
+            '采购供应部'
+        ];
+
+        function isSupportUnit(unit) {
+            return SUPPORT_UNITS.includes(unit);
+        }
+        function isConstructionUnit(unit) {
+            return CONSTRUCTION_UNITS.includes(unit);
+        }
+        function getRoleByUnit(unit) {
+            if (isSupportUnit(unit)) return 'manager';
+            return 'user';
+        }
+
+        function getApprovedSupportUsers() {
+            const users = loadUsers();
+            return users.filter(u => u.status === 'approved' && isSupportUnit(u.unit));
+        }
 
         let currentUser = null;
 
@@ -1194,6 +1230,22 @@
             }
         }
 
+        function onUnitTypeChange() {
+            const type = document.getElementById('reg-unit-type').value;
+            const wrap = document.getElementById('reg-unit-wrap');
+            const sel = document.getElementById('reg-unit');
+            if (type === 'construction') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + CONSTRUCTION_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else if (type === 'support') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + SUPPORT_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else {
+                wrap.style.display = 'none';
+                sel.innerHTML = '<option value="">请选择</option>';
+            }
+        }
+
         function showLogin() {
             document.getElementById('auth-register').classList.remove('active');
             document.getElementById('auth-login').classList.add('active');
@@ -1210,7 +1262,9 @@
             document.getElementById('reg-name').value = '';
             document.getElementById('reg-password').value = '';
             document.getElementById('reg-phone').value = '';
-            document.getElementById('reg-unit').value = '';
+            document.getElementById('reg-unit-type').value = '';
+            document.getElementById('reg-unit').innerHTML = '<option value="">请选择</option>';
+            document.getElementById('reg-unit-wrap').style.display = 'none';
             setTimeout(() => document.getElementById('reg-name').focus(), 100);
         }
 
@@ -1263,7 +1317,7 @@
                 return;
             }
             if (user.status === 'approved') {
-                const role = MANAGER_NAMES.includes(user.name) ? 'manager' : 'user';
+                const role = getRoleByUnit(user.unit);
                 currentUser = { account: user.account, name: user.name, role: role, unit: user.unit || '', phone: user.phone };
                 saveSession(currentUser);
                 onLoginSuccess();
@@ -1275,6 +1329,7 @@
             const name = document.getElementById('reg-name').value.trim();
             const password = document.getElementById('reg-password').value;
             const phone = document.getElementById('reg-phone').value.trim();
+            const unitType = document.getElementById('reg-unit-type').value;
             const unit = document.getElementById('reg-unit').value;
             const errEl = document.getElementById('register-error');
 
@@ -1293,6 +1348,11 @@
                 errEl.classList.add('show');
                 return;
             }
+            if (unitType && !unit) {
+                errEl.textContent = '请选择所在单位';
+                errEl.classList.add('show');
+                return;
+            }
 
             const users = loadUsers();
             if (users.find(u => u.name === name)) {
@@ -1302,7 +1362,7 @@
             }
 
             users.push({
-                account: name, password, name, phone, unit,
+                account: name, password, name, phone, unit, unitType,
                 status: 'pending',
                 registerTime: Date.now()
             });
@@ -1345,7 +1405,7 @@
                 btnAdmin.style.display = 'inline-flex';
             } else if (currentUser.role === 'manager') {
                 badge.className = 'user-badge admin';
-                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（工程管理员）';
+                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（支撑人员）';
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'none';
@@ -1389,10 +1449,11 @@
             };
 
             body.innerHTML = '<table class="review-table"><thead><tr>'
-                + '<th>姓名</th><th>手机号</th><th>施工单位</th><th>注册时间</th><th>状态</th><th>操作</th>'
+                +             '<th>姓名</th><th>手机号</th><th>单位</th><th>注册时间</th><th>状态</th><th>操作</th>'
                 + '</tr></thead><tbody>'
                 + users.map(u => {
                     const s = statusMap[u.status] || statusMap.pending;
+                    let unitDisplay = u.unit || '—';
                     let actions = '';
                     if (u.status === 'pending') {
                         actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">通过</button> '
@@ -1404,8 +1465,8 @@
                     }
                     return '<tr>'
                         + '<td>' + u.name + '</td>'
-                        + '<td>' + u.phone + '</td>'
-                        + '<td>' + u.unit + '</td>'
+                        + '<td>' + (u.phone || '') + '</td>'
+                        + '<td>' + unitDisplay + '</td>'
                         + '<td style="font-size:12px;color:var(--text-muted);">' + formatTime(u.registerTime) + '</td>'
                         + '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>'
                         + '<td style="white-space:nowrap;">' + actions + '</td>'
@@ -1478,7 +1539,7 @@
                     status: 'processing',
                     timeline: [
                         { action: 'create', time: now - 400000, text: '施工单位填报施工阻力' },
-                        { action: 'receive', time: now - 300000, text: '建设单位受理，意见：已联系属地政府协调，拟下周组织协商会议。' }
+                        { action: 'receive', time: now - 300000, text: '支撑人员受理，意见：已联系属地政府协调，拟下周组织协商会议。' }
                     ]
                 },
                 {
@@ -1497,8 +1558,8 @@
                     status: 'feedback',
                     timeline: [
                         { action: 'create', time: now - 200000, text: '施工单位填报施工阻力' },
-                        { action: 'receive', time: now - 180000, text: '建设单位受理，意见：已通知设计单位到场，同时协调管线权属单位确认。' },
-                        { action: 'feedback', time: now - 100000, text: '建设单位反馈：设计单位已出变更方案（路由北移15米），管线权属单位确认无影响，可恢复施工。' }
+                        { action: 'receive', time: now - 180000, text: '支撑人员受理，意见：已通知设计单位到场，同时协调管线权属单位确认。' },
+                        { action: 'feedback', time: now - 100000, text: '支撑人员反馈：设计单位已出变更方案（路由北移15米），管线权属单位确认无影响，可恢复施工。' }
                     ]
                 },
                 {
@@ -1517,8 +1578,8 @@
                     status: 'resolved',
                     timeline: [
                         { action: 'create', time: now - 80000, text: '施工单位填报施工阻力' },
-                        { action: 'receive', time: now - 70000, text: '建设单位受理，意见：联合物业与业委会沟通，调整施工时段。' },
-                        { action: 'feedback', time: now - 50000, text: '建设单位反馈：已与物业达成协议，施工调整为工作日9:00-17:00，完工后24小时内恢复路面。' },
+                        { action: 'receive', time: now - 70000, text: '支撑人员受理，意见：联合物业与业委会沟通，调整施工时段。' },
+                        { action: 'feedback', time: now - 50000, text: '支撑人员反馈：已与物业达成协议，施工调整为工作日9:00-17:00，完工后24小时内恢复路面。' },
                         { action: 'confirm', time: now - 30000, text: '施工单位确认：已解决。施工已恢复正常，居民无异议。' }
                     ]
                 }
@@ -1536,8 +1597,8 @@
 
         const ACTION_MAP = {
             create: '施工单位填报',
-            receive: '建设单位受理',
-            feedback: '建设单位反馈',
+            receive: '支撑人员受理',
+            feedback: '支撑人员反馈',
             confirm: '施工单位确认',
             edit: '填报人修改'
         };
@@ -1669,9 +1730,10 @@
 
         function getActionButtons(r) {
             let btns = `<button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>`;
-            const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
-            if (canManage) {
-                // 管理员/工程管理员：受理、反馈
+            const isAdmin = currentUser && currentUser.role === 'admin';
+            const isAssignedSupport = currentUser && currentUser.role === 'manager' && currentUser.name === r.area;
+            // 管理员或被指派的支撑人员可受理/反馈
+            if (isAdmin || isAssignedSupport) {
                 switch(r.status) {
                     case 'pending':
                         btns += `<button class="btn btn-info btn-sm" onclick="openProcess('${r.id}')">受理</button>`;
@@ -1684,7 +1746,7 @@
                         break;
                 }
                 // 仅管理员可删除
-                if (currentUser.role === 'admin') {
+                if (isAdmin) {
                     btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
                 }
             }
@@ -1712,7 +1774,7 @@
             const unitVal = unitSel.value;
 
             regionSel.innerHTML = '<option value="">全部区域</option>' + regions.map(r => `<option>${r}</option>`).join('');
-            areaSel.innerHTML = '<option value="">全部工程管理员</option>' + areas.map(a => `<option>${a}</option>`).join('');
+            areaSel.innerHTML = '<option value="">全部支撑人员</option>' + areas.map(a => `<option>${a}</option>`).join('');
             unitSel.innerHTML = '<option value="">全部施工单位</option>' + units.map(u => `<option>${u}</option>`).join('');
 
             regionSel.value = regionVal;
@@ -1762,6 +1824,24 @@
         // ========== Create ==========
         let editingId = null;
 
+        function populateSupportUsers() {
+            const sel = document.getElementById('f-area');
+            const currentVal = sel.value;
+            const supportUsers = getApprovedSupportUsers();
+            // 如果当前编辑的记录的 area 不在已注册支撑用户中，也加入选项
+            let opts = '<option value="">请选择</option>';
+            const names = new Set();
+            supportUsers.forEach(u => {
+                if (!names.has(u.name)) {
+                    opts += `<option value="${u.name}">${u.name}（${u.unit}）</option>`;
+                    names.add(u.name);
+                }
+            });
+            sel.innerHTML = opts;
+            // 尝试恢复之前的值
+            if (currentVal) sel.value = currentVal;
+        }
+
         function openCreateModal() {
             editingId = null;
             document.getElementById('modal-create-title').textContent = '新增施工阻力填报';
@@ -1769,16 +1849,18 @@
             document.getElementById('btn-submit-create').onclick = submitCreate;
             document.getElementById('f-code').value = '';
             document.getElementById('f-name').value = '';
-            // Pre-fill unit from logged-in user
+            // 填报时自动带入：施工单位用户带入自己单位、支撑人员带入自己单位
             if (currentUser && currentUser.unit) {
                 document.getElementById('f-unit').value = currentUser.unit;
             } else {
                 document.getElementById('f-unit').value = '';
             }
             document.getElementById('f-phone').value = (currentUser && currentUser.phone) ? currentUser.phone : '';
+            // 填充支撑人员下拉（已审核通过的支撑单位用户）
+            populateSupportUsers();
+            document.getElementById('f-area').value = '';
             document.getElementById('f-hopetime').value = '';
             document.getElementById('f-region').value = '';
-            document.getElementById('f-area').value = '';
             document.getElementById('f-type').value = '';
             document.getElementById('f-desc').value = '';
             openModal('modal-create');
@@ -1805,6 +1887,9 @@
             document.getElementById('f-area').value = r.area;
             document.getElementById('f-type').value = r.type;
             document.getElementById('f-desc').value = r.desc;
+            // 填充支撑人员下拉
+            populateSupportUsers();
+            document.getElementById('f-area').value = r.area;
             openModal('modal-create');
             setTimeout(() => document.getElementById('f-code').focus(), 100);
         }
@@ -1982,12 +2067,12 @@
             } else {
                 // 未解决：退回到反馈环节
                 r.status = 'feedback';
-                const confirmText = `施工单位确认：未解决。` + (text ? text : '') + `（已退回建设单位重新反馈）`;
+                const confirmText = `施工单位确认：未解决。` + (text ? text : '') + `（已退回支撑人员重新反馈）`;
                 r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
                 saveData();
                 renderAll();
                 closeModal('modal-confirm');
-                showToast('已退回反馈环节，等待建设单位重新处理');
+                showToast('已退回反馈环节，等待支撑人员重新处理');
             }
         }
 
@@ -2060,7 +2145,7 @@
                     '希望解决时间': r.hopeText || '',
                     '是否超时': isOverdue(r.hopeText, r.status) ? '是' : '否',
                     '区域': r.region || '',
-                    '工程管理员': r.area,
+                    '支撑人员': r.area,
                     '问题类型': r.type,
                     '当前状态': STATUS_MAP[r.status].label,
                     '阻力描述': r.desc,
@@ -2120,10 +2205,13 @@
         // Check session
         currentUser = loadSession();
         if (currentUser) {
-            // 修正角色：工程管理员名单中的用户始终为 manager（除非是 admin）
-            if (currentUser.role !== 'admin' && MANAGER_NAMES.includes(currentUser.name)) {
-                currentUser.role = 'manager';
-                saveSession(currentUser);
+            // 按注册单位修正角色（非admin用户）
+            if (currentUser.role !== 'admin' && currentUser.unit) {
+                const correctRole = getRoleByUnit(currentUser.unit);
+                if (currentUser.role !== correctRole) {
+                    currentUser.role = correctRole;
+                    saveSession(currentUser);
+                }
             }
             updateHeaderForUser();
         } else {
