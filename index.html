@@ -1545,8 +1545,8 @@
                     phone: '13907302222',
                     hopeText: '2026-08-16 14:00',
                     region: '君山区',
-                    area: '李力',
-                    type: '用地纠纷',
+                    area: '蒋志昭',
+                    type: '居民阻工',
                     desc: '基站用地与当地村民存在争议，村民阻挡施工人员进场，要求提高补偿标准。',
                     status: 'processing',
                     timeline: [
@@ -1565,7 +1565,7 @@
                     hopeText: '2026-08-14 09:00',
                     region: '云溪区',
                     area: '孙志祥',
-                    type: '管线冲突',
+                    type: '设计变更',
                     desc: '开挖沟槽时发现不明地下管线，与设计图纸不符，需设计单位现场确认路由调整方案。',
                     status: 'feedback',
                     timeline: [
@@ -2212,8 +2212,57 @@
             renderTable();
         }
 
+        // ========== Seed Support Users ==========
+        const PRESET_SUPPORT_STAFF = [
+            { name: '陈凌', phone: '13341300202' },
+            { name: '孙志祥', phone: '18907308680' },
+            { name: '丰中山', phone: '13341300187' },
+            { name: '刘益锴', phone: '13341301609' },
+            { name: '蒋志昭', phone: '18182002992' },
+            { name: '曹毅', phone: '18907309997' },
+            { name: '赵亚秀', phone: '13348615139' },
+            { name: '袁文芝', phone: '13341303569' },
+            { name: '王奇', phone: '19973091233' },
+            { name: '彭翔斌', phone: '18073026222' },
+            { name: '霍琦', phone: '13365802558' },
+            { name: '彭毅', phone: '13341305622' },
+            { name: '张运红', phone: '13341305802' },
+            { name: '胥烨', phone: '15387302388' },
+            { name: '周炜', phone: '18907306978' },
+            { name: '任高立', phone: '18907306356' },
+            { name: '万胜炎', phone: '13341300829' },
+            { name: '查小强', phone: '13341300497' },
+            { name: '易大伟', phone: '13341306517' },
+            { name: '陈磊', phone: '13341306860' },
+            { name: '荣富', phone: '13341300335' }
+        ];
+
+        function seedSupportUsers() {
+            const users = loadUsers();
+            const existingNames = new Set(users.map(u => u.name));
+            let added = false;
+            PRESET_SUPPORT_STAFF.forEach(s => {
+                if (!existingNames.has(s.name)) {
+                    users.push({
+                        account: s.name,
+                        password: s.phone,
+                        name: s.name,
+                        phone: s.phone,
+                        unit: '云网工程建设中心',
+                        unitType: 'support',
+                        status: 'approved',
+                        registerTime: Date.now()
+                    });
+                    added = true;
+                }
+            });
+            if (added) saveUsers(users);
+        }
+
         // ========== Init ==========
         loadData();
+        // 预置支撑人员账号
+        seedSupportUsers();
         // Check session
         currentUser = loadSession();
         if (currentUser) {
