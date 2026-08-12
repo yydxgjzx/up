@@ -1198,14 +1198,14 @@
             '云网工程建设中心',
             '湖南省邮电规划设计院有限公司',
             '中通服项目管理咨询有限公司',
-            '湘阴县分公司',
-            '临湘市分公司',
-            '华容县分公司',
-            '汨罗市分公司',
-            '平江县分公司',
-            '岳阳县分公司',
-            '云溪区分公司',
-            '君山区分公司',
+            '湘阴县',
+            '临湘市',
+            '华容县',
+            '汨罗市',
+            '平江县',
+            '岳阳县',
+            '云溪区',
+            '君山区',
             '综合维护中心',
             '云网操作维护中心',
             '云网运营部',
@@ -2322,15 +2322,15 @@
             { name: '蒋志昭', phone: '18182002992', unit: '云网工程建设中心' },
             { name: '曹毅', phone: '18907309997', unit: '云网工程建设中心' },
             { name: '赵亚秀', phone: '13348615139', unit: '云网工程建设中心' },
-            { name: '袁文芝', phone: '13341303569', unit: '湘阴县分公司' },
-            { name: '王奇', phone: '19973091233', unit: '临湘市分公司' },
-            { name: '彭翔斌', phone: '18073026222', unit: '华容县分公司' },
-            { name: '霍琦', phone: '13365802558', unit: '汨罗市分公司' },
-            { name: '彭毅', phone: '13341305622', unit: '平江县分公司' },
-            { name: '张运红', phone: '13341305802', unit: '岳阳县分公司' },
-            { name: '胥烨', phone: '15387302388', unit: '云溪区分公司' },
-            { name: '周炜', phone: '18907306978', unit: '君山区分公司' },
-            { name: '任高立', phone: '18907306356', unit: '君山区分公司' },
+            { name: '袁文芝', phone: '13341303569', unit: '湘阴县' },
+            { name: '王奇', phone: '19973091233', unit: '临湘市' },
+            { name: '彭翔斌', phone: '18073026222', unit: '华容县' },
+            { name: '霍琦', phone: '13365802558', unit: '汨罗市' },
+            { name: '彭毅', phone: '13341305622', unit: '平江县' },
+            { name: '张运红', phone: '13341305802', unit: '岳阳县' },
+            { name: '胥烨', phone: '15387302388', unit: '云溪区' },
+            { name: '周炜', phone: '18907306978', unit: '君山区' },
+            { name: '任高立', phone: '18907306356', unit: '君山区' },
             { name: '万胜炎', phone: '13341300829', unit: '智家中心' },
             { name: '查小强', phone: '13341300497', unit: '智家中心' },
             { name: '易大伟', phone: '13341306517', unit: '智家中心' },
@@ -2340,10 +2340,19 @@
 
         function seedSupportUsers() {
             const users = loadUsers();
-            const existingNames = new Set(users.map(u => u.name));
-            let added = false;
+            let changed = false;
             PRESET_SUPPORT_STAFF.forEach(s => {
-                if (!existingNames.has(s.name)) {
+                const existing = users.find(u => u.name === s.name);
+                if (existing) {
+                    // 更新单位（修正之前预置的单位名称）和手机号
+                    if (existing.unit !== s.unit || existing.phone !== s.phone) {
+                        existing.unit = s.unit;
+                        existing.phone = s.phone;
+                        existing.unitType = 'support';
+                        existing.status = 'approved';
+                        changed = true;
+                    }
+                } else {
                     users.push({
                         account: s.name,
                         password: s.phone,
@@ -2354,10 +2363,10 @@
                         status: 'approved',
                         registerTime: Date.now()
                     });
-                    added = true;
+                    changed = true;
                 }
             });
-            if (added) saveUsers(users);
+            if (changed) saveUsers(users);
         }
 
         // ========== Init ==========
