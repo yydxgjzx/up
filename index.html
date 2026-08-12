@@ -255,17 +255,16 @@
 
         .col-serial { width: 42px; text-align: center; color: var(--text-muted); white-space: nowrap; }
         .col-code { white-space: nowrap; }
-        .col-name { max-width: 150px; }
-        .col-unit { max-width: 110px; }
-        .col-reporter { width: 60px; white-space: nowrap; }
-        .col-phone { width: 95px; white-space: nowrap; }
-        .col-hope { width: 110px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-        .col-region { width: 70px; white-space: nowrap; }
-        .col-area { width: 70px; white-space: nowrap; }
-        .col-type { width: 70px; white-space: nowrap; }
-        .col-desc { max-width: 180px; }
-        .col-status { width: 85px; white-space: nowrap; }
-        .col-time { width: 110px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .col-name { max-width: 130px; }
+        .col-unit { max-width: 100px; }
+        .col-reporter { width: 55px; white-space: nowrap; }
+        .col-hope { width: 120px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .col-countdown { width: 80px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+        .col-region { width: 65px; white-space: nowrap; }
+        .col-area { width: 65px; white-space: nowrap; }
+        .col-type { width: 65px; white-space: nowrap; }
+        .col-desc { max-width: 250px; }
+        .col-status { width: 80px; white-space: nowrap; }
         .col-actions { width: 100px; text-align: center; white-space: nowrap; }
         .col-actions button {
             margin: 0 2px;
@@ -783,14 +782,13 @@
                         <th class="col-name">工程名称</th>
                         <th class="col-unit">施工单位</th>
                         <th class="col-reporter">填报人</th>
-                        <th class="col-phone">联系电话</th>
                         <th class="col-hope">希望解决时间</th>
+                        <th class="col-countdown">倒计时</th>
                         <th class="col-region">区域</th>
                         <th class="col-area">工程管理员</th>
                         <th class="col-type">问题类型</th>
                         <th class="col-desc">阻力描述</th>
                         <th class="col-status">状态</th>
-                        <th class="col-time">填报时间</th>
                         <th class="col-actions">操作</th>
                     </tr>
                 </thead>
@@ -803,7 +801,7 @@
     <div class="modal-overlay" id="modal-create">
         <div class="modal">
             <div class="modal-header">
-                <h2>新增施工阻力填报</h2>
+                <h2 id="modal-create-title">新增施工阻力填报</h2>
                 <button class="modal-close" onclick="closeModal('modal-create')">&times;</button>
             </div>
             <div class="form-group">
@@ -883,7 +881,7 @@
             </div>
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-create')">取消</button>
-                <button class="btn btn-primary" onclick="submitCreate()">提交填报</button>
+                <button class="btn btn-primary" id="btn-submit-create" onclick="submitCreate()">提交填报</button>
             </div>
         </div>
     </div>
@@ -1518,7 +1516,8 @@
             create: '施工单位填报',
             receive: '建设单位受理',
             feedback: '建设单位反馈',
-            confirm: '施工单位确认'
+            confirm: '施工单位确认',
+            edit: '填报人修改'
         };
 
         // ========== Render ==========
@@ -1526,6 +1525,26 @@
             const d = new Date(ts);
             const pad = n => String(n).padStart(2, '0');
             return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function getCountdown(hopeText) {
+            if (!hopeText) return { text: '-', color: 'var(--text-muted)' };
+            const hopeDate = new Date(hopeText.replace(/-/g, '/'));
+            if (isNaN(hopeDate.getTime())) return { text: '-', color: 'var(--text-muted)' };
+            const diff = hopeDate.getTime() - Date.now();
+            if (diff <= 0) return { text: '已超时', color: 'var(--danger)' };
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            if (days > 0) return { text: `${days}天${hours}时`, color: days <= 1 ? 'var(--warning)' : 'var(--text-secondary)' };
+            const mins = Math.floor((diff % 3600000) / 60000);
+            return { text: `${hours}时${mins}分`, color: 'var(--warning)' };
+        }
+
+        function isOverdue(hopeText, status) {
+            if (!hopeText || status === 'resolved') return false;
+            const hopeDate = new Date(hopeText.replace(/-/g, '/'));
+            if (isNaN(hopeDate.getTime())) return false;
+            return hopeDate.getTime() < Date.now();
         }
 
         function getFilteredRecords() {
@@ -1564,7 +1583,7 @@
             const tbody = document.getElementById('table-body');
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state">
+                tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2zm-7 4h10"/></svg>
                     <p>暂无阻力记录</p>
                 </div></td></tr>`;
@@ -1573,20 +1592,20 @@
 
             tbody.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
+                const cd = getCountdown(r.hopeText);
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
                     <td class="col-name">${r.name}</td>
                     <td class="col-unit">${r.unit}</td>
                     <td class="col-reporter">${r.reporter || ''}</td>
-                    <td class="col-phone">${r.phone || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
+                    <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
                     <td class="col-region">${r.region || ''}</td>
                     <td class="col-area">${r.area}</td>
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
-                    <td class="col-time">${formatTime(r.timeline[0].time)}</td>
                     <td class="col-actions">${getActionButtons(r)}</td>
                 </tr>`;
             }).join('');
@@ -1612,6 +1631,10 @@
                 // 填报人：仅自己填报的记录、且已反馈待确认状态才能确认
                 if (r.status === 'feedback' && r.reporter === currentUser.name) {
                     btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
+                }
+                // 填报人：仅自己填报的待受理记录可以编辑
+                if (r.status === 'pending' && r.reporter === currentUser.name) {
+                    btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
                 }
             }
             return btns;
@@ -1678,7 +1701,13 @@
         }
 
         // ========== Create ==========
+        let editingId = null;
+
         function openCreateModal() {
+            editingId = null;
+            document.getElementById('modal-create-title').textContent = '新增施工阻力填报';
+            document.getElementById('btn-submit-create').textContent = '提交填报';
+            document.getElementById('btn-submit-create').onclick = submitCreate;
             document.getElementById('f-code').value = '';
             document.getElementById('f-name').value = '';
             // Pre-fill unit from logged-in user
@@ -1695,6 +1724,65 @@
             document.getElementById('f-desc').value = '';
             openModal('modal-create');
             setTimeout(() => document.getElementById('f-code').focus(), 100);
+        }
+
+        function openEdit(id) {
+            const r = findRecord(id);
+            if (!r) return;
+            if (!currentUser || currentUser.role !== 'user' || r.reporter !== currentUser.name || r.status !== 'pending') {
+                showToast('只能编辑自己填报的待受理记录', true);
+                return;
+            }
+            editingId = id;
+            document.getElementById('modal-create-title').textContent = '编辑阻力填报';
+            document.getElementById('btn-submit-create').textContent = '保存修改';
+            document.getElementById('btn-submit-create').onclick = submitEdit;
+            document.getElementById('f-code').value = r.code;
+            document.getElementById('f-name').value = r.name;
+            document.getElementById('f-unit').value = r.unit;
+            document.getElementById('f-phone').value = r.phone || '';
+            document.getElementById('f-hopetime').value = (r.hopeText || '').replace(' ', 'T');
+            document.getElementById('f-region').value = r.region || '';
+            document.getElementById('f-area').value = r.area;
+            document.getElementById('f-type').value = r.type;
+            document.getElementById('f-desc').value = r.desc;
+            openModal('modal-create');
+            setTimeout(() => document.getElementById('f-code').focus(), 100);
+        }
+
+        function submitEdit() {
+            const r = findRecord(editingId);
+            if (!r) return;
+            const code = document.getElementById('f-code').value.trim();
+            const name = document.getElementById('f-name').value.trim();
+            const unit = document.getElementById('f-unit').value;
+            const phone = document.getElementById('f-phone').value.trim();
+            const hopeRaw = document.getElementById('f-hopetime').value;
+            const region = document.getElementById('f-region').value;
+            const area = document.getElementById('f-area').value;
+            const type = document.getElementById('f-type').value;
+            const desc = document.getElementById('f-desc').value.trim();
+
+            if (!code || !name || !unit || !phone || !hopeRaw || !region || !area || !type || !desc) {
+                showToast('请填写所有必填项', true);
+                return;
+            }
+
+            r.code = code;
+            r.name = name;
+            r.unit = unit;
+            r.phone = phone;
+            r.hopeText = hopeRaw.replace('T', ' ');
+            r.region = region;
+            r.area = area;
+            r.type = type;
+            r.desc = desc;
+            r.timeline.push({ action: 'edit', time: Date.now(), text: '填报人修改了阻力信息' });
+            editingId = null;
+            saveData();
+            renderAll();
+            closeModal('modal-create');
+            showToast('修改已保存');
         }
 
         function submitCreate() {
@@ -1911,6 +1999,7 @@
                     '填报人': r.reporter || '',
                     '联系电话': r.phone || '',
                     '希望解决时间': r.hopeText || '',
+                    '是否超时': isOverdue(r.hopeText, r.status) ? '是' : '否',
                     '区域': r.region || '',
                     '工程管理员': r.area,
                     '问题类型': r.type,
@@ -1930,7 +2019,7 @@
             // Set column widths
             ws1['!cols'] = [
                 {wch: 5}, {wch: 18}, {wch: 25}, {wch: 18}, {wch: 10},
-                {wch: 14}, {wch: 18}, {wch: 10}, {wch: 10}, {wch: 10},
+                {wch: 14}, {wch: 18}, {wch: 8}, {wch: 10}, {wch: 10}, {wch: 10},
                 {wch: 12}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 30},
                 {wch: 18}, {wch: 40}, {wch: 18}, {wch: 30}
             ];
