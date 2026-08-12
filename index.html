@@ -211,14 +211,13 @@
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius);
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
-            table-layout: fixed;
         }
 
         thead th {
@@ -226,14 +225,12 @@
             color: var(--text-secondary);
             font-weight: 600;
             text-align: left;
-            padding: 14px 10px;
+            padding: 14px 8px;
             border-bottom: 1px solid var(--card-border);
             white-space: nowrap;
             position: sticky;
             top: 0;
             z-index: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         tbody tr {
@@ -246,24 +243,30 @@
         }
 
         tbody td {
-            padding: 12px 10px;
+            padding: 12px 8px;
             vertical-align: middle;
         }
 
-        .col-serial { width: 45px; text-align: center; color: var(--text-muted); }
-        .col-code { width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-name { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-unit { width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-reporter { width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-phone { width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-hope { width: 120px; color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-region { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-area { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-type { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-desc { overflow: hidden; }
-        .col-status { width: 90px; }
-        .col-time { width: 120px; color: var(--text-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .col-actions { width: 110px; text-align: center; white-space: nowrap; }
+        tbody td.col-name, tbody td.col-unit {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .col-serial { width: 42px; text-align: center; color: var(--text-muted); white-space: nowrap; }
+        .col-code { white-space: nowrap; }
+        .col-name { max-width: 150px; }
+        .col-unit { max-width: 110px; }
+        .col-reporter { width: 60px; white-space: nowrap; }
+        .col-phone { width: 95px; white-space: nowrap; }
+        .col-hope { width: 110px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .col-region { width: 70px; white-space: nowrap; }
+        .col-area { width: 70px; white-space: nowrap; }
+        .col-type { width: 70px; white-space: nowrap; }
+        .col-desc { max-width: 180px; }
+        .col-status { width: 85px; white-space: nowrap; }
+        .col-time { width: 110px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .col-actions { width: 100px; text-align: center; white-space: nowrap; }
         .col-actions button {
             margin: 0 2px;
         }
