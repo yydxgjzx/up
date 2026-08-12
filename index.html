@@ -134,6 +134,19 @@
             padding: 18px 22px;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .stat-card.active-filter {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
         }
 
         .stat-card::before {
@@ -728,21 +741,21 @@
 
         <!-- Stats -->
         <div class="stats-row">
-            <div class="stat-card pending">
+            <div class="stat-card pending" id="card-pending">
                 <div class="stat-label">待受理</div>
-                <div class="stat-value" id="stat-pending">0</div>
+                <div class="stat-value" id="stat-pending" onclick="clickStatCard('pending')">0</div>
             </div>
-            <div class="stat-card processing">
+            <div class="stat-card processing" id="card-processing">
                 <div class="stat-label">受理中</div>
-                <div class="stat-value" id="stat-processing">0</div>
+                <div class="stat-value" id="stat-processing" onclick="clickStatCard('processing')">0</div>
             </div>
-            <div class="stat-card feedback">
+            <div class="stat-card feedback" id="card-feedback">
                 <div class="stat-label">已反馈待确认</div>
-                <div class="stat-value" id="stat-feedback">0</div>
+                <div class="stat-value" id="stat-feedback" onclick="clickStatCard('feedback')">0</div>
             </div>
-            <div class="stat-card done">
+            <div class="stat-card done" id="card-done">
                 <div class="stat-label">已闭环</div>
-                <div class="stat-value" id="stat-done">0</div>
+                <div class="stat-value" id="stat-done" onclick="clickStatCard('resolved')">0</div>
             </div>
         </div>
 
@@ -1547,6 +1560,8 @@
             return hopeDate.getTime() < Date.now();
         }
 
+        var STATUS_SORT_ORDER = { pending: 0, processing: 1, feedback: 2, resolved: 3 };
+
         function getFilteredRecords() {
             const status = document.getElementById('filter-status').value;
             const region = document.getElementById('filter-region').value;
@@ -1564,19 +1579,18 @@
                     if (!hay.includes(search)) return false;
                 }
                 return true;
+            }).sort((a, b) => {
+                const sa = STATUS_SORT_ORDER[a.status] ?? 99;
+                const sb = STATUS_SORT_ORDER[b.status] ?? 99;
+                if (sa !== sb) return sa - sb;
+                // 同状态内按填报时间倒序（新的在前）
+                const ta = a.timeline && a.timeline[0] ? a.timeline[0].time : 0;
+                const tb = b.timeline && b.timeline[0] ? b.timeline[0].time : 0;
+                return tb - ta;
             });
         }
 
-        function renderStats() {
-            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
-            records.forEach(r => {
-                if (stats[r.status] !== undefined) stats[r.status]++;
-            });
-            document.getElementById('stat-pending').textContent = stats.pending;
-            document.getElementById('stat-processing').textContent = stats.processing;
-            document.getElementById('stat-feedback').textContent = stats.feedback;
-            document.getElementById('stat-done').textContent = stats.resolved;
-        }
+        function renderStats() {\n            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };\n            records.forEach(r => {\n                if (stats[r.status] !== undefined) stats[r.status]++;\n            });\n            document.getElementById('stat-pending').textContent = stats.pending;\n            document.getElementById('stat-processing').textContent = stats.processing;\n            document.getElementById('stat-feedback').textContent = stats.feedback;\n            document.getElementById('stat-done').textContent = stats.resolved;\n            updateStatCardHighlight();\n        }\n\n        function clickStatCard(status) {\n            const sel = document.getElementById('filter-status');\n            if (sel.value === status) {\n                // 已选中同一状态，取消筛选\n                sel.value = '';\n            } else {\n                sel.value = status;\n            }\n            updateStatCardHighlight();\n            renderTable();\n        }\n\n        function updateStatCardHighlight() {\n            const current = document.getElementById('filter-status').value;\n            ['pending','processing','feedback','resolved'].forEach(s => {\n                const card = document.getElementById('card-' + s);\n                if (card) {\n                    if (current === s) card.classList.add('active-filter');\n                    else card.classList.remove('active-filter');\n                }\n            });\n        }
 
         function renderTable() {
             const filtered = getFilteredRecords();
