@@ -750,7 +750,6 @@
                     <option value="processing">受理中</option>
                     <option value="feedback">已反馈待确认</option>
                     <option value="resolved">已解决</option>
-                    <option value="unresolved">未解决</option>
                 </select>
                 <select class="filter-select" id="filter-region" onchange="renderTable()">
                     <option value="">全部区域</option>
@@ -1506,8 +1505,7 @@
             pending:    { label: '待受理',       badge: 'badge-pending',    dot: 'pending' },
             processing: { label: '受理中',       badge: 'badge-processing', dot: 'processing' },
             feedback:   { label: '已反馈待确认', badge: 'badge-feedback',   dot: 'feedback' },
-            resolved:   { label: '已解决',       badge: 'badge-resolved',   dot: 'resolved' },
-            unresolved: { label: '未解决',       badge: 'badge-unresolved', dot: 'unresolved' }
+            resolved:   { label: '已解决',       badge: 'badge-resolved',   dot: 'resolved' }
         };
 
         const ACTION_MAP = {
@@ -1545,14 +1543,14 @@
         }
 
         function renderStats() {
-            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0, unresolved: 0 };
+            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
             records.forEach(r => {
                 if (stats[r.status] !== undefined) stats[r.status]++;
             });
             document.getElementById('stat-pending').textContent = stats.pending;
             document.getElementById('stat-processing').textContent = stats.processing;
             document.getElementById('stat-feedback').textContent = stats.feedback;
-            document.getElementById('stat-done').textContent = stats.resolved + stats.unresolved;
+            document.getElementById('stat-done').textContent = stats.resolved;
         }
 
         function renderTable() {
@@ -1590,16 +1588,25 @@
 
         function getActionButtons(r) {
             let btns = `<button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>`;
-            switch(r.status) {
-                case 'pending':
-                    btns += `<button class="btn btn-info btn-sm" onclick="openProcess('${r.id}')">受理</button>`;
-                    break;
-                case 'processing':
-                    btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
-                    break;
-                case 'feedback':
+            if (currentUser && currentUser.role === 'admin') {
+                // 管理员：受理、反馈、删除
+                switch(r.status) {
+                    case 'pending':
+                        btns += `<button class="btn btn-info btn-sm" onclick="openProcess('${r.id}')">受理</button>`;
+                        break;
+                    case 'processing':
+                        btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
+                        break;
+                    case 'feedback':
+                        btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
+                        break;
+                }
+                btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
+            } else {
+                // 填报人：确认（仅已反馈待确认状态）
+                if (r.status === 'feedback') {
                     btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
-                    break;
+                }
             }
             return btns;
         }
@@ -1807,13 +1814,36 @@
             const r = records.find(x => x.name === titleEl.textContent);
             if (!r) return;
 
-            r.status = resolved; // 'resolved' or 'unresolved'
-            const confirmText = `施工单位确认：${resolved === 'resolved' ? '已解决' : '未解决'}。` + (text ? text : '');
-            r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
+            if (resolved === 'resolved') {
+                r.status = 'resolved';
+                const confirmText = `施工单位确认：已解决。` + (text ? text : '');
+                r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
+                saveData();
+                renderAll();
+                closeModal('modal-confirm');
+                showToast('已确认解决，阻力闭环');
+            } else {
+                // 未解决：退回到反馈环节
+                r.status = 'feedback';
+                const confirmText = `施工单位确认：未解决。` + (text ? text : '') + `（已退回建设单位重新反馈）`;
+                r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
+                saveData();
+                renderAll();
+                closeModal('modal-confirm');
+                showToast('已退回反馈环节，等待建设单位重新处理');
+            }
+        }
+
+        // ========== Delete (管理员删除) ==========
+        function deleteRecord(id) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const r = findRecord(id);
+            if (!r) return;
+            if (!confirm(`确定删除该阻力记录吗？\n\n工程编码：${r.code}\n工程名称：${r.name}\n\n删除后不可恢复。`)) return;
+            records = records.filter(x => x.id !== id);
             saveData();
             renderAll();
-            closeModal('modal-confirm');
-            showToast(resolved === 'resolved' ? '已确认解决，阻力闭环' : '已确认未解决');
+            showToast('记录已删除');
         }
 
         // ========== Detail ==========
@@ -1899,14 +1929,13 @@
             XLSX.utils.book_append_sheet(wb, ws1, '阻力记录明细');
 
             // Stats sheet
-            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0, unresolved: 0 };
+            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
             records.forEach(r => { if (stats[r.status] !== undefined) stats[r.status]++; });
             const statsData = [
                 { '状态': '待受理', '数量': stats.pending },
                 { '状态': '受理中', '数量': stats.processing },
                 { '状态': '已反馈待确认', '数量': stats.feedback },
                 { '状态': '已解决', '数量': stats.resolved },
-                { '状态': '未解决', '数量': stats.unresolved },
                 { '状态': '总计', '数量': records.length }
             ];
             const ws2 = XLSX.utils.json_to_sheet(statsData);
