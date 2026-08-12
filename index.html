@@ -1590,7 +1590,40 @@
             });
         }
 
-        function renderStats() {\n            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };\n            records.forEach(r => {\n                if (stats[r.status] !== undefined) stats[r.status]++;\n            });\n            document.getElementById('stat-pending').textContent = stats.pending;\n            document.getElementById('stat-processing').textContent = stats.processing;\n            document.getElementById('stat-feedback').textContent = stats.feedback;\n            document.getElementById('stat-done').textContent = stats.resolved;\n            updateStatCardHighlight();\n        }\n\n        function clickStatCard(status) {\n            const sel = document.getElementById('filter-status');\n            if (sel.value === status) {\n                // 已选中同一状态，取消筛选\n                sel.value = '';\n            } else {\n                sel.value = status;\n            }\n            updateStatCardHighlight();\n            renderTable();\n        }\n\n        function updateStatCardHighlight() {\n            const current = document.getElementById('filter-status').value;\n            ['pending','processing','feedback','resolved'].forEach(s => {\n                const card = document.getElementById('card-' + s);\n                if (card) {\n                    if (current === s) card.classList.add('active-filter');\n                    else card.classList.remove('active-filter');\n                }\n            });\n        }
+        function renderStats() {
+            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
+            records.forEach(r => {
+                if (stats[r.status] !== undefined) stats[r.status]++;
+            });
+            document.getElementById('stat-pending').textContent = stats.pending;
+            document.getElementById('stat-processing').textContent = stats.processing;
+            document.getElementById('stat-feedback').textContent = stats.feedback;
+            document.getElementById('stat-done').textContent = stats.resolved;
+            updateStatCardHighlight();
+        }
+
+        function clickStatCard(status) {
+            const sel = document.getElementById('filter-status');
+            if (sel.value === status) {
+                // 已选中同一状态，取消筛选
+                sel.value = '';
+            } else {
+                sel.value = status;
+            }
+            updateStatCardHighlight();
+            renderTable();
+        }
+
+        function updateStatCardHighlight() {
+            const current = document.getElementById('filter-status').value;
+            ['pending','processing','feedback','resolved'].forEach(s => {
+                const card = document.getElementById('card-' + s);
+                if (card) {
+                    if (current === s) card.classList.add('active-filter');
+                    else card.classList.remove('active-filter');
+                }
+            });
+        }
 
         function renderTable() {
             const filtered = getFilteredRecords();
