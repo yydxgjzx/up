@@ -312,36 +312,51 @@
   {
     "name": "徐亮球",
     "phone": "13341303565",
-    "department": "湘阴县分公司",
-    "role": "support",
-    "password": "13341303565"
+    "password": "13341303565",
+    "unit": "湘阴县分公司",
+    "account": "徐亮球",
+    "unitType": "support",
+    "status": "approved",
+    "registerTime": 1786605749999
   },
   {
     "name": "付乃峰",
     "phone": "13341307058",
-    "department": "资源中心",
-    "role": "support",
-    "password": "13341307058"
+    "password": "13341307058",
+    "unit": "资源中心",
+    "account": "付乃峰",
+    "unitType": "support",
+    "status": "approved",
+    "registerTime": 1786605749999
   },
   {
     "name": "张爱华",
     "phone": "18973019460",
-    "department": "监理单位",
-    "role": "support",
-    "password": "18973019460"
+    "password": "18973019460",
+    "unit": "监理单位",
+    "account": "张爱华",
+    "unitType": "support",
+    "status": "approved",
+    "registerTime": 1786605749999
   },
   {
     "name": "肖刘",
     "phone": "15308400909",
-    "department": "设计单位",
-    "role": "support",
-    "password": "15308400909"
+    "password": "15308400909",
+    "unit": "设计单位",
+    "account": "肖刘",
+    "unitType": "support",
+    "status": "approved",
+    "registerTime": 1786605749999
   },
   {
     "name": "徐志威",
     "phone": "13319552029",
-    "department": "设计单位",
-    "role": "support",
-    "password": "13319552029"
+    "password": "13319552029",
+    "unit": "设计单位",
+    "account": "徐志威",
+    "unitType": "support",
+    "status": "approved",
+    "registerTime": 1786605749999
   }
 ]
