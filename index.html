@@ -260,6 +260,43 @@
             vertical-align: middle;
         }
 
+        /* Tooltip: hover truncated cell to see full text */
+        .tip-cell {
+            position: relative;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tip-cell-desc {
+            position: relative;
+        }
+        .tip-cell::after, .tip-cell-desc .desc-text::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 6px);
+            transform: translateX(-50%);
+            background: #1a2332;
+            color: var(--text);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: normal;
+            word-break: break-all;
+            max-width: 360px;
+            min-width: 120px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease 0.3s;
+        }
+        .tip-cell:hover::after, .tip-cell-desc:hover .desc-text::after {
+            opacity: 1;
+        }
+
         tbody td.col-name, tbody td.col-unit {
             overflow: hidden;
             text-overflow: ellipsis;
@@ -308,6 +345,7 @@
             text-overflow: ellipsis;
             cursor: pointer;
             line-height: 1.5;
+            position: relative;
         }
 
         /* Empty state */
@@ -2114,15 +2152,15 @@
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
-                    <td class="col-name">${r.name}</td>
-                    <td class="col-unit">${r.unit}</td>
+                    <td class="col-name tip-cell" data-tip="${escAttr(r.name)}">${r.name}</td>
+                    <td class="col-unit tip-cell" data-tip="${escAttr(r.unit)}">${r.unit}</td>
                     <td class="col-reporter">${r.reporter || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
                     <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
                     <td class="col-region">${r.region || ''}</td>
                     <td class="col-area">${r.area}</td>
                     <td class="col-type">${r.type}</td>
-                    <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
+                    <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
                     <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
                 </tr>`;
@@ -2237,6 +2275,15 @@
                 }
             });
         });
+
+        function escAttr(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
 
         function showToast(msg, isError) {
             const toast = document.getElementById('toast');
@@ -2687,15 +2734,15 @@
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
-                    <td class="col-name">${r.name}</td>
-                    <td class="col-unit">${r.unit}</td>
+                    <td class="col-name tip-cell" data-tip="${escAttr(r.name)}">${r.name}</td>
+                    <td class="col-unit tip-cell" data-tip="${escAttr(r.unit)}">${r.unit}</td>
                     <td class="col-reporter">${r.reporter || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
                     <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
                     <td class="col-region">${r.region || ''}</td>
                     <td class="col-area">${r.area}</td>
                     <td class="col-type">${r.type}</td>
-                    <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
+                    <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
                     <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
                 </tr>`;
