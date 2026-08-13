@@ -261,21 +261,10 @@
         }
 
         /* Tooltip: hover truncated cell to see full text */
-        .tip-cell {
-            position: relative;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .tip-cell-desc {
-            position: relative;
-        }
-        .tip-cell::after, .tip-cell-desc .desc-text::after {
-            content: attr(data-tip);
-            position: absolute;
-            left: 50%;
-            bottom: calc(100% + 6px);
-            transform: translateX(-50%);
+        .tip-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tip-cell-desc { position: relative; }
+        #floatTip {
+            position: fixed;
             background: #1a2332;
             color: var(--text);
             border: 1px solid var(--card-border);
@@ -288,13 +277,9 @@
             max-width: 360px;
             min-width: 120px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-            z-index: 100;
-            opacity: 0;
+            z-index: 99999;
             pointer-events: none;
-            transition: opacity 0.2s ease 0.3s;
-        }
-        .tip-cell:hover::after, .tip-cell-desc:hover .desc-text::after {
-            opacity: 1;
+            display: none;
         }
 
         tbody td.col-name, tbody td.col-unit {
@@ -1363,6 +1348,8 @@
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
+    <!-- Float tooltip for truncated cells -->
+    <div id="floatTip"></div>
 
     <script>
         // ========== GitHub API 数据层 ==========
@@ -2284,6 +2271,30 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
         }
+
+        // ========== Float Tooltip ==========
+        const _tip = document.getElementById('floatTip');
+        document.addEventListener('mouseover', e => {
+            const el = e.target.closest('[data-tip]');
+            if (!el) { _tip.style.display = 'none'; return; }
+            const text = el.getAttribute('data-tip');
+            if (!text) { _tip.style.display = 'none'; return; }
+            _tip.textContent = text;
+            _tip.style.display = 'block';
+            const r = el.getBoundingClientRect();
+            const tw = _tip.offsetWidth, th = _tip.offsetHeight;
+            let x = r.left + r.width / 2 - tw / 2;
+            let y = r.top - th - 6;
+            if (y < 4) y = r.bottom + 6; // 不够高就显示在下方
+            if (x < 4) x = 4;
+            if (x + tw > window.innerWidth - 4) x = window.innerWidth - tw - 4;
+            _tip.style.left = x + 'px';
+            _tip.style.top = y + 'px';
+        });
+        document.addEventListener('mouseout', e => {
+            const el = e.target.closest('[data-tip]');
+            if (el) _tip.style.display = 'none';
+        });
 
         function showToast(msg, isError) {
             const toast = document.getElementById('toast');
