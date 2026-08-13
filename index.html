@@ -909,6 +909,7 @@
                     <option value="pending">待受理</option>
                     <option value="processing">受理中</option>
                     <option value="feedback">已反馈待确认</option>
+                    <option value="unresolved">未解决待反馈</option>
                     <option value="resolved">已解决</option>
                 </select>
                 <select class="filter-select" id="filter-region" onchange="renderTable()">
@@ -1849,6 +1850,7 @@
             pending:    { label: '待受理',       badge: 'badge-pending',    dot: 'pending' },
             processing: { label: '受理中',       badge: 'badge-processing', dot: 'processing' },
             feedback:   { label: '已反馈待确认', badge: 'badge-feedback',   dot: 'feedback' },
+            unresolved: { label: '未解决待反馈', badge: 'badge-unresolved', dot: 'unresolved' },
             resolved:   { label: '已解决',       badge: 'badge-resolved',   dot: 'resolved' }
         };
 
@@ -1887,7 +1889,7 @@
             return hopeDate.getTime() < Date.now();
         }
 
-        var STATUS_SORT_ORDER = { pending: 0, processing: 1, feedback: 2, resolved: 3 };
+        var STATUS_SORT_ORDER = { pending: 0, processing: 1, feedback: 2, unresolved: 3, resolved: 4 };
 
         function getFilteredRecords() {
             const status = document.getElementById('filter-status').value;
@@ -1918,7 +1920,7 @@
         }
 
         function renderStats() {
-            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
+            const stats = { pending: 0, processing: 0, feedback: 0, unresolved: 0, resolved: 0 };
             records.forEach(r => {
                 if (stats[r.status] !== undefined) stats[r.status]++;
             });
@@ -2026,6 +2028,9 @@
                         btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
                         break;
                     case 'feedback':
+                        btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
+                        break;
+                    case 'unresolved':
                         btns += `<button class="btn btn-primary btn-sm" onclick="openFeedback('${r.id}')">反馈</button>`;
                         break;
                 }
@@ -2350,8 +2355,8 @@
                 closeModal('modal-confirm');
                 showToast('已确认解决，阻力闭环');
             } else {
-                // 未解决：退回到反馈环节
-                r.status = 'feedback';
+                // 未解决：退回到支撑人员反馈环节，状态为 unresolved
+                r.status = 'unresolved';
                 const confirmText = `施工单位确认：未解决。` + (text ? text : '') + `（已退回支撑人员重新反馈）`;
                 r.timeline.push({ action: 'confirm', time: Date.now(), text: confirmText });
                 saveData();
@@ -2457,12 +2462,13 @@
             XLSX.utils.book_append_sheet(wb, ws1, '阻力记录明细');
 
             // Stats sheet
-            const stats = { pending: 0, processing: 0, feedback: 0, resolved: 0 };
+            const stats = { pending: 0, processing: 0, feedback: 0, unresolved: 0, resolved: 0 };
             records.forEach(r => { if (stats[r.status] !== undefined) stats[r.status]++; });
             const statsData = [
                 { '状态': '待受理', '数量': stats.pending },
                 { '状态': '受理中', '数量': stats.processing },
                 { '状态': '已反馈待确认', '数量': stats.feedback },
+                { '状态': '未解决待反馈', '数量': stats.unresolved },
                 { '状态': '已解决', '数量': stats.resolved },
                 { '状态': '总计', '数量': records.length }
             ];
