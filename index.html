@@ -1349,7 +1349,8 @@
             if (resp.status === 404) return { data: null, sha: null };
             if (!resp.ok) throw new Error('GitHub读取失败: ' + resp.status);
             const json = await resp.json();
-            const content = atob(json.content.replace(/\n/g, ''));
+            const raw = atob(json.content.replace(/\n/g, ''));
+            const content = decodeURIComponent(raw.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
             return { data: JSON.parse(content), sha: json.sha };
         }
 
