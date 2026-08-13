@@ -921,7 +921,7 @@
                 <select class="filter-select" id="filter-unit" onchange="renderTable()">
                     <option value="">全部施工单位</option>
                 </select>
-                <input type="text" class="filter-input" id="filter-search" placeholder="搜索工程名称/编码/描述..." oninput="renderTable()">
+                <input type="text" class="filter-input" id="filter-search" placeholder="搜索工程名称/编码/描述..." autocomplete="off" oninput="renderTable()">
             </div>
             <div class="toolbar-right">
                 <button class="btn btn-ghost btn-sm" onclick="clearAllFilters()">清除筛选</button>
@@ -1235,11 +1235,11 @@
             <div class="auth-error" id="login-error"></div>
             <div class="form-group">
                 <label class="form-label">姓名</label>
-                <input type="text" class="form-input" id="login-account" placeholder="请输入姓名" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+                <input type="text" class="form-input" id="login-account" placeholder="请输入姓名" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
             </div>
             <div class="form-group">
                 <label class="form-label">密码</label>
-                <input type="password" class="form-input" id="login-password" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+                <input type="password" class="form-input" id="login-password" placeholder="请输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
             </div>
             <button class="btn btn-primary" onclick="doLogin()">登录</button>
             <div class="auth-switch">还没有账号？<a onclick="showRegister()">立即注册</a></div>
