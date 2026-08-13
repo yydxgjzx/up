@@ -661,7 +661,26 @@
             color: var(--primary);
             font-weight: 600;
             white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s;
         }
+        .user-badge:hover { opacity: 0.85; }
+        .badge-todo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            background: var(--danger);
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            margin-left: 4px;
+            line-height: 1;
+        }
+        .badge-todo.zero { display: none; }
         .user-badge.admin {
             background: rgba(245,158,11,0.12);
             border-color: rgba(245,158,11,0.3);
@@ -1558,20 +1577,26 @@
 
             if (currentUser.role === 'admin') {
                 badge.className = 'user-badge admin';
-                badge.innerHTML = '<span class="dot"></span>管理员';
+                const todo = getTodoCount();
+                badge.innerHTML = '<span class="dot"></span>管理员' + (todo > 0 ? '<span class="badge-todo">' + todo + '</span>' : '');
+                badge.onclick = () => filterTodo();
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'inline-flex';
             } else if (currentUser.role === 'manager') {
                 badge.className = 'user-badge admin';
-                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（支撑人员）';
+                const todo = getTodoCount();
+                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（支撑人员）' + (todo > 0 ? '<span class="badge-todo">' + todo + '</span>' : '');
+                badge.onclick = () => filterTodo();
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'none';
             } else {
                 badge.className = 'user-badge';
+                const todo = getTodoCount();
                 const badgeText = currentUser.unit ? (currentUser.name + ' · ' + currentUser.unit) : currentUser.name;
-                badge.innerHTML = '<span class="dot"></span>' + badgeText;
+                badge.innerHTML = '<span class="dot"></span>' + badgeText + (todo > 0 ? '<span class="badge-todo">' + todo + '</span>' : '');
+                badge.onclick = () => filterTodo();
                 btnCreate.style.display = 'inline-flex';
                 btnExport.style.display = 'inline-flex';
                 btnAdmin.style.display = 'none';
@@ -1928,6 +1953,7 @@
         }
 
         function renderTable() {
+            if (window._todoFilter) { renderTableWithTodo(); return; }
             const filtered = getFilteredRecords();
             const tbody = document.getElementById('table-body');
             const mobileEl = document.getElementById('mobile-cards');
@@ -2041,6 +2067,7 @@
         }
 
         function renderAll() {
+            updateHeaderForUser();
             renderStats();
             renderFilters();
             renderTable();
@@ -2458,6 +2485,101 @@
             renderTable();
         }
 
+        // ========== Todo ==========
+        function getTodoRecords() {
+            if (!currentUser) return [];
+            if (currentUser.role === 'admin') {
+                // 管理员：所有未闭环的记录
+                return records.filter(r => r.status !== 'resolved');
+            } else if (currentUser.role === 'manager') {
+                // 支撑人员：指派给自己的未闭环记录
+                return records.filter(r => r.area === currentUser.name && r.status !== 'resolved');
+            } else {
+                // 施工单位：自己填报的、已反馈待确认的记录
+                return records.filter(r => r.reporter === currentUser.name && r.status === 'feedback');
+            }
+        }
+
+        function getTodoCount() {
+            return getTodoRecords().length;
+        }
+
+        function filterTodo() {
+            if (window._todoFilter) {
+                // 已经在待办筛选中，取消
+                window._todoFilter = null;
+                clearAllFilters();
+                showToast('已取消待办筛选');
+                return;
+            }
+            const todos = getTodoRecords();
+            const todoIds = new Set(todos.map(r => r.id));
+            window._todoFilter = todoIds;
+            clearAllFilters();
+            renderTableWithTodo();
+            const roleText = currentUser.role === 'admin' ? '全部未闭环' :
+                             currentUser.role === 'manager' ? '指派给我的待处理' :
+                             '待我确认';
+            showToast('待办 ' + todos.length + ' 条（' + roleText + '），再次点击徽标取消');
+        }
+
+        function renderTableWithTodo() {
+            const todoIds = window._todoFilter;
+            if (!todoIds) { renderTable(); return; }
+            const filtered = getFilteredRecords().filter(r => todoIds.has(r.id));
+            const tbody = document.getElementById('table-body');
+            const mobileEl = document.getElementById('mobile-cards');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><p>暂无待办记录</p></div></td></tr>';
+                mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无待办记录</p></div>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r, i) => {
+                const s = STATUS_MAP[r.status];
+                const cd = getCountdown(r.hopeText);
+                return `<tr>
+                    <td class="col-serial">${i + 1}</td>
+                    <td class="col-code">${r.code}</td>
+                    <td class="col-name">${r.name}</td>
+                    <td class="col-unit">${r.unit}</td>
+                    <td class="col-reporter">${r.reporter || ''}</td>
+                    <td class="col-hope">${r.hopeText || ''}</td>
+                    <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
+                    <td class="col-region">${r.region || ''}</td>
+                    <td class="col-area">${r.area}</td>
+                    <td class="col-type">${r.type}</td>
+                    <td class="col-desc"><div class="desc-text" title="${r.desc}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
+                    <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
+                    <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
+                </tr>`;
+            }).join('');
+
+            mobileEl.innerHTML = filtered.map((r, i) => {
+                const s = STATUS_MAP[r.status];
+                const cd = getCountdown(r.hopeText);
+                return `<div class="m-card">
+                    <div class="m-card-top">
+                        <div class="m-card-title">${r.name}</div>
+                        <div class="m-card-status"><span class="badge ${s.badge}">${s.label}</span></div>
+                    </div>
+                    <div class="m-card-sub"><b>编码</b> ${r.code}</div>
+                    <div class="m-card-sub"><b>施工</b> ${r.unit} | <b>填报</b> ${r.reporter || ''}</div>
+                    <div class="m-card-sub"><b>区域</b> ${r.region || ''} | <b>支撑</b> ${r.area} | <b>类型</b> ${r.type}</div>
+                    <div class="m-card-sub"><b>希望</b> ${r.hopeText || ''}</div>
+                    <div class="m-card-desc" onclick="openDetail('${r.id}')">${r.desc}</div>
+                    <div class="m-card-bottom">
+                        <div class="m-card-countdown" style="color:${cd.color}">${cd.text}</div>
+                        <div class="m-card-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>
+                            ${getActionButtons(r)}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         // ========== Seed Support Users ==========
         const PRESET_SUPPORT_STAFF = [
             { name: '陈凌', phone: '13341300202', unit: '云网工程建设中心' },
@@ -2484,17 +2606,31 @@
             { name: '荣富', phone: '13341300335', unit: '智家中心' }
         ];
 
+        const PRESET_CONSTRUCTION_STAFF = [
+            { name: '彭宏', phone: '18907404431', unit: '湖南省通信建设有限公司' },
+            { name: '章俊', phone: '18108493939', unit: '湖南省通信建设有限公司' },
+            { name: '夏龙锴', phone: '15399907766', unit: '湖南省通信建设有限公司' },
+            { name: '刘波', phone: '19067299588', unit: '湖南省通信建设有限公司' },
+            { name: '吴健', phone: '18932441314', unit: '湖南天辰建设有限责任公司' },
+            { name: '曾豪', phone: '19118831667', unit: '湖南天辰建设有限责任公司' },
+            { name: '周波', phone: '15308403593', unit: '湖南天辰建设有限责任公司' },
+            { name: '任志红', phone: '15308407706', unit: '湖南省康普通信技术有限责任公司' }
+        ];
+
         function seedSupportUsers() {
             const users = loadUsers();
             let changed = false;
-            PRESET_SUPPORT_STAFF.forEach(s => {
+            const seedList = [
+                ...PRESET_SUPPORT_STAFF.map(s => ({...s, unitType: 'support'})),
+                ...PRESET_CONSTRUCTION_STAFF.map(s => ({...s, unitType: 'construction'}))
+            ];
+            seedList.forEach(s => {
                 const existing = users.find(u => u.name === s.name);
                 if (existing) {
-                    // 更新单位（修正之前预置的单位名称）和手机号
-                    if (existing.unit !== s.unit || existing.phone !== s.phone) {
+                    if (existing.unit !== s.unit || existing.phone !== s.phone || existing.unitType !== s.unitType) {
                         existing.unit = s.unit;
                         existing.phone = s.phone;
-                        existing.unitType = 'support';
+                        existing.unitType = s.unitType;
                         existing.status = 'approved';
                         changed = true;
                     }
@@ -2505,7 +2641,7 @@
                         name: s.name,
                         phone: s.phone,
                         unit: s.unit,
-                        unitType: 'support',
+                        unitType: s.unitType,
                         status: 'approved',
                         registerTime: Date.now()
                     });
