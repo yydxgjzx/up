@@ -1326,9 +1326,54 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <script src="https://unpkg.com/@cloudbase/js-sdk@1.7.39/dist/cloudbase.full.js"></script>
     <script>
+        // ========== CloudBase Init ==========
+        const CLOUD_ENV = 'cloud1-d6g8ezdjybccf836a';
+        let app = null;
+        let cloudReady = false;
+
+        async function initCloud() {
+            try {
+                app = cloudbase.init({
+                    env: CLOUD_ENV
+                });
+                // 未登录模式匿名登录
+                const auth = app.auth();
+                await auth.anonymousAuthProvider().signIn();
+                cloudReady = true;
+                console.log('[CloudBase] 初始化成功，匿名登录完成');
+            } catch (e) {
+                console.error('[CloudBase] 初始化失败:', e);
+                cloudReady = false;
+            }
+        }
+
+        // 调用云函数的统一方法
+        async function callCloudAPI(action, data = {}) {
+            if (!cloudReady) {
+                showToast('云服务未连接，请刷新重试', true);
+                throw new Error('CloudBase not ready');
+            }
+            try {
+                const result = await app.callFunction({
+                    name: 'resistanceApi',
+                    data: { action, apiKey: '3b50hB&W&jH#4ln', ...data }
+                });
+                const res = result.result;
+                if (res && res.code === 0) {
+                    return res;
+                } else {
+                    console.error('[CloudAPI] 错误:', res);
+                    throw new Error(res ? res.msg : '未知错误');
+                }
+            } catch (e) {
+                console.error('[CloudAPI] 调用失败:', e);
+                throw e;
+            }
+        }
+
         // ========== Auth System ==========
-        const USERS_KEY = 'construction_resistance_users';
         const SESSION_KEY = 'construction_resistance_session';
         const ADMIN_ACCOUNT = 'yydxlily';
         const ADMIN_PASSWORD = 'yydxvip8216109';
@@ -1375,16 +1420,34 @@
 
         let currentUser = null;
 
-        function loadUsers() {
-            const raw = localStorage.getItem(USERS_KEY);
-            if (raw) {
-                try { return JSON.parse(raw); } catch(e) { return []; }
+        // 用户数据缓存（从云数据库读写）
+        let _usersCache = null;
+
+        async function loadUsersAsync() {
+            try {
+                const res = await callCloudAPI('getUsers');
+                _usersCache = res.users || [];
+                // 云端记录带 _id，去掉避免干扰
+                _usersCache.forEach(u => { delete u._id; });
+                return _usersCache;
+            } catch (e) {
+                console.error('加载用户失败:', e);
+                return _usersCache || [];
             }
-            return [];
+        }
+
+        function loadUsers() {
+            return _usersCache || [];
+        }
+
+        async function saveUsersAsync(users) {
+            _usersCache = users;
+            await callCloudAPI('saveUsers', { data: users.map(u => { const c = {...u}; delete c._id; return c; }) });
         }
 
         function saveUsers(users) {
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            _usersCache = users;
+            saveUsersAsync(users).catch(e => console.error('保存用户失败:', e));
         }
 
         function loadSession() {
@@ -1441,7 +1504,7 @@
             setTimeout(() => document.getElementById('reg-name').focus(), 100);
         }
 
-        function doLogin() {
+        async function doLogin() {
             const account = document.getElementById('login-account').value.trim();
             const password = document.getElementById('login-password').value;
             const errEl = document.getElementById('login-error');
@@ -1452,9 +1515,11 @@
                 return;
             }
 
-            // Check admin — 优先从 localStorage 读取密码（支持改密后生效），无则用默认密码
+            // 从云端加载用户列表
+            const users = await loadUsersAsync();
+
+            // Check admin — 优先从云端读取密码（支持改密后生效），无则用默认密码
             if (account === ADMIN_ACCOUNT) {
-                const users = loadUsers();
                 const adminUser = users.find(u => u.name === ADMIN_ACCOUNT);
                 const adminPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
                 if (password === adminPwd) {
@@ -1469,8 +1534,7 @@
                 }
             }
 
-            // Check regular users (account === name)
-            const users = loadUsers();
+            // Check regular users (account === name) — 已从云端加载用户列表
             const user = users.find(u => u.name === account);
             if (!user) {
                 errEl.textContent = '该姓名未注册';
@@ -1501,7 +1565,7 @@
             }
         }
 
-        function doRegister() {
+        async function doRegister() {
             const name = document.getElementById('reg-name').value.trim();
             const password = document.getElementById('reg-password').value;
             const phone = document.getElementById('reg-phone').value.trim();
@@ -1530,7 +1594,7 @@
                 return;
             }
 
-            const users = loadUsers();
+            const users = await loadUsersAsync();
             if (users.find(u => u.name === name)) {
                 errEl.textContent = '该姓名已注册';
                 errEl.classList.add('show');
@@ -1542,7 +1606,7 @@
                 status: 'pending',
                 registerTime: Date.now()
             });
-            saveUsers(users);
+            await saveUsersAsync(users);
             showToast('注册成功，请等待管理员审核');
             showLogin();
         }
@@ -1620,7 +1684,7 @@
             setTimeout(() => document.getElementById('cp-old').focus(), 100);
         }
 
-        function submitChangePassword() {
+        async function submitChangePassword() {
             const oldPwd = document.getElementById('cp-old').value;
             const newPwd = document.getElementById('cp-new').value;
             const confirmPwd = document.getElementById('cp-confirm').value;
@@ -1640,20 +1704,19 @@
 
             // 管理员改自己的密码
             if (currentUser.role === 'admin') {
-                if (oldPwd !== ADMIN_PASSWORD) {
+                const users = await loadUsersAsync();
+                const adminUser = users.find(u => u.name === ADMIN_ACCOUNT);
+                const currentPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
+                if (oldPwd !== currentPwd) {
                     showToast('原密码错误', true);
                     return;
                 }
-                // 管理员密码存在 localStorage 中作为特殊用户
-                const users = loadUsers();
-                let adminUser = users.find(u => u.name === ADMIN_ACCOUNT);
                 if (!adminUser) {
-                    adminUser = { account: ADMIN_ACCOUNT, name: ADMIN_ACCOUNT, password: ADMIN_PASSWORD, status: 'approved', registerTime: Date.now() };
-                    users.push(adminUser);
+                    users.push({ account: ADMIN_ACCOUNT, name: ADMIN_ACCOUNT, password: newPwd, status: 'approved', registerTime: Date.now() });
+                } else {
+                    adminUser.password = newPwd;
                 }
-                adminUser.password = newPwd;
-                saveUsers(users);
-                // 更新内存中的密码校验
+                await saveUsersAsync(users);
                 window._adminPassword = newPwd;
                 closeModal('modal-changepwd');
                 showToast('密码修改成功');
@@ -1661,7 +1724,7 @@
             }
 
             // 普通用户改密码
-            const users = loadUsers();
+            const users = await loadUsersAsync();
             const user = users.find(u => u.name === currentUser.name);
             if (!user) {
                 showToast('用户信息异常', true);
@@ -1672,14 +1735,15 @@
                 return;
             }
             user.password = newPwd;
-            saveUsers(users);
+            await saveUsersAsync(users);
             closeModal('modal-changepwd');
             showToast('密码修改成功');
         }
 
         // ========== Admin Review ==========
-        function openAdminReview() {
+        async function openAdminReview() {
             if (!currentUser || currentUser.role !== 'admin') return;
+            await loadUsersAsync(); // 刷新用户缓存
             renderAdminReview();
             openModal('modal-admin');
         }
@@ -1727,39 +1791,57 @@
                 + '</tbody></table>';
         }
 
-        function reviewUser(name, status) {
-            const users = loadUsers();
+        async function reviewUser(name, status) {
+            const users = await loadUsersAsync();
             const user = users.find(u => u.name === name);
             if (!user) return;
             user.status = status;
-            saveUsers(users);
+            await saveUsersAsync(users);
+            await loadUsersAsync(); // 刷新缓存
             renderAdminReview();
             showToast(status === 'approved' ? '已通过该用户' : '已拒绝该用户');
         }
 
-        function deleteUser(name) {
+        async function deleteUser(name) {
             if (!currentUser || currentUser.role !== 'admin') return;
             if (!confirm('确定删除用户「' + name + '」吗？\n\n删除后该用户将无法登录，且注册信息不可恢复。')) return;
-            const users = loadUsers();
+            const users = await loadUsersAsync();
             const filtered = users.filter(u => u.name !== name);
-            saveUsers(filtered);
+            await saveUsersAsync(filtered);
+            await loadUsersAsync(); // 刷新缓存
             renderAdminReview();
             showToast('用户已删除');
         }
 
         // ========== Data Layer ==========
-        const STORAGE_KEY = 'construction_resistance_data';
         let records = [];
 
+        async function loadDataAsync() {
+            try {
+                const res = await callCloudAPI('getRecords');
+                records = (res.records || []).map(r => { const c = {...r}; delete c._id; return c; });
+            } catch (e) {
+                console.error('加载记录失败:', e);
+                records = [];
+            }
+        }
+
         function loadData() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                try { records = JSON.parse(raw); } catch(e) { records = []; }
+            // 不再从 localStorage 加载，由 loadDataAsync 替代
+            records = records || [];
+        }
+
+        async function saveDataAsync() {
+            // 全量同步到云数据库
+            try {
+                await callCloudAPI('setAllRecords', { data: records.map(r => { const c = {...r}; delete c._id; return c; }) });
+            } catch (e) {
+                console.error('保存记录失败:', e);
             }
         }
 
         function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            saveDataAsync().catch(e => console.error('保存失败:', e));
         }
 
         function seedDemoData() {
@@ -2624,8 +2706,8 @@
             { name: '任志红', phone: '15308407706', unit: '湖南省康普通信技术有限责任公司' }
         ];
 
-        function seedSupportUsers() {
-            const users = loadUsers();
+        async function seedSupportUsers() {
+            const users = await loadUsersAsync();
             let changed = false;
             const seedList = [
                 ...PRESET_SUPPORT_STAFF.map(s => ({...s, unitType: 'support'})),
@@ -2655,29 +2737,40 @@
                     changed = true;
                 }
             });
-            if (changed) saveUsers(users);
+            if (changed) await saveUsersAsync(users);
         }
 
         // ========== Init ==========
-        loadData();
-        // 预置支撑人员账号
-        seedSupportUsers();
-        // Check session
-        currentUser = loadSession();
-        if (currentUser) {
-            // 按注册单位修正角色（非admin用户）
-            if (currentUser.role !== 'admin' && currentUser.unit) {
-                const correctRole = getRoleByUnit(currentUser.unit);
-                if (currentUser.role !== correctRole) {
-                    currentUser.role = correctRole;
-                    saveSession(currentUser);
-                }
+        async function initApp() {
+            // 1. 初始化云开发
+            await initCloud();
+            if (!cloudReady) {
+                showToast('云服务连接失败，请检查网络后刷新', true);
+                return;
             }
-            updateHeaderForUser();
-        } else {
-            showLogin();
+            // 2. 从云端加载数据
+            await loadDataAsync();
+            // 3. 预置支撑人员账号（同步到云端）
+            await seedSupportUsers();
+            // 4. Check session
+            currentUser = loadSession();
+            if (currentUser) {
+                // 按注册单位修正角色（非admin用户）
+                if (currentUser.role !== 'admin' && currentUser.unit) {
+                    const correctRole = getRoleByUnit(currentUser.unit);
+                    if (currentUser.role !== correctRole) {
+                        currentUser.role = correctRole;
+                        saveSession(currentUser);
+                    }
+                }
+                updateHeaderForUser();
+            } else {
+                showLogin();
+            }
+            renderAll();
         }
-        renderAll();
+
+        initApp().catch(e => console.error('初始化失败:', e));
     </script>
 </body>
 </html>
