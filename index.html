@@ -1342,6 +1342,22 @@
             'Content-Type': 'application/json'
         };
 
+        // base64 解码 UTF-8 字符串（正确处理中文）
+        function b64Decode(base64) {
+            const raw = atob(base64.replace(/\n/g, ''));
+            const bytes = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+            return new TextDecoder('utf-8').decode(bytes);
+        }
+
+        // base64 编码 UTF-8 字符串（正确处理中文）
+        function b64Encode(str) {
+            const bytes = new TextEncoder().encode(str);
+            let binary = '';
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            return btoa(binary);
+        }
+
         // 读取仓库中的 JSON 文件，返回 { data, sha }
         async function ghRead(path) {
             const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
@@ -1349,25 +1365,36 @@
             if (resp.status === 404) return { data: null, sha: null };
             if (!resp.ok) throw new Error('GitHub读取失败: ' + resp.status);
             const json = await resp.json();
-            const raw = atob(json.content.replace(/\n/g, ''));
-            const content = decodeURIComponent(raw.split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            const content = b64Decode(json.content);
+            if (!content || content.trim() === '') return { data: null, sha: json.sha };
             return { data: JSON.parse(content), sha: json.sha };
         }
 
-        // 写入仓库中的 JSON 文件（需提供 sha 更新已有文件）
+        // 写入仓库中的 JSON 文件（自动处理 sha 冲突）
         async function ghWrite(path, data, sha) {
             const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+            const content = b64Encode(JSON.stringify(data));
             const body = {
                 message: 'Update ' + path + ' @ ' + new Date().toISOString(),
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(data)))),
+                content: content,
                 branch: GH_BRANCH
             };
             if (sha) body.sha = sha;
-            const resp = await fetch(url, {
+            let resp = await fetch(url, {
                 method: 'PUT',
                 headers: GH_HEADERS,
                 body: JSON.stringify(body)
             });
+            // sha 过期或冲突 → 重新读取最新 sha 再重试
+            if (resp.status === 409 || resp.status === 422) {
+                const latest = await ghRead(path);
+                body.sha = latest.sha;
+                resp = await fetch(url, {
+                    method: 'PUT',
+                    headers: GH_HEADERS,
+                    body: JSON.stringify(body)
+                });
+            }
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
                 throw new Error('GitHub写入失败: ' + resp.status + ' ' + (err.message || ''));
@@ -1465,6 +1492,13 @@
         async function saveUsersAsync(users) {
             _usersCache = users;
             _usersSha = await ghWrite('data/users.json', users, _usersSha);
+        }
+
+        // 重新从 GitHub 拉取最新数据（用于刷新页面时同步）
+        async function refreshFromCloud() {
+            await loadDataAsync();
+            await loadUsersAsync();
+            renderAll();
         }
 
         function saveUsers(users) {
@@ -1859,12 +1893,6 @@
                 _recordsSha = await ghWrite('data/records.json', records, _recordsSha);
             } catch (e) {
                 console.error('保存记录失败:', e);
-                // SHA 过期时重新读取再写
-                if (e.message.includes('409') || e.message.includes('422')) {
-                    const { data, sha } = await ghRead('data/records.json');
-                    _recordsSha = sha;
-                    _recordsSha = await ghWrite('data/records.json', records, _recordsSha);
-                }
             }
         }
 
