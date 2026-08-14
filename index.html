@@ -2211,6 +2211,10 @@
             if (currentUser && r.status === 'pending' && r.reporter === currentUser.name) {
                 btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
             }
+            // 管理员：任意状态都可以编辑申报内容
+            if (isAdmin) {
+                btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
+            }
             return btns;
         }
 
@@ -2357,8 +2361,10 @@
         function openEdit(id) {
             const r = findRecord(id);
             if (!r) return;
-            if (!currentUser || r.reporter !== currentUser.name || r.status !== 'pending') {
-                showToast('只能编辑自己填报的待受理记录', true);
+            const isAdmin = currentUser && currentUser.role === 'admin';
+            const isReporterPending = currentUser && r.status === 'pending' && r.reporter === currentUser.name;
+            if (!isAdmin && !isReporterPending) {
+                showToast('仅管理员可编辑任意状态记录，填报人只能编辑待受理记录', true);
                 return;
             }
             editingId = id;
@@ -2408,7 +2414,8 @@
             r.area = area;
             r.type = type;
             r.desc = desc;
-            r.timeline.push({ action: 'edit', time: Date.now(), text: '填报人修改了阻力信息' });
+            const isAdmin = currentUser && currentUser.role === 'admin';
+            r.timeline.push({ action: 'edit', time: Date.now(), text: (isAdmin ? '管理员修改了申报内容' : '填报人修改了阻力信息') });
             editingId = null;
             saveData();
             renderAll();
