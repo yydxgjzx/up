@@ -3013,6 +3013,14 @@
                 ...PRESET_SUPPORT_STAFF.map(s => ({...s, unitType: 'support'})),
                 ...PRESET_CONSTRUCTION_STAFF.map(s => ({...s, unitType: 'construction'}))
             ];
+            // 已初始化标记：localStorage 记录 + 云端存在任一预置账号，两者满足其一即跳过
+            // 避免管理员删除预置用户后，刷新页面又被重新加回
+            const seededFlag = localStorage.getItem('resistance_users_seeded');
+            const seededCloud = users.some(u => seedList.some(s => u.name === s.name));
+            if (seededFlag === '1' || seededCloud) {
+                localStorage.setItem('resistance_users_seeded', '1');
+                return;
+            }
             seedList.forEach(s => {
                 const existing = users.find(u => u.name === s.name);
                 if (existing) {
@@ -3037,7 +3045,10 @@
                     changed = true;
                 }
             });
-            if (changed) await saveUsersAsync(users);
+            if (changed) {
+                await saveUsersAsync(users);
+                localStorage.setItem('resistance_users_seeded', '1');
+            }
         }
 
         // ========== Init ==========
