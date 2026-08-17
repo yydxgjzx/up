@@ -1346,6 +1346,43 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" id="modal-edituser">
+        <div class="modal" style="max-width:440px;">
+            <div class="modal-header">
+                <h2>编辑用户</h2>
+                <button class="modal-close" onclick="closeModal('modal-edituser')">&times;</button>
+            </div>
+            <div class="auth-error" id="edituser-error"></div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>姓名</label>
+                <input type="text" class="form-input" id="eu-name" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>手机号</label>
+                <input type="text" class="form-input" id="eu-phone" placeholder="请输入手机号码">
+            </div>
+            <div class="form-group">
+                <label class="form-label">单位类型</label>
+                <select class="form-select" id="eu-unit-type" onchange="onEditUnitTypeChange()">
+                    <option value="">不选择</option>
+                    <option value="construction">施工单位</option>
+                    <option value="support">支撑单位</option>
+                </select>
+            </div>
+            <div class="form-group" id="eu-unit-wrap" style="display:none;">
+                <label class="form-label"><span class="required">*</span>所在单位</label>
+                <select class="form-select" id="eu-unit">
+                    <option value="">请选择</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-edituser')">取消</button>
+                <button class="btn btn-primary" onclick="submitEditUser()">保存修改</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
     <!-- Float tooltip for truncated cells -->
@@ -1860,6 +1897,7 @@
                     } else {
                         actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
                     }
+                    actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(\'' + u.name + '\')">编辑</button>';
                     actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
                     return '<tr>'
                         + '<td>' + u.name + '</td>'
@@ -1893,6 +1931,109 @@
             await loadUsersAsync(); // 刷新缓存
             renderAdminReview();
             showToast('用户已删除');
+        }
+
+        // ========== Admin Edit User ==========
+        let _editUserName = null;
+
+        async function openEditUser(name) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const users = await loadUsersAsync();
+            const u = users.find(x => x.name === name);
+            if (!u) return;
+            _editUserName = name;
+            document.getElementById('eu-name').value = u.name || '';
+            document.getElementById('eu-phone').value = u.phone || '';
+            const unitType = isSupportUnit(u.unit) ? 'support' : (isConstructionUnit(u.unit) ? 'construction' : '');
+            document.getElementById('eu-unit-type').value = unitType;
+            onEditUnitTypeChange();
+            document.getElementById('eu-unit').value = u.unit || '';
+            document.getElementById('edituser-error').classList.remove('show');
+            openModal('modal-edituser');
+        }
+
+        function onEditUnitTypeChange() {
+            const type = document.getElementById('eu-unit-type').value;
+            const wrap = document.getElementById('eu-unit-wrap');
+            const sel = document.getElementById('eu-unit');
+            if (type === 'construction') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + CONSTRUCTION_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else if (type === 'support') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + SUPPORT_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else {
+                wrap.style.display = 'none';
+                sel.innerHTML = '<option value="">请选择</option>';
+            }
+        }
+
+        async function submitEditUser() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const errEl = document.getElementById('edituser-error');
+            const newName = document.getElementById('eu-name').value.trim();
+            const newPhone = document.getElementById('eu-phone').value.trim();
+            const unitType = document.getElementById('eu-unit-type').value;
+            const newUnit = document.getElementById('eu-unit').value;
+
+            if (!newName || !newPhone) {
+                errEl.textContent = '请填写姓名和手机号';
+                errEl.classList.add('show');
+                return;
+            }
+            // 姓名重复检查（排除自己）
+            const users = await loadUsersAsync();
+            if (users.find(u => u.name === newName && u.name !== _editUserName)) {
+                errEl.textContent = '该姓名已被其他账号使用';
+                errEl.classList.add('show');
+                return;
+            }
+
+            const u = users.find(x => x.name === _editUserName);
+            if (!u) return;
+
+            const oldName = u.name;
+            const oldUnit = u.unit || '';
+            u.name = newName;
+            u.account = newName;
+            u.phone = newPhone;
+            u.unit = newUnit;
+            u.unitType = unitType;
+
+            await saveUsersAsync(users);
+            await loadUsersAsync(); // 刷新缓存
+
+            // 同步更新该用户填报的记录（姓名/施工单位变化时）
+            if (oldName !== newName || (oldUnit && oldUnit !== newUnit)) {
+                let changed = false;
+                records.forEach(r => {
+                    if (r.reporter === oldName) {
+                        r.reporter = newName;
+                        r.unit = newUnit || r.unit;
+                        changed = true;
+                    }
+                    // 如果该用户是支撑人员，更新被指派字段
+                    if (r.area === oldName) {
+                        r.area = newName;
+                        changed = true;
+                    }
+                });
+                if (changed) await saveDataAsync();
+            }
+
+            // 如果编辑的是当前登录用户，刷新会话
+            if (currentUser && currentUser.name === oldName) {
+                currentUser.name = newName;
+                currentUser.phone = newPhone;
+                currentUser.unit = newUnit;
+                currentUser.role = getRoleByUnit(newUnit);
+                saveSession(currentUser);
+            }
+
+            closeModal('modal-edituser');
+            renderAdminReview();
+            renderAll();
+            showToast('用户信息已更新');
         }
 
         // ========== Data Layer ==========
