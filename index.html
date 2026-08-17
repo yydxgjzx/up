@@ -737,6 +737,17 @@
             vertical-align: middle;
         }
         .review-table tr:hover td { background: #243044; }
+        .review-table tr.review-group-row td {
+            background: #1e293b;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 13px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--card-border);
+            border-top: 2px solid var(--card-border);
+            letter-spacing: 1px;
+        }
+        .review-table tr.review-group-row:hover td { background: #1e293b; }
 
         .badge-approved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
         .badge-pending-review { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
@@ -1882,32 +1893,54 @@
                 rejected: { label: '已拒绝', cls: 'badge-rejected' }
             };
 
+            // 待审核排在最前，其余按注册时间倒序
+            const statusOrder = { pending: 0, rejected: 1, approved: 2 };
+            const sortedUsers = [...users].sort((a, b) => {
+                const sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 3;
+                const sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 3;
+                if (sa !== sb) return sa - sb;
+                return (b.registerTime || 0) - (a.registerTime || 0);
+            });
+
+            // 分组标题：待审核 / 已拒绝 / 已通过
+            const groupTitle = { pending: '待审核', rejected: '已拒绝', approved: '已通过' };
+            let lastGroup = null;
+            const rowsHtml = sortedUsers.map(u => {
+                const group = groupTitle[u.status] || '其他';
+                let html = '';
+                if (group !== lastGroup) {
+                    html += '<tr class="review-group-row"><td colspan="6" class="review-group-title">' + group
+                        + '（' + sortedUsers.filter(x => (groupTitle[x.status] || x.status) === group).length + '人）</td></tr>';
+                    lastGroup = group;
+                }
+                const s = statusMap[u.status] || statusMap.pending;
+                let unitDisplay = u.unit || '—';
+                let actions = '';
+                if (u.status === 'pending') {
+                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">通过</button> '
+                        + '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">拒绝</button>';
+                } else if (u.status === 'approved') {
+                    actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">禁用</button>';
+                } else {
+                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
+                }
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(\'' + u.name + '\')">编辑</button>';
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
+                html += '<tr>'
+                    + '<td>' + u.name + '</td>'
+                    + '<td>' + (u.phone || '') + '</td>'
+                    + '<td>' + unitDisplay + '</td>'
+                    + '<td style="font-size:12px;color:var(--text-muted);">' + formatTime(u.registerTime) + '</td>'
+                    + '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>'
+                    + '<td style="white-space:nowrap;">' + actions + '</td>'
+                    + '</tr>';
+                return html;
+            }).join('');
+
             body.innerHTML = '<table class="review-table"><thead><tr>'
                 +             '<th>姓名</th><th>手机号</th><th>单位</th><th>注册时间</th><th>状态</th><th>操作</th>'
                 + '</tr></thead><tbody>'
-                + users.map(u => {
-                    const s = statusMap[u.status] || statusMap.pending;
-                    let unitDisplay = u.unit || '—';
-                    let actions = '';
-                    if (u.status === 'pending') {
-                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">通过</button> '
-                            + '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">拒绝</button>';
-                    } else if (u.status === 'approved') {
-                        actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">禁用</button>';
-                    } else {
-                        actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
-                    }
-                    actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(\'' + u.name + '\')">编辑</button>';
-                    actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
-                    return '<tr>'
-                        + '<td>' + u.name + '</td>'
-                        + '<td>' + (u.phone || '') + '</td>'
-                        + '<td>' + unitDisplay + '</td>'
-                        + '<td style="font-size:12px;color:var(--text-muted);">' + formatTime(u.registerTime) + '</td>'
-                        + '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>'
-                        + '<td style="white-space:nowrap;">' + actions + '</td>'
-                        + '</tr>';
-                }).join('')
+                + rowsHtml
                 + '</tbody></table>';
         }
 
