@@ -1299,9 +1299,9 @@
                 <input type="text" class="form-input" id="reg-phone" placeholder="请输入手机号码">
             </div>
                 <div class="form-group">
-                    <label class="form-label">单位（可选）</label>
+                    <label class="form-label"><span class="required">*</span>单位类型</label>
                     <select class="form-select" id="reg-unit-type" onchange="onUnitTypeChange()">
-                        <option value="">不选择</option>
+                        <option value="">请选择</option>
                         <option value="construction">施工单位</option>
                         <option value="support">支撑单位</option>
                     </select>
@@ -1708,6 +1708,16 @@
                 errEl.classList.add('show');
                 return;
             }
+            if (!unitType) {
+                errEl.textContent = '请选择单位类型';
+                errEl.classList.add('show');
+                return;
+            }
+            if (!unit) {
+                errEl.textContent = '请选择所在单位';
+                errEl.classList.add('show');
+                return;
+            }
             if (password.length < 6) {
                 errEl.textContent = '密码至少6位';
                 errEl.classList.add('show');
@@ -1715,11 +1725,6 @@
             }
             if (name === ADMIN_ACCOUNT) {
                 errEl.textContent = '该姓名已被占用';
-                errEl.classList.add('show');
-                return;
-            }
-            if (unitType && !unit) {
-                errEl.textContent = '请选择所在单位';
                 errEl.classList.add('show');
                 return;
             }
