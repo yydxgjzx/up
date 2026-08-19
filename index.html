@@ -1394,6 +1394,33 @@
         </div>
     </div>
 
+    <!-- Reset Password Modal (Admin) -->
+    <div class="modal-overlay" id="modal-resetpwd">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <h2>重置密码</h2>
+                <button class="modal-close" onclick="closeModal('modal-resetpwd')">&times;</button>
+            </div>
+            <div class="auth-error" id="resetpwd-error"></div>
+            <div class="form-group">
+                <label class="form-label">用户</label>
+                <div class="form-input" id="rp-user" style="background:var(--bg-muted);"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>新密码</label>
+                <input type="password" class="form-input" id="rp-new" placeholder="请输入新密码（至少6位）">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>确认新密码</label>
+                <input type="password" class="form-input" id="rp-confirm" placeholder="请再次输入新密码" onkeydown="if(event.key==='Enter')submitResetPassword()">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-resetpwd')">取消</button>
+                <button class="btn btn-primary" onclick="submitResetPassword()">确认重置</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
     <!-- Float tooltip for truncated cells -->
@@ -1930,6 +1957,7 @@
                     actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
                 }
                 actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(\'' + u.name + '\')">编辑</button>';
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="openResetPassword(\'' + u.name + '\')">改密</button>';
                 actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
                 html += '<tr>'
                     + '<td>' + u.name + '</td>'
@@ -2072,6 +2100,60 @@
             renderAdminReview();
             renderAll();
             showToast('用户信息已更新');
+        }
+
+        // ========== Admin Reset Password ==========
+        let _resetPwdUserName = null;
+
+        async function openResetPassword(name) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const users = await loadUsersAsync();
+            const u = users.find(x => x.name === name);
+            if (!u) return;
+            _resetPwdUserName = name;
+            document.getElementById('rp-user').textContent = (u.name || '') + (u.phone ? '（' + u.phone + '）' : '');
+            document.getElementById('rp-new').value = '';
+            document.getElementById('rp-confirm').value = '';
+            document.getElementById('resetpwd-error').classList.remove('show');
+            openModal('modal-resetpwd');
+            setTimeout(() => document.getElementById('rp-new').focus(), 100);
+        }
+
+        async function submitResetPassword() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const errEl = document.getElementById('resetpwd-error');
+            const newPwd = document.getElementById('rp-new').value;
+            const confirmPwd = document.getElementById('rp-confirm').value;
+
+            if (!newPwd || !confirmPwd) {
+                errEl.textContent = '请填写新密码和确认密码';
+                errEl.classList.add('show');
+                return;
+            }
+            if (newPwd.length < 6) {
+                errEl.textContent = '新密码至少6位';
+                errEl.classList.add('show');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                errEl.textContent = '两次输入的密码不一致';
+                errEl.classList.add('show');
+                return;
+            }
+
+            const users = await loadUsersAsync();
+            const u = users.find(x => x.name === _resetPwdUserName);
+            if (!u) {
+                errEl.textContent = '用户不存在';
+                errEl.classList.add('show');
+                return;
+            }
+            u.password = newPwd;
+            await saveUsersAsync(users);
+            await loadUsersAsync(); // 刷新缓存
+            closeModal('modal-resetpwd');
+            renderAdminReview();
+            showToast('密码已重置');
         }
 
         // ========== Data Layer ==========
