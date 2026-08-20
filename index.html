@@ -2294,12 +2294,21 @@
             return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
 
-        function getCountdown(hopeText) {
+        function getCountdown(hopeText, status) {
             if (!hopeText) return { text: '-', color: 'var(--text-muted)' };
             const hopeDate = new Date(hopeText.replace(/-/g, '/'));
             if (isNaN(hopeDate.getTime())) return { text: '-', color: 'var(--text-muted)' };
             const diff = hopeDate.getTime() - Date.now();
-            if (diff <= 0) return { text: '已超时', color: 'var(--danger)' };
+            if (diff <= 0) {
+                if (status === 'resolved') return { text: '已解决', color: 'var(--success)' };
+                const over = -diff;
+                const odays = Math.floor(over / 86400000);
+                const ohours = Math.floor((over % 86400000) / 3600000);
+                const omin = Math.floor((over % 3600000) / 60000);
+                if (odays > 0) return { text: `已超时 ${odays}天${ohours}时`, color: 'var(--danger)' };
+                if (ohours > 0) return { text: `已超时 ${ohours}时${omin}分`, color: 'var(--danger)' };
+                return { text: `已超时 ${omin}分`, color: 'var(--danger)' };
+            }
             const days = Math.floor(diff / 86400000);
             const hours = Math.floor((diff % 86400000) / 3600000);
             if (days > 0) return { text: `${days}天${hours}时`, color: days <= 1 ? 'var(--warning)' : 'var(--text-secondary)' };
@@ -2396,7 +2405,7 @@
 
             tbody.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText);
+                const cd = getCountdown(r.hopeText, r.status);
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
@@ -2417,7 +2426,7 @@
             // Mobile cards
             mobileEl.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText);
+                const cd = getCountdown(r.hopeText, r.status);
                 return `<div class="m-card">
                     <div class="m-card-top">
                         <div class="m-card-title">${r.name}</div>
@@ -3009,7 +3018,7 @@
 
             tbody.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText);
+                const cd = getCountdown(r.hopeText, r.status);
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
@@ -3029,7 +3038,7 @@
 
             mobileEl.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText);
+                const cd = getCountdown(r.hopeText, r.status);
                 return `<div class="m-card">
                     <div class="m-card-top">
                         <div class="m-card-title">${r.name}</div>
