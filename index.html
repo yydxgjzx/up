@@ -1526,6 +1526,7 @@
         const SESSION_KEY = 'construction_resistance_session';
         const ADMIN_ACCOUNT = 'yydxlily';
         const ADMIN_PASSWORD = 'yydxvip8216109';
+        const ADMIN_ACCOUNTS = ['yydxlily', 'yydx'];
 
         const CONSTRUCTION_UNITS = [
             '湖南省通信建设有限公司',
@@ -1676,11 +1677,11 @@
             const users = await loadUsersAsync();
 
             // Check admin — 优先从云端读取密码（支持改密后生效），无则用默认密码
-            if (account === ADMIN_ACCOUNT) {
-                const adminUser = users.find(u => u.name === ADMIN_ACCOUNT);
+            if (ADMIN_ACCOUNTS.includes(account)) {
+                const adminUser = users.find(u => u.name === account);
                 const adminPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
                 if (password === adminPwd) {
-                    currentUser = { account: ADMIN_ACCOUNT, name: '管理员', role: 'admin', unit: '' };
+                    currentUser = { account: account, name: '管理员', role: 'admin', unit: '' };
                     saveSession(currentUser);
                     onLoginSuccess();
                     return;
@@ -1750,7 +1751,7 @@
                 errEl.classList.add('show');
                 return;
             }
-            if (name === ADMIN_ACCOUNT) {
+            if (ADMIN_ACCOUNTS.includes(name)) {
                 errEl.textContent = '该姓名已被占用';
                 errEl.classList.add('show');
                 return;
@@ -1867,14 +1868,14 @@
             // 管理员改自己的密码
             if (currentUser.role === 'admin') {
                 const users = await loadUsersAsync();
-                const adminUser = users.find(u => u.name === ADMIN_ACCOUNT);
+                const adminUser = users.find(u => u.name === currentUser.account);
                 const currentPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
                 if (oldPwd !== currentPwd) {
                     showToast('原密码错误', true);
                     return;
                 }
                 if (!adminUser) {
-                    users.push({ account: ADMIN_ACCOUNT, name: ADMIN_ACCOUNT, password: newPwd, status: 'approved', registerTime: Date.now() });
+                    users.push({ account: currentUser.account, name: currentUser.account, password: newPwd, status: 'approved', registerTime: Date.now() });
                 } else {
                     adminUser.password = newPwd;
                 }
