@@ -2412,11 +2412,11 @@
                     <td class="col-code">${r.code}</td>
                     <td class="col-name tip-cell" data-tip="${escAttr(r.name)}">${r.name}</td>
                     <td class="col-unit tip-cell" data-tip="${escAttr(r.unit)}">${r.unit}</td>
-                    <td class="col-reporter">${r.reporter || ''}</td>
+                    <td class="col-reporter tip-cell" data-tip="${escAttr(getReporterTip(r))}">${r.reporter || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
                     <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
                     <td class="col-region">${r.region || ''}</td>
-                    <td class="col-area">${r.area}</td>
+                    <td class="col-area tip-cell" data-tip="${escAttr(getAreaTip(r))}">${r.area}</td>
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
@@ -2545,6 +2545,25 @@
                 .replace(/'/g, '&#39;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
+        }
+
+        // ========== 人员联系电话查询 ==========
+        // 从用户列表按姓名查找电话；查不到返回空串
+        function getUserPhone(name) {
+            if (!name) return '';
+            const users = loadUsers();
+            const u = users.find(x => x.name === name);
+            return u && u.phone ? u.phone : '';
+        }
+        // 填报人电话：优先用记录自带 phone，其次查用户列表
+        function getReporterTip(r) {
+            const p = r.phone || getUserPhone(r.reporter);
+            return p ? '电话：' + p : '';
+        }
+        // 支撑人员电话：从用户列表查询
+        function getAreaTip(r) {
+            const p = getUserPhone(r.area);
+            return p ? '电话：' + p : '';
         }
 
         // ========== Float Tooltip ==========
@@ -3025,11 +3044,11 @@
                     <td class="col-code">${r.code}</td>
                     <td class="col-name tip-cell" data-tip="${escAttr(r.name)}">${r.name}</td>
                     <td class="col-unit tip-cell" data-tip="${escAttr(r.unit)}">${r.unit}</td>
-                    <td class="col-reporter">${r.reporter || ''}</td>
+                    <td class="col-reporter tip-cell" data-tip="${escAttr(getReporterTip(r))}">${r.reporter || ''}</td>
                     <td class="col-hope">${r.hopeText || ''}</td>
                     <td class="col-countdown" style="color:${cd.color}">${cd.text}</td>
                     <td class="col-region">${r.region || ''}</td>
-                    <td class="col-area">${r.area}</td>
+                    <td class="col-area tip-cell" data-tip="${escAttr(getAreaTip(r))}">${r.area}</td>
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
                     <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
