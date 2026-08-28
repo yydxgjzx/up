@@ -155,7 +155,7 @@
     "area": "徐亮球",
     "type": "居民阻工",
     "desc": "进机房400多米管道光缆没放，中间有七八十米老管道阻工不让放光缆，其他的光缆已放完，正在熔接",
-    "status": "processing",
+    "status": "feedback",
     "timeline": [
       {
         "action": "create",
@@ -172,11 +172,19 @@
       {
         "action": "receive",
         "text": "徐亮球 受理：今天已与村长沟通，明天到现场放光缆，有问题再与村长联系",
-        "time": 1787757274755
+        "time": 1787757274755,
+        "timeText": "8/26 23:14"
+      },
+      {
+        "action": "feedback",
+        "text": "徐亮球 反馈：已协调好，今天正在施工中",
+        "time": 1787883218561
       }
     ],
     "receiveOpinion": "今天已与村长沟通，明天到现场放光缆，有问题再与村长联系",
-    "receiveTime": 1787757274759
+    "receiveTime": 1787757274759,
+    "feedbackOpinion": "已协调好，今天正在施工中",
+    "feedbackTime": 1787883218568
   },
   {
     "id": "R1786596648707",
