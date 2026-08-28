@@ -2557,13 +2557,11 @@
         }
         // 填报人电话：优先用记录自带 phone，其次查用户列表
         function getReporterTip(r) {
-            const p = r.phone || getUserPhone(r.reporter);
-            return p ? '电话：' + p : '';
+            return r.phone || getUserPhone(r.reporter);
         }
         // 支撑人员电话：从用户列表查询
         function getAreaTip(r) {
-            const p = getUserPhone(r.area);
-            return p ? '电话：' + p : '';
+            return getUserPhone(r.area);
         }
 
         // ========== Float Tooltip ==========
