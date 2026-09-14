@@ -2323,29 +2323,9 @@
             if (!hopeText) return { text: '-', color: 'var(--text-muted)' };
             const hopeDate = new Date(hopeText.replace(/-/g, '/'));
             if (isNaN(hopeDate.getTime())) return { text: '-', color: 'var(--text-muted)' };
-            // 已解决工单：用支撑人员最后反馈时间对比希望解决时间
+            // 已解决工单：倒计时列统一显示"已解决"绿色
             if (status === 'resolved') {
-                const fbTime = record ? getLastFeedbackTime(record) : null;
-                const refTime = fbTime || Date.now();
-                const diff = hopeDate.getTime() - refTime;
-                if (diff >= 0) {
-                    // 未超时：显示提前量
-                    const days = Math.floor(diff / 86400000);
-                    const hours = Math.floor((diff % 86400000) / 3600000);
-                    const mins = Math.floor((diff % 3600000) / 60000);
-                    if (days > 0) return { text: `提前${days}天${hours}时`, color: 'var(--success)' };
-                    if (hours > 0) return { text: `提前${hours}时${mins}分`, color: 'var(--success)' };
-                    return { text: `提前${mins}分`, color: 'var(--success)' };
-                } else {
-                    // 超时
-                    const over = -diff;
-                    const odays = Math.floor(over / 86400000);
-                    const ohours = Math.floor((over % 86400000) / 3600000);
-                    const omin = Math.floor((over % 3600000) / 60000);
-                    if (odays > 0) return { text: `超时${odays}天${ohours}时`, color: 'var(--danger)' };
-                    if (ohours > 0) return { text: `超时${ohours}时${omin}分`, color: 'var(--danger)' };
-                    return { text: `超时${omin}分`, color: 'var(--danger)' };
-                }
+                return { text: '已解决', color: 'var(--success)' };
             }
             const diff = hopeDate.getTime() - Date.now();
             if (diff <= 0) {
@@ -2462,10 +2442,9 @@
                 const cd = getCountdown(r.hopeText, r.status, r);
                 var badgeClass = s.badge;
                 var badgeLabel = s.label;
-                if (r.status === 'resolved' && r.hopeText) {
-                    var rst = getResolvedStatusText(r);
-                    badgeLabel = rst;
-                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                if (r.status === 'resolved') {
+                    badgeLabel = '已解决';
+                    badgeClass = isOverdue(r.hopeText, r.status, r) ? 'badge-resolved-overdue' : 'badge-resolved-ontime';
                 }
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
@@ -2490,10 +2469,9 @@
                 const cd = getCountdown(r.hopeText, r.status, r);
                 var badgeClass = s.badge;
                 var badgeLabel = s.label;
-                if (r.status === 'resolved' && r.hopeText) {
-                    var rst = getResolvedStatusText(r);
-                    badgeLabel = rst;
-                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                if (r.status === 'resolved') {
+                    badgeLabel = '已解决';
+                    badgeClass = isOverdue(r.hopeText, r.status, r) ? 'badge-resolved-overdue' : 'badge-resolved-ontime';
                 }
                 return `<div class="m-card">
                     <div class="m-card-top">
@@ -3106,10 +3084,9 @@
                 const cd = getCountdown(r.hopeText, r.status, r);
                 var badgeClass = s.badge;
                 var badgeLabel = s.label;
-                if (r.status === 'resolved' && r.hopeText) {
-                    var rst = getResolvedStatusText(r);
-                    badgeLabel = rst;
-                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                if (r.status === 'resolved') {
+                    badgeLabel = '已解决';
+                    badgeClass = isOverdue(r.hopeText, r.status, r) ? 'badge-resolved-overdue' : 'badge-resolved-ontime';
                 }
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
@@ -3133,10 +3110,9 @@
                 const cd = getCountdown(r.hopeText, r.status, r);
                 var badgeClass = s.badge;
                 var badgeLabel = s.label;
-                if (r.status === 'resolved' && r.hopeText) {
-                    var rst = getResolvedStatusText(r);
-                    badgeLabel = rst;
-                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                if (r.status === 'resolved') {
+                    badgeLabel = '已解决';
+                    badgeClass = isOverdue(r.hopeText, r.status, r) ? 'badge-resolved-overdue' : 'badge-resolved-ontime';
                 }
                 return `<div class="m-card">
                     <div class="m-card-top">
