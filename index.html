@@ -319,6 +319,8 @@
         .badge-processing { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
         .badge-feedback { background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); }
         .badge-resolved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+        .badge-resolved-ontime { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+        .badge-resolved-overdue { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         .badge-unresolved { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 
         /* Description truncation */
@@ -2280,6 +2282,28 @@
             resolved:   { label: '已解决',       badge: 'badge-resolved',   dot: 'resolved' }
         };
 
+        // 获取支撑人员最后反馈时间
+        function getLastFeedbackTime(record) {
+            if (!record.timeline) return null;
+            let lastTime = null;
+            record.timeline.forEach(function(t) {
+                if (t.action === 'feedback' && t.time) {
+                    if (lastTime === null || t.time > lastTime) lastTime = t.time;
+                }
+            });
+            return lastTime;
+        }
+
+        // 获取已解决工单的状态文本（区分超时/未超时）
+        function getResolvedStatusText(record) {
+            if (!record.hopeText) return '已解决';
+            var hopeDate = new Date(record.hopeText.replace(/-/g, '/'));
+            if (isNaN(hopeDate.getTime())) return '已解决';
+            var fbTime = getLastFeedbackTime(record);
+            var refTime = fbTime || Date.now();
+            return hopeDate.getTime() >= refTime ? '已解决（未超时）' : '已解决（超时）';
+        }
+
         const ACTION_MAP = {
             create: '施工单位填报',
             receive: '支撑人员受理',
@@ -2295,13 +2319,36 @@
             return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
 
-        function getCountdown(hopeText, status) {
+        function getCountdown(hopeText, status, record) {
             if (!hopeText) return { text: '-', color: 'var(--text-muted)' };
             const hopeDate = new Date(hopeText.replace(/-/g, '/'));
             if (isNaN(hopeDate.getTime())) return { text: '-', color: 'var(--text-muted)' };
+            // 已解决工单：用支撑人员最后反馈时间对比希望解决时间
+            if (status === 'resolved') {
+                const fbTime = record ? getLastFeedbackTime(record) : null;
+                const refTime = fbTime || Date.now();
+                const diff = hopeDate.getTime() - refTime;
+                if (diff >= 0) {
+                    // 未超时：显示提前量
+                    const days = Math.floor(diff / 86400000);
+                    const hours = Math.floor((diff % 86400000) / 3600000);
+                    const mins = Math.floor((diff % 3600000) / 60000);
+                    if (days > 0) return { text: `提前${days}天${hours}时`, color: 'var(--success)' };
+                    if (hours > 0) return { text: `提前${hours}时${mins}分`, color: 'var(--success)' };
+                    return { text: `提前${mins}分`, color: 'var(--success)' };
+                } else {
+                    // 超时
+                    const over = -diff;
+                    const odays = Math.floor(over / 86400000);
+                    const ohours = Math.floor((over % 86400000) / 3600000);
+                    const omin = Math.floor((over % 3600000) / 60000);
+                    if (odays > 0) return { text: `超时${odays}天${ohours}时`, color: 'var(--danger)' };
+                    if (ohours > 0) return { text: `超时${ohours}时${omin}分`, color: 'var(--danger)' };
+                    return { text: `超时${omin}分`, color: 'var(--danger)' };
+                }
+            }
             const diff = hopeDate.getTime() - Date.now();
             if (diff <= 0) {
-                if (status === 'resolved') return { text: '已解决', color: 'var(--success)' };
                 const over = -diff;
                 const odays = Math.floor(over / 86400000);
                 const ohours = Math.floor((over % 86400000) / 3600000);
@@ -2317,10 +2364,16 @@
             return { text: `${hours}时${mins}分`, color: 'var(--warning)' };
         }
 
-        function isOverdue(hopeText, status) {
-            if (!hopeText || status === 'resolved') return false;
+        function isOverdue(hopeText, status, record) {
+            if (!hopeText) return false;
             const hopeDate = new Date(hopeText.replace(/-/g, '/'));
             if (isNaN(hopeDate.getTime())) return false;
+            // 已解决工单：用支撑人员最后反馈时间判断
+            if (status === 'resolved') {
+                const fbTime = record ? getLastFeedbackTime(record) : null;
+                const refTime = fbTime || Date.now();
+                return hopeDate.getTime() < refTime;
+            }
             return hopeDate.getTime() < Date.now();
         }
 
@@ -2406,7 +2459,14 @@
 
             tbody.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText, r.status);
+                const cd = getCountdown(r.hopeText, r.status, r);
+                var badgeClass = s.badge;
+                var badgeLabel = s.label;
+                if (r.status === 'resolved' && r.hopeText) {
+                    var rst = getResolvedStatusText(r);
+                    badgeLabel = rst;
+                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                }
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
@@ -2419,7 +2479,7 @@
                     <td class="col-area tip-cell" data-tip="${escAttr(getAreaTip(r))}">${r.area}</td>
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
-                    <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
+                    <td class="col-status"><span class="badge ${badgeClass}">${badgeLabel}</span></td>
                     <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
                 </tr>`;
             }).join('');
@@ -2427,11 +2487,18 @@
             // Mobile cards
             mobileEl.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText, r.status);
+                const cd = getCountdown(r.hopeText, r.status, r);
+                var badgeClass = s.badge;
+                var badgeLabel = s.label;
+                if (r.status === 'resolved' && r.hopeText) {
+                    var rst = getResolvedStatusText(r);
+                    badgeLabel = rst;
+                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                }
                 return `<div class="m-card">
                     <div class="m-card-top">
                         <div class="m-card-title">${r.name}</div>
-                        <div class="m-card-status"><span class="badge ${s.badge}">${s.label}</span></div>
+                        <div class="m-card-status"><span class="badge ${badgeClass}">${badgeLabel}</span></div>
                     </div>
                     <div class="m-card-sub"><b>编码</b> ${r.code}</div>
                     <div class="m-card-sub"><b>施工</b> ${r.unit} | <b>填报</b> ${r.reporter || ''}</div>
@@ -2925,7 +2992,7 @@
                     '填报人': r.reporter || '',
                     '联系电话': r.phone || '',
                     '希望解决时间': r.hopeText || '',
-                    '是否超时': isOverdue(r.hopeText, r.status) ? '是' : '否',
+                    '是否超时': isOverdue(r.hopeText, r.status, r) ? '是' : '否',
                     '区域': r.region || '',
                     '支撑人员': r.area,
                     '问题类型': r.type,
@@ -3036,7 +3103,14 @@
 
             tbody.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText, r.status);
+                const cd = getCountdown(r.hopeText, r.status, r);
+                var badgeClass = s.badge;
+                var badgeLabel = s.label;
+                if (r.status === 'resolved' && r.hopeText) {
+                    var rst = getResolvedStatusText(r);
+                    badgeLabel = rst;
+                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                }
                 return `<tr>
                     <td class="col-serial">${i + 1}</td>
                     <td class="col-code">${r.code}</td>
@@ -3049,18 +3123,25 @@
                     <td class="col-area tip-cell" data-tip="${escAttr(getAreaTip(r))}">${r.area}</td>
                     <td class="col-type">${r.type}</td>
                     <td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="${escAttr(r.desc)}" onclick="openDetail('${r.id}')">${r.desc}</div></td>
-                    <td class="col-status"><span class="badge ${s.badge}">${s.label}</span></td>
+                    <td class="col-status"><span class="badge ${badgeClass}">${badgeLabel}</span></td>
                     <td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openDetail('${r.id}')">详情</button>${getActionButtons(r)}</td>
                 </tr>`;
             }).join('');
 
             mobileEl.innerHTML = filtered.map((r, i) => {
                 const s = STATUS_MAP[r.status];
-                const cd = getCountdown(r.hopeText, r.status);
+                const cd = getCountdown(r.hopeText, r.status, r);
+                var badgeClass = s.badge;
+                var badgeLabel = s.label;
+                if (r.status === 'resolved' && r.hopeText) {
+                    var rst = getResolvedStatusText(r);
+                    badgeLabel = rst;
+                    badgeClass = rst.indexOf('未超时') >= 0 ? 'badge-resolved-ontime' : 'badge-resolved-overdue';
+                }
                 return `<div class="m-card">
                     <div class="m-card-top">
                         <div class="m-card-title">${r.name}</div>
-                        <div class="m-card-status"><span class="badge ${s.badge}">${s.label}</span></div>
+                        <div class="m-card-status"><span class="badge ${badgeClass}">${badgeLabel}</span></div>
                     </div>
                     <div class="m-card-sub"><b>编码</b> ${r.code}</div>
                     <div class="m-card-sub"><b>施工</b> ${r.unit} | <b>填报</b> ${r.reporter || ''}</div>
