@@ -3759,7 +3759,7 @@
             const container = document.getElementById('material-rows');
             const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
             const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
-                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + ' (库存:' + item.stock + item.unit + ')</option>';
+                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
             }).join('');
             const div = document.createElement('div');
             div.className = 'material-row';
@@ -3781,11 +3781,9 @@
             const opt = sel.selectedOptions[0];
             const infoEl = row.querySelector('.mat-info');
             if (opt && opt.value) {
-                const stock = parseInt(opt.dataset.stock || 0);
                 const unit = opt.dataset.unit || '';
-                const price = parseFloat(opt.dataset.price || 0);
-                infoEl.textContent = '库存' + stock + unit + ' / 单价' + price.toFixed(2) + '元';
-                infoEl.style.color = stock <= 0 ? 'var(--danger)' : 'var(--text-muted)';
+                infoEl.textContent = '单位：' + unit;
+                infoEl.style.color = 'var(--text-muted)';
             } else {
                 infoEl.textContent = '';
             }
@@ -3821,10 +3819,6 @@
                     return;
                 }
                 const stock = parseInt(opt.dataset.stock || 0);
-                if (qty > stock) {
-                    showToast('"' + opt.dataset.name + '" 库存不足（剩余' + stock + opt.dataset.unit + '）', true);
-                    return;
-                }
                 materials.push({
                     code: opt.value,
                     name: opt.dataset.name,
