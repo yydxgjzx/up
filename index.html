@@ -897,10 +897,50 @@
         /* Mobile cards container - hidden by default */
         .mobile-cards { display: none; }
 
+        /* Nav Bar */
+        .nav-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 4px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+        .nav-tab.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .nav-tab:hover:not(.active) {
+            background: rgba(59,130,246,0.1);
+            color: var(--primary);
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Nav Bar -->
+        <div class="nav-bar" id="nav-bar">
+            <a class="nav-tab active" href="index.html">施工阻力</a>
+            <a class="nav-tab" href="borrowing.html">工单借料</a>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <div class="header-left">
