@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>施工阻力协调系统</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -3362,8 +3362,32 @@
             XLSX.utils.book_append_sheet(wb, ws2, '统计汇总');
 
             const dateStr = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `施工阻力记录_${dateStr}.xlsx`);
+            downloadWorkbook(wb, `施工阻力记录_${dateStr}.xlsx`);
             showToast('Excel已导出');
+        }
+
+        // ========== 通用下载辅助（兼容微信/手机浏览器）==========
+        function downloadWorkbook(wb, filename) {
+            try {
+                // 优先使用 XLSX.writeFile（桌面浏览器）
+                XLSX.writeFile(wb, filename);
+                return;
+            } catch (e) {
+                // 降级：手动 Blob 下载
+                try {
+                    const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+                } catch (e2) {
+                    showToast('导出失败，请更换浏览器重试', true);
+                }
+            }
         }
 
         // ========== Helpers ==========
@@ -4066,7 +4090,7 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料明细');
             const dateStr = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, '工单借料记录_' + dateStr + '.xlsx');
+            downloadWorkbook(wb, '工单借料记录_' + dateStr + '.xlsx');
             showToast('Excel已导出');
         }
 
