@@ -1126,7 +1126,7 @@
                     <select class="filter-select" id="b-filter-unit" onchange="bRenderTable()">
                         <option value="">全部施工单位</option>
                     </select>
-                    <input type="text" class="filter-input" id="b-filter-search" placeholder="搜索工单编码/名称/借料人..." autocomplete="off" oninput="bRenderTable()">
+                    <input type="text" class="filter-input" id="b-filter-search" placeholder="搜索领料单号/工单编码/名称/借料人..." autocomplete="off" oninput="bRenderTable()">
                 </div>
                 <div class="toolbar-right">
                     <button class="btn btn-ghost btn-sm" onclick="bClearAllFilters()">清除筛选</button>
@@ -1139,6 +1139,7 @@
                     <thead>
                         <tr>
                             <th class="col-serial">序号</th>
+                            <th class="col-code">领料单号</th>
                             <th class="col-code">工单编码</th>
                             <th class="col-name">工单名称</th>
                             <th class="col-unit">施工单位</th>
@@ -1604,8 +1605,12 @@
                 <button class="modal-close" onclick="closeModal('modal-borrowing')">&times;</button>
             </div>
             <div class="form-group">
-                <label class="form-label"><span class="required">*</span>工单编码</label>
-                <input type="text" class="form-input" id="bf-code" placeholder="请输入工单编码">
+                <label class="form-label"><span class="required">*</span>领料工单编号</label>
+                <input type="text" class="form-input" id="bf-ticket-no" readonly placeholder="自动生成" style="background:var(--bg-muted);color:var(--primary);font-weight:600;letter-spacing:0.5px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工单编号</label>
+                <input type="text" class="form-input" id="bf-code" placeholder="请输入工程工单编号">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>工单名称</label>
@@ -1641,6 +1646,7 @@
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">申请信息</div>
+                <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bc-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bc-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bc-name"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bc-unit"></div></div>
@@ -1669,6 +1675,7 @@
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">申请信息</div>
+                <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="br-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="br-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="br-name"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="br-unit"></div></div>
@@ -1698,6 +1705,7 @@
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">借料信息</div>
+                <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bt-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bt-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bt-name"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="bt-materials"></div></div>
@@ -1722,6 +1730,7 @@
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">基本信息</div>
+                <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bd-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bd-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bd-name"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bd-unit"></div></div>
@@ -3677,7 +3686,7 @@
                 if (status && b.status !== status) return false;
                 if (unit && b.unit !== unit) return false;
                 if (search) {
-                    const hay = (b.code + ' ' + b.name + ' ' + (b.reporter || '') + ' ' + (b.unit || '')).toLowerCase();
+                    const hay = ((b.ticketNo || '') + ' ' + b.code + ' ' + b.name + ' ' + (b.reporter || '') + ' ' + (b.unit || '')).toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -3695,15 +3704,16 @@
             const tbody = document.getElementById('borrowing-table-body');
             const mobileEl = document.getElementById('borrowing-mobile-cards');
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
                 mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无借料记录</p></div>';
                 return;
             }
             tbody.innerHTML = filtered.map((b, i) => {
                 const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
-                return '<tr>'
+                    return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
+                    + '<td class="col-code">' + (b.ticketNo || '') + '</td>'
                     + '<td class="col-code">' + (b.code || '') + '</td>'
                     + '<td class="col-name tip-cell" data-tip="' + escAttr(b.name) + '">' + (b.name || '') + '</td>'
                     + '<td class="col-unit">' + (b.unit || '') + '</td>'
@@ -3717,9 +3727,10 @@
             mobileEl.innerHTML = filtered.map((b) => {
                 const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
-                return '<div class="m-card">'
+                    return '<div class="m-card">'
                     + '<div class="m-card-top"><div class="m-card-title">' + (b.name || '') + '</div>'
                     + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
+                    + '<div class="m-card-sub"><b>领料单号</b> ' + (b.ticketNo || '') + '</div>'
                     + '<div class="m-card-sub"><b>编码</b> ' + (b.code || '') + '</div>'
                     + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
                     + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
@@ -3765,7 +3776,29 @@
         }
 
         // ===== Borrowing Create =====
+        // 生成领料工单编号：LL + YYYYMMDD + -XXX（当日递增）
+        function genTicketNo() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const dateStr = y + m + d;
+            // 找出当日已用的最大序号
+            let maxSeq = 0;
+            (borrowings || []).forEach(b => {
+                if (b.ticketNo && b.ticketNo.indexOf(dateStr) === 2) {
+                    const seqStr = b.ticketNo.split('-')[1];
+                    const seq = parseInt(seqStr, 10);
+                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+                }
+            });
+            const nextSeq = String(maxSeq + 1).padStart(3, '0');
+            return 'LL' + dateStr + '-' + nextSeq;
+        }
+
         function openBorrowingModal() {
+            // 自动生成领料工单编号（只读）
+            document.getElementById('bf-ticket-no').value = genTicketNo();
             document.getElementById('bf-code').value = '';
             document.getElementById('bf-name').value = '';
             if (currentUser && currentUser.unit && CONSTRUCTION_UNITS.includes(currentUser.unit)) {
@@ -3818,11 +3851,12 @@
         }
 
         function submitBorrowing() {
+            const ticketNo = document.getElementById('bf-ticket-no').value.trim();
             const code = document.getElementById('bf-code').value.trim();
             const name = document.getElementById('bf-name').value.trim();
             const unit = document.getElementById('bf-unit').value;
-            if (!code || !name || !unit) {
-                showToast('请填写工单编码、名称和施工单位', true);
+            if (!ticketNo || !code || !name || !unit) {
+                showToast('请填写领料编号、工单编号、工单名称和施工单位', true);
                 return;
             }
             const rows = document.querySelectorAll('#material-rows .material-row');
@@ -3845,7 +3879,7 @@
             }
             const now = Date.now();
             const record = {
-                id: 'B' + now, code: code, name: name, unit: unit,
+                id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit,
                 reporter: currentUser.name, materials: materials,
                 status: 'pending', createTime: now, createTimeText: formatTime(now),
                 timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请' }]
@@ -3861,6 +3895,7 @@
         function openBorrowingCheck(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
+            document.getElementById('bc-ticket').textContent = b.ticketNo || '';
             document.getElementById('bc-code').textContent = b.code;
             document.getElementById('bc-name').textContent = b.name;
             document.getElementById('bc-unit').textContent = b.unit;
@@ -3903,6 +3938,7 @@
         function openBorrowingReview(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
+            document.getElementById('br-ticket').textContent = b.ticketNo || '';
             document.getElementById('br-code').textContent = b.code;
             document.getElementById('br-name').textContent = b.name;
             document.getElementById('br-unit').textContent = b.unit;
@@ -3938,6 +3974,7 @@
         function openBorrowingReturn(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
+            document.getElementById('bt-ticket').textContent = b.ticketNo || '';
             document.getElementById('bt-code').textContent = b.code;
             document.getElementById('bt-name').textContent = b.name;
             document.getElementById('bt-materials').innerHTML = (b.materials || []).map(m =>
@@ -3967,6 +4004,7 @@
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
             const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
+            document.getElementById('bd-ticket').textContent = b.ticketNo || '';
             document.getElementById('bd-code').textContent = b.code;
             document.getElementById('bd-name').textContent = b.name;
             document.getElementById('bd-unit').textContent = b.unit;
@@ -4011,7 +4049,7 @@
             filtered.forEach((b, i) => {
                 (b.materials || []).forEach(m => {
                     data.push({
-                        '序号': i + 1, '工单编码': b.code, '工单名称': b.name,
+                        '序号': i + 1, '领料单号': b.ticketNo || '', '工单编码': b.code, '工单名称': b.name,
                         '施工单位': b.unit, '借料人': b.reporter || '',
                         '物资编码': m.code, '物资名称': m.name, '计量单位': m.unit,
                         '单价': m.price || 0, '数量': m.qty, '金额': ((m.price || 0) * m.qty).toFixed(2),
@@ -4024,7 +4062,7 @@
                 });
             });
             const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [{wch:5},{wch:18},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:10},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
+            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:10},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料明细');
             const dateStr = new Date().toISOString().slice(0, 10);
