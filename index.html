@@ -2126,12 +2126,10 @@
             btnLogout.style.display = 'inline-flex';
             btnChangePwd.style.display = 'inline-flex';
 
-            // 借料按钮：所有已登录用户可见
-            btnBorrowCreate.style.display = 'inline-flex';
-            btnBorrowExport.style.display = 'inline-flex';
-
-            // 阻力按钮根据当前Tab控制
+            // 按Tab控制按钮显隐
             const isResTab = _currentBorrowingTab === 'resistance';
+            const isBorrowTab = _currentBorrowingTab === 'borrowing';
+
             if (currentUser.role === 'admin') {
                 badge.className = 'user-badge admin';
                 const todo = getTodoCount();
@@ -2140,6 +2138,8 @@
                 btnCreate.style.display = isResTab ? 'inline-flex' : 'none';
                 btnExport.style.display = isResTab ? 'inline-flex' : 'none';
                 btnAdmin.style.display = isResTab ? 'inline-flex' : 'none';
+                btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             } else if (currentUser.role === 'manager') {
                 badge.className = 'user-badge admin';
                 const todo = getTodoCount();
@@ -2148,12 +2148,16 @@
                 btnCreate.style.display = isResTab ? 'inline-flex' : 'none';
                 btnExport.style.display = isResTab ? 'inline-flex' : 'none';
                 btnAdmin.style.display = 'none';
+                btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             } else if (currentUser.role === 'designer') {
                 badge.className = 'user-badge admin';
                 badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（设计单位）';
                 btnCreate.style.display = 'none';
                 btnExport.style.display = 'none';
                 btnAdmin.style.display = 'none';
+                btnBorrowCreate.style.display = 'none';
+                btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             } else {
                 badge.className = 'user-badge';
                 const todo = getTodoCount();
@@ -2163,6 +2167,8 @@
                 btnCreate.style.display = isResTab ? 'inline-flex' : 'none';
                 btnExport.style.display = isResTab ? 'inline-flex' : 'none';
                 btnAdmin.style.display = 'none';
+                btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             }
         }
 
