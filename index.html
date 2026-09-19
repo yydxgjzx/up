@@ -1006,6 +1006,7 @@
                 <button class="btn btn-primary" onclick="openCreateModal()" id="btn-create" style="display:none;">+ 新增阻力填报</button>
                 <button class="btn btn-success" onclick="exportExcel()" id="btn-export" style="display:none;">导出Excel</button>
                 <button class="btn btn-primary" onclick="openBorrowingModal()" id="btn-borrow-create" style="display:none;">+ 新增借料申请</button>
+                <button class="btn btn-info" onclick="openBorrowingImport()" id="btn-borrow-import" style="display:none;">批量导入</button>
                 <button class="btn btn-success" onclick="exportBorrowingExcel()" id="btn-borrow-export" style="display:none;">导出Excel</button>
                 <button class="btn btn-warning btn-sm" onclick="openAdminReview()" id="btn-admin" style="display:none;">用户审核</button>
                 <button class="btn btn-ghost btn-sm" onclick="openChangePassword()" id="btn-changepwd" style="display:none;">修改密码</button>
@@ -1142,6 +1143,7 @@
                             <th class="col-code">领料单号</th>
                             <th class="col-code">工单编码</th>
                             <th class="col-name">工单名称</th>
+                            <th class="col-code">物料编号</th>
                             <th class="col-unit">仓库名称</th>
                             <th class="col-unit">施工单位</th>
                             <th class="col-reporter">借料人</th>
@@ -1618,6 +1620,10 @@
                 <input type="text" class="form-input" id="bf-name" placeholder="请输入工单名称">
             </div>
             <div class="form-group">
+                <label class="form-label"><span class="required">*</span>物料编号</label>
+                <input type="text" class="form-input" id="bf-mat-code" placeholder="请输入物料编号">
+            </div>
+            <div class="form-group">
                 <label class="form-label"><span class="required">*</span>施工单位</label>
                 <select class="form-select" id="bf-unit">
                     <option value="">请选择</option>
@@ -1670,6 +1676,7 @@
                 <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bc-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bc-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bc-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bc-matcode"></div></div>
                 <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bc-warehouse"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bc-unit"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="bc-reporter"></div></div>
@@ -1700,6 +1707,7 @@
                 <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="br-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="br-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="br-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="br-matcode"></div></div>
                 <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="br-warehouse"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="br-unit"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="br-reporter"></div></div>
@@ -1731,6 +1739,7 @@
                 <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bt-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bt-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bt-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bt-matcode"></div></div>
                 <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bt-warehouse"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="bt-materials"></div></div>
             </div>
@@ -1757,6 +1766,7 @@
                 <div class="detail-field"><div class="detail-field-label">领料单号</div><div class="detail-field-value" id="bd-ticket"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bd-code"></div></div>
                 <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bd-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bd-matcode"></div></div>
                 <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bd-warehouse"></div></div>
                 <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bd-unit"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="bd-reporter"></div></div>
@@ -1773,6 +1783,50 @@
             </div>
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Borrowing Import Modal ===== -->
+    <div class="modal-overlay" id="modal-borrowing-import">
+        <div class="modal" style="max-width:800px;">
+            <div class="modal-header">
+                <h2>批量导入借料申请</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-import')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">第一步：下载模板</label>
+                <button class="btn btn-ghost btn-sm" onclick="downloadBorrowingTemplate()">下载导入模板（Excel）</button>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">填写每行一条借料记录，无需填领料单号（导入后自动生成）</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">第二步：上传填写好的Excel</label>
+                <input type="file" id="bf-import-file" accept=".xlsx,.xls" style="color:var(--text-secondary);">
+            </div>
+            <div class="form-group" id="import-preview-area" style="display:none;">
+                <label class="form-label">预览（共 <span id="import-count">0</span> 条）</label>
+                <div style="max-height:300px;overflow:auto;border:1px solid var(--card-border);border-radius:var(--radius);">
+                    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                        <thead style="position:sticky;top:0;background:var(--input-bg);z-index:1;">
+                            <tr>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">#</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单编码</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">物料编号</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">仓库名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">施工单位</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">物资名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">数量</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="import-preview-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-import')">取消</button>
+                <button class="btn btn-primary" onclick="confirmBorrowingImport()" id="btn-import-confirm" style="display:none;">确认导入</button>
             </div>
         </div>
     </div>
@@ -2142,6 +2196,7 @@
             const btnChangePwd = document.getElementById('btn-changepwd');
             const btnLogout = document.getElementById('btn-logout');
             const btnBorrowCreate = document.getElementById('btn-borrow-create');
+            const btnBorrowImport = document.getElementById('btn-borrow-import');
             const btnBorrowExport = document.getElementById('btn-borrow-export');
 
             if (!currentUser) {
@@ -2150,6 +2205,7 @@
                 btnExport.style.display = 'none';
                 btnAdmin.style.display = 'none';
                 btnBorrowCreate.style.display = 'none';
+                btnBorrowImport.style.display = 'none';
                 btnBorrowExport.style.display = 'none';
                 btnChangePwd.style.display = 'none';
                 btnLogout.style.display = 'none';
@@ -2173,6 +2229,7 @@
                 btnExport.style.display = isResTab ? 'inline-flex' : 'none';
                 btnAdmin.style.display = isResTab ? 'inline-flex' : 'none';
                 btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnBorrowImport.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             } else if (currentUser.role === 'manager') {
                 badge.className = 'user-badge admin';
@@ -2191,6 +2248,7 @@
                 btnExport.style.display = 'none';
                 btnAdmin.style.display = 'none';
                 btnBorrowCreate.style.display = 'none';
+                btnBorrowImport.style.display = 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             } else {
                 badge.className = 'user-badge';
@@ -2202,6 +2260,7 @@
                 btnExport.style.display = isResTab ? 'inline-flex' : 'none';
                 btnAdmin.style.display = 'none';
                 btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnBorrowImport.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
             }
         }
@@ -3735,7 +3794,7 @@
                 if (status && b.status !== status) return false;
                 if (unit && b.unit !== unit) return false;
                 if (search) {
-                    const hay = ((b.ticketNo || '') + ' ' + b.code + ' ' + b.name + ' ' + (b.reporter || '') + ' ' + (b.unit || '') + ' ' + (b.warehouse || '')).toLowerCase();
+                    const hay = ((b.ticketNo || '') + ' ' + b.code + ' ' + b.name + ' ' + (b.matCode || '') + ' ' + (b.reporter || '') + ' ' + (b.unit || '') + ' ' + (b.warehouse || '')).toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -3753,7 +3812,7 @@
             const tbody = document.getElementById('borrowing-table-body');
             const mobileEl = document.getElementById('borrowing-mobile-cards');
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
                 mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无借料记录</p></div>';
                 return;
             }
@@ -3765,6 +3824,7 @@
                     + '<td class="col-code">' + (b.ticketNo || '') + '</td>'
                     + '<td class="col-code">' + (b.code || '') + '</td>'
                     + '<td class="col-name tip-cell" data-tip="' + escAttr(b.name) + '">' + (b.name || '') + '</td>'
+                    + '<td class="col-code">' + (b.matCode || '') + '</td>'
                     + '<td class="col-unit">' + (b.warehouse || '') + '</td>'
                     + '<td class="col-unit">' + (b.unit || '') + '</td>'
                     + '<td class="col-reporter">' + (b.reporter || '') + '</td>'
@@ -3782,6 +3842,7 @@
                     + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
                     + '<div class="m-card-sub"><b>领料单号</b> ' + (b.ticketNo || '') + '</div>'
                     + '<div class="m-card-sub"><b>编码</b> ' + (b.code || '') + '</div>'
+                    + '<div class="m-card-sub"><b>物料编号</b> ' + (b.matCode || '') + '</div>'
                     + '<div class="m-card-sub"><b>仓库</b> ' + (b.warehouse || '') + '</div>'
                     + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
                     + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
@@ -3852,6 +3913,7 @@
             document.getElementById('bf-ticket-no').value = genTicketNo();
             document.getElementById('bf-code').value = '';
             document.getElementById('bf-name').value = '';
+            document.getElementById('bf-mat-code').value = '';
             if (currentUser && currentUser.unit && CONSTRUCTION_UNITS.includes(currentUser.unit)) {
                 document.getElementById('bf-unit').value = currentUser.unit;
             } else {
@@ -3905,10 +3967,15 @@
             const ticketNo = document.getElementById('bf-ticket-no').value.trim();
             const code = document.getElementById('bf-code').value.trim();
             const name = document.getElementById('bf-name').value.trim();
+            const matCode = document.getElementById('bf-mat-code').value.trim();
             const unit = document.getElementById('bf-unit').value;
             const warehouse = document.getElementById('bf-warehouse').value;
             if (!ticketNo || !code || !name || !unit) {
                 showToast('请填写领料编号、工单编号、工单名称和施工单位', true);
+                return;
+            }
+            if (!matCode) {
+                showToast('请填写物料编号', true);
                 return;
             }
             if (!warehouse) {
@@ -3935,7 +4002,7 @@
             }
             const now = Date.now();
             const record = {
-                id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit, warehouse: warehouse,
+                id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit, warehouse: warehouse, matCode: matCode,
                 reporter: currentUser.name, materials: materials,
                 status: 'pending', createTime: now, createTimeText: formatTime(now),
                 timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请' }]
@@ -3954,6 +4021,7 @@
             document.getElementById('bc-ticket').textContent = b.ticketNo || '';
             document.getElementById('bc-code').textContent = b.code;
             document.getElementById('bc-name').textContent = b.name;
+            document.getElementById('bc-matcode').textContent = b.matCode || '';
             document.getElementById('bc-warehouse').textContent = b.warehouse || '';
             document.getElementById('bc-unit').textContent = b.unit;
             document.getElementById('bc-reporter').textContent = b.reporter;
@@ -3998,6 +4066,7 @@
             document.getElementById('br-ticket').textContent = b.ticketNo || '';
             document.getElementById('br-code').textContent = b.code;
             document.getElementById('br-name').textContent = b.name;
+            document.getElementById('br-matcode').textContent = b.matCode || '';
             document.getElementById('br-warehouse').textContent = b.warehouse || '';
             document.getElementById('br-unit').textContent = b.unit;
             document.getElementById('br-reporter').textContent = b.reporter;
@@ -4035,6 +4104,7 @@
             document.getElementById('bt-ticket').textContent = b.ticketNo || '';
             document.getElementById('bt-code').textContent = b.code;
             document.getElementById('bt-name').textContent = b.name;
+            document.getElementById('bt-matcode').textContent = b.matCode || '';
             document.getElementById('bt-warehouse').textContent = b.warehouse || '';
             document.getElementById('bt-materials').innerHTML = (b.materials || []).map(m =>
                 '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
@@ -4066,6 +4136,7 @@
             document.getElementById('bd-ticket').textContent = b.ticketNo || '';
             document.getElementById('bd-code').textContent = b.code;
             document.getElementById('bd-name').textContent = b.name;
+            document.getElementById('bd-matcode').textContent = b.matCode || '';
             document.getElementById('bd-warehouse').textContent = b.warehouse || '';
             document.getElementById('bd-unit').textContent = b.unit;
             document.getElementById('bd-reporter').textContent = b.reporter;
@@ -4110,6 +4181,7 @@
                 (b.materials || []).forEach(m => {
                     data.push({
                         '序号': i + 1, '领料单号': b.ticketNo || '', '工单编码': b.code, '工单名称': b.name,
+                        '物料编号': b.matCode || '',
                         '仓库名称': b.warehouse || '', '施工单位': b.unit, '借料人': b.reporter || '',
                         '物资编码': m.code, '物资名称': m.name, '计量单位': m.unit,
                         '单价': m.price || 0, '数量': m.qty, '金额': ((m.price || 0) * m.qty).toFixed(2),
@@ -4122,12 +4194,153 @@
                 });
             });
             const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:10},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
+            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:15},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:10},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料明细');
             const dateStr = new Date().toISOString().slice(0, 10);
             downloadWorkbook(wb, '工单借料记录_' + dateStr + '.xlsx');
             showToast('Excel已导出');
+        }
+
+        // ===== Borrowing Import =====
+        let _importedRecords = [];
+
+        function openBorrowingImport() {
+            _importedRecords = [];
+            document.getElementById('bf-import-file').value = '';
+            document.getElementById('import-preview-area').style.display = 'none';
+            document.getElementById('btn-import-confirm').style.display = 'none';
+            document.getElementById('import-preview-body').innerHTML = '';
+            openModal('modal-borrowing-import');
+        }
+
+        function downloadBorrowingTemplate() {
+            const headers = ['工单编码', '工单名称', '物料编号', '仓库名称', '施工单位', '物资名称', '数量'];
+            const sampleRow = ['GD-2026-001', '示例工单', 'WL-001', 'P2503 湖南天辰建设有限责任公司（华容县）', '湖南省通信建设有限公司', '光缆-GYTS-单模G.652D-6芯（皮长公里）', '2'];
+            const wsData = [headers, sampleRow];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [{wch:18},{wch:25},{wch:15},{wch:30},{wch:20},{wch:35},{wch:8}];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '借料导入模板');
+            downloadWorkbook(wb, '借料导入模板.xlsx');
+            showToast('模板已下载');
+        }
+
+        // 文件选择后自动解析
+        document.getElementById('bf-import-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    parseImportRows(rows);
+                } catch (err) {
+                    showToast('解析Excel失败：' + err.message, true);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function parseImportRows(rows) {
+            _importedRecords = [];
+            const validWarehouses = [...document.getElementById('bf-warehouse').options].map(o => o.value).filter(Boolean);
+            const validUnits = ['湖南省通信建设有限公司', '湖南天辰建设有限责任公司', '湖南省康普通信技术有限责任公司'];
+            const previewBody = document.getElementById('import-preview-body');
+            previewBody.innerHTML = '';
+            let validCount = 0, invalidCount = 0;
+
+            rows.forEach((row, idx) => {
+                const code = String(row['工单编码'] || '').trim();
+                const name = String(row['工单名称'] || '').trim();
+                const matCode = String(row['物料编号'] || '').trim();
+                const warehouse = String(row['仓库名称'] || '').trim();
+                const unit = String(row['施工单位'] || '').trim();
+                const matName = String(row['物资名称'] || '').trim();
+                const qty = parseInt(row['数量']) || 0;
+
+                let status = '', statusColor = '';
+                const errors = [];
+                if (!code) errors.push('缺工单编码');
+                if (!name) errors.push('缺工单名称');
+                if (!matCode) errors.push('缺物料编号');
+                if (!warehouse) errors.push('缺仓库名称');
+                else if (!validWarehouses.includes(warehouse)) errors.push('仓库名称不在列表');
+                if (!unit) errors.push('缺施工单位');
+                else if (!validUnits.includes(unit)) errors.push('施工单位不在列表');
+                if (!matName) errors.push('缺物资名称');
+                if (qty <= 0) errors.push('数量无效');
+
+                if (errors.length > 0) {
+                    status = errors.join('; ');
+                    statusColor = 'var(--danger)';
+                    invalidCount++;
+                } else {
+                    const invItem = inventory.find(it => it.name === matName);
+                    _importedRecords.push({
+                        code, name, matCode, warehouse, unit,
+                        materialName: matName,
+                        materialCode: invItem ? invItem.code : matName,
+                        materialUnit: invItem ? invItem.unit : '',
+                        materialPrice: invItem ? invItem.price : 0,
+                        qty
+                    });
+                    status = 'OK';
+                    statusColor = 'var(--success)';
+                    validCount++;
+                }
+
+                const tr = '<tr>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + (idx + 1) + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + code + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + name + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + matCode + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + warehouse + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + unit + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + matName + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + qty + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);color:' + statusColor + ';font-size:11px;">' + status + '</td>'
+                    + '</tr>';
+                previewBody.insertAdjacentHTML('beforeend', tr);
+            });
+
+            document.getElementById('import-count').textContent = validCount + ' 条有效 / ' + invalidCount + ' 条无效';
+            document.getElementById('import-preview-area').style.display = 'block';
+            document.getElementById('btn-import-confirm').style.display = validCount > 0 ? 'inline-flex' : 'none';
+            if (validCount === 0 && rows.length > 0) {
+                showToast('没有有效的记录可导入', true);
+            }
+        }
+
+        async function confirmBorrowingImport() {
+            if (_importedRecords.length === 0) { showToast('没有可导入的记录', true); return; }
+            if (!currentUser) { showToast('请先登录', true); return; }
+            const now = Date.now();
+            _importedRecords.forEach((r, i) => {
+                const ticketNo = genTicketNo();
+                const ts = now + i;
+                borrowings.unshift({
+                    id: 'B' + ts,
+                    ticketNo: ticketNo,
+                    code: r.code, name: r.name, matCode: r.matCode,
+                    unit: r.unit, warehouse: r.warehouse,
+                    reporter: currentUser.name,
+                    materials: [{
+                        code: r.materialCode, name: r.materialName,
+                        unit: r.materialUnit, price: r.materialPrice, qty: r.qty
+                    }],
+                    status: 'pending',
+                    createTime: ts, createTimeText: formatTime(ts),
+                    timeline: [{ action: 'create', time: ts, text: currentUser.name + ' 批量导入借料申请' }]
+                });
+            });
+            await saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing-import');
+            showToast('成功导入 ' + _importedRecords.length + ' 条借料申请');
         }
 
         // ========== Init ==========
