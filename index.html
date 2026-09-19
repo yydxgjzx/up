@@ -1606,7 +1606,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>领料工单编号</label>
-                <input type="text" class="form-input" id="bf-ticket-no" readonly placeholder="自动生成" style="background:var(--bg-muted);color:var(--primary);font-weight:600;letter-spacing:0.5px;">
+                <input type="text" class="form-input" id="bf-ticket-no" placeholder="自动生成，可手动修改" style="color:var(--primary);font-weight:600;letter-spacing:0.5px;">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>工单编号</label>
@@ -3821,7 +3821,7 @@
         }
 
         function openBorrowingModal() {
-            // 自动生成领料工单编号（只读）
+            // 自动生成领料工单编号（可手动修改）
             document.getElementById('bf-ticket-no').value = genTicketNo();
             document.getElementById('bf-code').value = '';
             document.getElementById('bf-name').value = '';
