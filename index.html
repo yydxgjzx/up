@@ -1797,7 +1797,7 @@
             <div class="form-group">
                 <label class="form-label">第一步：下载模板</label>
                 <button class="btn btn-ghost btn-sm" onclick="downloadBorrowingTemplate()">下载导入模板（Excel）</button>
-                <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">填写每行一条借料记录，无需填领料单号（导入后自动生成）</p>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">每行填写一条借料记录，无需填领料单号和物料编号（导入后自动生成）</p>
             </div>
             <div class="form-group">
                 <label class="form-label">第二步：上传填写好的Excel</label>
@@ -1812,7 +1812,6 @@
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">#</th>
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单编码</th>
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单名称</th>
-                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">物料编号</th>
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">仓库名称</th>
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">施工单位</th>
                                 <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">物资名称</th>
@@ -4218,11 +4217,11 @@
         }
 
         function downloadBorrowingTemplate() {
-            const headers = ['工单编码', '工单名称', '物料编号', '仓库名称', '施工单位', '物资名称', '数量'];
-            const sampleRow = ['GD-2026-001', '示例工单', 'WL-001', 'P2503 湖南天辰建设有限责任公司（华容县）', '湖南省通信建设有限公司', '光缆-GYTS-单模G.652D-6芯（皮长公里）', '2'];
+            const headers = ['工单编码', '工单名称', '仓库名称', '施工单位', '物资名称', '数量'];
+            const sampleRow = ['GD-2026-001', '示例工单', 'P2503 湖南天辰建设有限责任公司（华容县）', '湖南省通信建设有限公司', '光缆-GYTS-单模G.652D-6芯（皮长公里）', '2'];
             const wsData = [headers, sampleRow];
             const ws = XLSX.utils.aoa_to_sheet(wsData);
-            ws['!cols'] = [{wch:18},{wch:25},{wch:15},{wch:30},{wch:20},{wch:35},{wch:8}];
+            ws['!cols'] = [{wch:18},{wch:25},{wch:30},{wch:20},{wch:35},{wch:8}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料导入模板');
             downloadWorkbook(wb, '借料导入模板.xlsx');
@@ -4269,7 +4268,6 @@
                 const errors = [];
                 if (!code) errors.push('缺工单编码');
                 if (!name) errors.push('缺工单名称');
-                if (!matCode) errors.push('缺物料编号');
                 if (!warehouse) errors.push('缺仓库名称');
                 else if (!validWarehouses.includes(warehouse)) errors.push('仓库名称不在列表');
                 if (!unit) errors.push('缺施工单位');
@@ -4301,7 +4299,6 @@
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + (idx + 1) + '</td>'
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + code + '</td>'
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + name + '</td>'
-                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + matCode + '</td>'
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + warehouse + '</td>'
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + unit + '</td>'
                     + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + matName + '</td>'
