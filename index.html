@@ -1621,7 +1621,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>物料编号</label>
-                <input type="text" class="form-input" id="bf-mat-code" placeholder="请输入物料编号">
+                <input type="text" class="form-input" id="bf-mat-code" placeholder="选择物资后自动填充" readonly style="color:var(--text-secondary);background:var(--input-bg);">
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>施工单位</label>
@@ -3954,12 +3954,15 @@
             const row = sel.closest('.material-row');
             const opt = sel.selectedOptions[0];
             const infoEl = row.querySelector('.mat-info');
+            const matCodeEl = document.getElementById('bf-mat-code');
             if (opt && opt.value) {
                 const unit = opt.dataset.unit || '';
                 infoEl.textContent = '单位：' + unit;
                 infoEl.style.color = 'var(--text-muted)';
+                if (matCodeEl) matCodeEl.value = opt.value;
             } else {
                 infoEl.textContent = '';
+                if (matCodeEl) matCodeEl.value = '';
             }
         }
 
@@ -4280,8 +4283,9 @@
                     invalidCount++;
                 } else {
                     const invItem = inventory.find(it => it.name === matName);
+                    const autoMatCode = invItem ? invItem.code : matCode;
                     _importedRecords.push({
-                        code, name, matCode, warehouse, unit,
+                        code, name, matCode: autoMatCode, warehouse, unit,
                         materialName: matName,
                         materialCode: invItem ? invItem.code : matName,
                         materialUnit: invItem ? invItem.unit : '',
