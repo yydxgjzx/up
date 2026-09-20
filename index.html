@@ -948,7 +948,7 @@
         .material-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .material-row .form-select { flex: 1; min-width: 0; }
         .material-row .mat-qty { width: 70px !important; flex-shrink: 0; text-align: center; }
-        .material-row .mat-info { font-size: 12px; color: var(--text-muted); min-width: 100px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .material-row .mat-info { font-size: 11px; color: var(--text-muted); min-width: 130px; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .material-row .btn-remove { padding: 6px 10px; font-size: 18px; line-height: 1; flex-shrink: 0; }
 
         /* Nav Bar */
@@ -1653,10 +1653,7 @@
                 <div id="material-rows"></div>
                 <button class="btn btn-ghost btn-sm" onclick="addMaterialRow()" style="margin-top:8px;">+ 添加物资</button>
             </div>
-            <div class="form-group">
-                <label class="form-label"><span class="required">*</span>物料编号</label>
-                <input type="text" class="form-input" id="bf-mat-code" placeholder="选择物资后自动填充" readonly style="color:var(--text-secondary);background:var(--input-bg);">
-            </div>
+
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-borrowing')">取消</button>
                 <button class="btn btn-primary" onclick="submitBorrowing()">提交申请</button>
@@ -3913,7 +3910,6 @@
             document.getElementById('bf-ticket-no').value = genTicketNo();
             document.getElementById('bf-code').value = '';
             document.getElementById('bf-name').value = '';
-            document.getElementById('bf-mat-code').value = '';
             if (currentUser && currentUser.unit && CONSTRUCTION_UNITS.includes(currentUser.unit)) {
                 document.getElementById('bf-unit').value = currentUser.unit;
             } else {
@@ -3939,7 +3935,7 @@
             div.className = 'material-row';
             div.id = rowId;
             div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
-                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="1" onchange="updateMaterialInfo(this)">'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="1">'
                 + '<span class="mat-info"></span>'
                 + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
             container.appendChild(div);
@@ -3954,15 +3950,12 @@
             const row = sel.closest('.material-row');
             const opt = sel.selectedOptions[0];
             const infoEl = row.querySelector('.mat-info');
-            const matCodeEl = document.getElementById('bf-mat-code');
             if (opt && opt.value) {
                 const unit = opt.dataset.unit || '';
-                infoEl.textContent = '单位：' + unit;
+                infoEl.textContent = opt.value + ' | 单位：' + unit;
                 infoEl.style.color = 'var(--text-muted)';
-                if (matCodeEl) matCodeEl.value = opt.value;
             } else {
                 infoEl.textContent = '';
-                if (matCodeEl) matCodeEl.value = '';
             }
         }
 
@@ -3970,15 +3963,10 @@
             const ticketNo = document.getElementById('bf-ticket-no').value.trim();
             const code = document.getElementById('bf-code').value.trim();
             const name = document.getElementById('bf-name').value.trim();
-            const matCode = document.getElementById('bf-mat-code').value.trim();
             const unit = document.getElementById('bf-unit').value;
             const warehouse = document.getElementById('bf-warehouse').value;
             if (!ticketNo || !code || !name || !unit) {
                 showToast('请填写领料编号、工单编号、工单名称和施工单位', true);
-                return;
-            }
-            if (!matCode) {
-                showToast('请填写物料编号', true);
                 return;
             }
             if (!warehouse) {
@@ -4005,7 +3993,7 @@
             }
             const now = Date.now();
             const record = {
-                id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit, warehouse: warehouse, matCode: matCode,
+                id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit, warehouse: warehouse, matCode: materials.map(m => m.code).join('; '),
                 reporter: currentUser.name, materials: materials,
                 status: 'pending', createTime: now, createTimeText: formatTime(now),
                 timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请' }]
