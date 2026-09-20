@@ -928,6 +928,7 @@
         .b-stat-card.checked::before { background: #8b5cf6; }
         .b-stat-card.approved::before { background: var(--success); }
         .b-stat-card.rejected::before { background: var(--danger); }
+        .b-stat-card.returned_to_borrower::before { background: var(--warning); }
         .b-stat-card.returned::before { background: var(--info); }
         .b-stat-card .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
         .b-stat-card .stat-value { font-size: 32px; font-weight: 700; }
@@ -936,6 +937,7 @@
         .b-stat-card.checked .stat-value { color: #8b5cf6; }
         .b-stat-card.approved .stat-value { color: var(--success); }
         .b-stat-card.rejected .stat-value { color: var(--danger); }
+        .b-stat-card.returned_to_borrower .stat-value { color: var(--warning); }
         .b-stat-card.returned .stat-value { color: var(--info); }
 
         .badge-borrowing-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
@@ -944,6 +946,7 @@
         .badge-borrowing-approved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
         .badge-borrowing-rejected { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         .badge-borrowing-returned { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
+        .badge-borrowing-returned-to-borrower { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
 
         .material-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .material-row .form-select { flex: 1; min-width: 0; }
@@ -1107,6 +1110,10 @@
                     <div class="stat-label">已批准</div>
                     <div class="stat-value" id="b-stat-approved">0</div>
                 </div>
+                <div class="b-stat-card returned_to_borrower" id="b-card-returned-to-borrower" onclick="bClickStatCard('returned_to_borrower')">
+                    <div class="stat-label">已退回</div>
+                    <div class="stat-value" id="b-stat-returned-to-borrower">0</div>
+                </div>
                 <div class="b-stat-card returned" id="b-card-returned" onclick="bClickStatCard('returned')">
                     <div class="stat-label">已归还</div>
                     <div class="stat-value" id="b-stat-returned">0</div>
@@ -1121,7 +1128,7 @@
                         <option value="pending">待核对</option>
                         <option value="checked">待审批</option>
                         <option value="approved">已批准</option>
-                        <option value="rejected">已拒绝</option>
+                        <option value="returned_to_borrower">已退回</option>
                         <option value="returned">已归还</option>
                     </select>
                     <select class="filter-select" id="b-filter-unit" onchange="bRenderTable()">
@@ -1604,7 +1611,7 @@
     <div class="modal-overlay" id="modal-borrowing">
         <div class="modal" style="max-width:680px;">
             <div class="modal-header">
-                <h2>新增借料申请</h2>
+                <h2 id="modal-borrowing-title">新增借料申请</h2>
                 <button class="modal-close" onclick="closeModal('modal-borrowing')">&times;</button>
             </div>
             <div class="form-group">
@@ -1656,7 +1663,7 @@
 
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-borrowing')">取消</button>
-                <button class="btn btn-primary" onclick="submitBorrowing()">提交申请</button>
+                <button class="btn btn-primary" id="modal-borrowing-submit-btn" onclick="submitBorrowing()">提交申请</button>
             </div>
         </div>
     </div>
@@ -3688,7 +3695,8 @@
             checked:   { label: '待审批', badge: 'badge-borrowing-checked' },
             approved:  { label: '已批准', badge: 'badge-borrowing-approved' },
             rejected:  { label: '已拒绝', badge: 'badge-borrowing-rejected' },
-            returned:  { label: '已归还', badge: 'badge-borrowing-returned' }
+            returned:  { label: '已归还', badge: 'badge-borrowing-returned' },
+            returned_to_borrower: { label: '已退回', badge: 'badge-borrowing-returned-to-borrower' }
         };
 
         const BORROWING_ACTION_MAP = {
@@ -3759,7 +3767,7 @@
         }
 
         function bRenderStats() {
-            const stats = { pending: 0, checked: 0, approved: 0, rejected: 0, returned: 0 };
+            const stats = { pending: 0, checked: 0, approved: 0, rejected: 0, returned: 0, returned_to_borrower: 0 };
             borrowings.forEach(b => {
                 if (stats[b.status] !== undefined) stats[b.status]++;
             });
@@ -3767,6 +3775,8 @@
             document.getElementById('b-stat-checked').textContent = stats.checked;
             document.getElementById('b-stat-approved').textContent = stats.approved;
             document.getElementById('b-stat-returned').textContent = stats.returned;
+            const rtb = document.getElementById('b-stat-returned-to-borrower');
+            if (rtb) rtb.textContent = stats.returned_to_borrower;
         }
 
         function bClickStatCard(status) {
@@ -3796,7 +3806,7 @@
                 }
                 return true;
             }).sort((a, b) => {
-                const order = { pending: 0, checked: 1, approved: 2, rejected: 3, returned: 4 };
+                const order = { pending: 0, checked: 1, approved: 2, rejected: 3, returned: 4, returned_to_borrower: 5 };
                 const sa = order[a.status] !== undefined ? order[a.status] : 99;
                 const sb = order[b.status] !== undefined ? order[b.status] : 99;
                 if (sa !== sb) return sa - sb;
@@ -3871,7 +3881,11 @@
             if (b.status === 'pending' && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
-            if (isAdmin && b.status !== 'pending') {
+            // 已退回：借料人或admin可编辑修改后重新提交
+            if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
+                btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
+            }
+            if (isAdmin && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             return btns;
@@ -3906,6 +3920,7 @@
         }
 
         function openBorrowingModal() {
+            _editingBorrowingId = null;
             // 自动生成领料工单编号（可手动修改）
             document.getElementById('bf-ticket-no').value = genTicketNo();
             document.getElementById('bf-code').value = '';
@@ -3916,6 +3931,8 @@
                 document.getElementById('bf-unit').value = '';
             }
             document.getElementById('material-rows').innerHTML = '';
+            document.getElementById('modal-borrowing-title').textContent = '新增借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '提交申请';
             addMaterialRow();
             openModal('modal-borrowing');
             setTimeout(() => document.getElementById('bf-code').focus(), 100);
@@ -3960,6 +3977,7 @@
         }
 
         function submitBorrowing() {
+            if (_editingBorrowingId) { submitBorrowingEdit(); return; }
             const ticketNo = document.getElementById('bf-ticket-no').value.trim();
             const code = document.getElementById('bf-code').value.trim();
             const name = document.getElementById('bf-name').value.trim();
@@ -4005,6 +4023,110 @@
             showToast('借料申请已提交，等待设计单位核对');
         }
 
+        // ===== Borrowing Edit (退回后修改) =====
+        let _editingBorrowingId = null;
+
+        function openBorrowingEdit(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            if (!currentUser) return;
+            const isAdmin = currentUser.role === 'admin';
+            const isReporter = b.reporter === currentUser.name;
+            if (!isAdmin && !isReporter) {
+                showToast('只有借料人本人或管理员可以编辑', true);
+                return;
+            }
+            _editingBorrowingId = id;
+            document.getElementById('bf-ticket-no').value = b.ticketNo || '';
+            document.getElementById('bf-code').value = b.code || '';
+            document.getElementById('bf-name').value = b.name || '';
+            document.getElementById('bf-unit').value = b.unit || '';
+            document.getElementById('bf-warehouse').value = b.warehouse || '';
+            document.getElementById('material-rows').innerHTML = '';
+            (b.materials || []).forEach(m => {
+                addMaterialRowWithValue(m.code, m.qty);
+            });
+            if ((b.materials || []).length === 0) addMaterialRow();
+            document.getElementById('modal-borrowing-title').textContent = '编辑借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '保存修改';
+            openModal('modal-borrowing');
+            setTimeout(() => document.getElementById('bf-code').focus(), 100);
+        }
+
+        function addMaterialRowWithValue(code, qty) {
+            const container = document.getElementById('material-rows');
+            const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
+                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
+            }).join('');
+            const div = document.createElement('div');
+            div.className = 'material-row';
+            div.id = rowId;
+            div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="' + (qty || 1) + '">'
+                + '<span class="mat-info"></span>'
+                + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
+            container.appendChild(div);
+            if (code) {
+                const sel = div.querySelector('.mat-select');
+                sel.value = code;
+                updateMaterialInfo(sel);
+            }
+        }
+
+        function submitBorrowingEdit() {
+            const ticketNo = document.getElementById('bf-ticket-no').value.trim();
+            const code = document.getElementById('bf-code').value.trim();
+            const name = document.getElementById('bf-name').value.trim();
+            const unit = document.getElementById('bf-unit').value;
+            const warehouse = document.getElementById('bf-warehouse').value;
+            if (!ticketNo || !code || !name || !unit) {
+                showToast('请填写领料编号、工单编号、工单名称和施工单位', true);
+                return;
+            }
+            if (!warehouse) {
+                showToast('请选择仓库名称', true);
+                return;
+            }
+            const rows = document.querySelectorAll('#material-rows .material-row');
+            if (rows.length === 0) {
+                showToast('请至少添加一种借料物资', true);
+                return;
+            }
+            const materials = [];
+            for (let r of rows) {
+                const sel = r.querySelector('.mat-select');
+                const qtyInput = r.querySelector('.mat-qty');
+                const opt = sel.selectedOptions[0];
+                const qty = parseInt(qtyInput.value);
+                if (!opt || !opt.value) { showToast('请选择物资', true); return; }
+                if (!qty || qty <= 0) { showToast('请填写有效数量', true); return; }
+                materials.push({
+                    code: opt.value, name: opt.dataset.name,
+                    unit: opt.dataset.unit, price: parseFloat(opt.dataset.price || 0), qty: qty
+                });
+            }
+            const record = borrowings.find(x => x.id === _editingBorrowingId);
+            if (!record) return;
+            record.ticketNo = ticketNo;
+            record.code = code;
+            record.name = name;
+            record.unit = unit;
+            record.warehouse = warehouse;
+            record.matCode = materials.map(m => m.code).join('; ');
+            record.materials = materials;
+            record.status = 'pending';
+            record.editTime = Date.now();
+            record.timeline.push({ action: 'edit', time: Date.now(), text: currentUser.name + ' 修改后重新提交' });
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing');
+            showToast('已修改并重新提交，等待设计单位核对');
+            _editingBorrowingId = null;
+            document.getElementById('modal-borrowing-title').textContent = '新增借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '提交申请';
+        }
+
         // ===== Borrowing Check (设计单位核对) =====
         function openBorrowingCheck(id) {
             const b = borrowings.find(x => x.id === id);
@@ -4039,11 +4161,11 @@
                 record.timeline.push({ action: 'check', time: Date.now(), text: '核对通过：' + opinion });
                 showToast('已核对通过，转入审批');
             } else {
-                record.status = 'rejected';
+                record.status = 'returned_to_borrower';
                 record.checkOpinion = opinion;
                 record.checkTime = Date.now();
                 record.timeline.push({ action: 'reject', time: Date.now(), text: '核对退回：' + opinion });
-                showToast('已退回借料申请');
+                showToast('已退回借料申请，借料人可修改后重新提交');
             }
             saveBorrowings();
             bRenderAll();
@@ -4082,15 +4204,15 @@
             const code = document.getElementById('br-code').textContent;
             const b = borrowings.find(x => x.code === code);
             if (!b) return;
-            b.status = action;
+            b.status = action === 'approved' ? 'approved' : 'returned_to_borrower';
             b.reviewOpinion = opinion;
             b.reviewTime = Date.now();
-            const actionText = action === 'approved' ? '审批通过' : '审批拒绝';
+            const actionText = action === 'approved' ? '审批通过' : '审批退回';
             b.timeline.push({ action: action === 'approved' ? 'approve' : 'reject', time: Date.now(), text: actionText + '：' + opinion });
             saveBorrowings();
             bRenderAll();
             closeModal('modal-borrowing-review');
-            showToast(action === 'approved' ? '已批准借料申请' : '已拒绝借料申请');
+            showToast(action === 'approved' ? '已批准借料申请' : '已退回借料申请，借料人可修改后重新提交');
         }
 
         // ===== Borrowing Return =====
@@ -4144,7 +4266,7 @@
             const timelineEl = document.getElementById('bd-timeline');
             timelineEl.innerHTML = (b.timeline || []).map(t => {
                 const action = BORROWING_ACTION_MAP[t.action] || t.action;
-                const dotColor = t.action === 'create' ? 'pending' : t.action === 'check' ? 'processing' : t.action === 'approve' ? 'resolved' : t.action === 'reject' ? 'unresolved' : 'processing';
+                const dotColor = t.action === 'create' ? 'pending' : t.action === 'check' ? 'processing' : t.action === 'approve' ? 'resolved' : t.action === 'reject' ? 'unresolved' : t.action === 'edit' ? 'processing' : 'processing';
                 return '<div class="timeline-item"><div class="timeline-dot ' + dotColor + '"></div><div class="timeline-content"><div class="timeline-title">' + action + '</div><div class="timeline-time">' + formatTime(t.time) + '</div><div class="timeline-text">' + t.text + '</div></div></div>';
             }).join('');
             openModal('modal-borrowing-detail');
