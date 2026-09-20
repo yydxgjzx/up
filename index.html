@@ -4076,7 +4076,7 @@
             document.getElementById('br-time').textContent = b.createTimeText || '';
             document.getElementById('br-check-opinion').textContent = b.checkOpinion || '';
             document.getElementById('br-materials').innerHTML = (b.materials || []).map(m =>
-                '<div>' + m.name + ' × ' + m.qty + m.unit + ' (单价' + (m.price || 0).toFixed(2) + '元)</div>'
+                '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
             ).join('');
             document.getElementById('bf-review-opinion').value = '';
             openModal('modal-borrowing-review');
@@ -4146,7 +4146,7 @@
             document.getElementById('bd-time').textContent = b.createTimeText || '';
             document.getElementById('bd-status').innerHTML = '<span class="badge ' + s.badge + '">' + s.label + '</span>';
             document.getElementById('bd-materials').innerHTML = (b.materials || []).map(m =>
-                '<div style="display:flex;margin-bottom:8px;"><div style="width:140px;color:var(--text-secondary);font-size:13px;">' + m.name + '</div><div style="flex:1;font-size:13px;">' + m.qty + ' ' + m.unit + ' × ' + (m.price || 0).toFixed(2) + '元 = <b>' + ((m.price || 0) * m.qty).toFixed(2) + '元</b></div></div>'
+                '<div style="display:flex;margin-bottom:8px;"><div style="width:140px;color:var(--text-secondary);font-size:13px;">' + m.name + '</div><div style="flex:1;font-size:13px;">' + m.qty + ' ' + m.unit + '</div></div>'
             ).join('');
             const timelineEl = document.getElementById('bd-timeline');
             timelineEl.innerHTML = (b.timeline || []).map(t => {
@@ -4187,7 +4187,7 @@
                         '物料编号': b.matCode || '',
                         '仓库名称': b.warehouse || '', '施工单位': b.unit, '借料人': b.reporter || '',
                         '物资编码': m.code, '物资名称': m.name, '计量单位': m.unit,
-                        '单价': m.price || 0, '数量': m.qty, '金额': ((m.price || 0) * m.qty).toFixed(2),
+                        '数量': m.qty,
                         '申请时间': b.createTimeText || '',
                         '状态': (BORROWING_STATUS_MAP[b.status] || {label: b.status}).label,
                         '核对意见': b.checkOpinion || '', '核对时间': b.checkTime ? formatTime(b.checkTime) : '',
@@ -4197,7 +4197,7 @@
                 });
             });
             const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:15},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:10},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
+            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:15},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料明细');
             const dateStr = new Date().toISOString().slice(0, 10);
