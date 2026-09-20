@@ -1,1 +1,1 @@
-[]
+[{"id":"B1789886766568","ticketNo":"LL20260920-001","code":"111","name":"111","unit":"湖南天辰建设有限责任公司","warehouse":"X401 湖南省通信建设有限公司第二分公司","matCode":"J05010303347; J05010303220","reporter":"李力","materials":[{"code":"J05010303347","name":"光缆-GYTA53-单模G.652D-60芯","unit":"皮长公里","price":6283.8775,"qty":1},{"code":"J05010303220","name":"光缆-GYTS-单模G.652D-96芯","unit":"皮长公里","price":8614.7745007274,"qty":1}],"status":"pending","createTime":1789886766568,"createTimeText":"2026-09-20 14:46","timeline":[{"action":"create","time":1789886766568,"text":"李力 提交借料申请"}]}]
