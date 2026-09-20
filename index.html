@@ -4280,7 +4280,7 @@
                     statusColor = 'var(--danger)';
                     invalidCount++;
                 } else {
-                    const invItem = inventory.find(it => it.name === matName);
+                    const invItem = inventory.find(it => it.name === matName) || inventory.find(it => matName.startsWith(it.name));
                     const autoMatCode = invItem ? invItem.code : matCode;
                     _importedRecords.push({
                         code, name, matCode: autoMatCode, warehouse, unit,
