@@ -3859,8 +3859,8 @@
             if (b.status === 'pending' && (isDesigner || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingCheck(\'' + b.id + '\')">核对</button>';
             }
-            // 待审批：admin或manager可审批
-            if (b.status === 'checked' && (isAdmin || isManager)) {
+            // 待审批：仅李力可审批
+            if (b.status === 'checked' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
             }
             // 已批准：admin或manager可归还
@@ -4072,6 +4072,11 @@
         }
 
         function submitBorrowingReview(action) {
+            if (!currentUser || currentUser.name !== '李力') {
+                showToast('只有李力可以进行审批操作', true);
+                closeModal('modal-borrowing-review');
+                return;
+            }
             const opinion = document.getElementById('bf-review-opinion').value.trim();
             if (!opinion) { showToast('请填写审批意见', true); return; }
             const code = document.getElementById('br-code').textContent;
