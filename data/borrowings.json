@@ -1,1 +1,1 @@
-[]
+[{"id":"B1789864721662","ticketNo":"LL20260920-001","code":"1111","name":"1111","unit":"湖南省通信建设有限公司","warehouse":"P21 湖南省通信建设有限公司六分公司","matCode":"J05010303340","reporter":"李力","materials":[{"code":"J05010303340","name":"光缆-GYTA53-单模G.652D-48芯","unit":"皮长公里","price":5359.92,"qty":10}],"status":"pending","createTime":1789864721662,"createTimeText":"2026-09-20 08:38","timeline":[{"action":"create","time":1789864721662,"text":"李力 提交借料申请"}]}]
