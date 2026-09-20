@@ -4172,7 +4172,6 @@
                 (b.materials || []).forEach(m => {
                     data.push({
                         '序号': i + 1, '领料单号': b.ticketNo || '', '工单编码': b.code, '工单名称': b.name,
-                        '物料编号': b.matCode || '',
                         '仓库名称': b.warehouse || '', '施工单位': b.unit, '借料人': b.reporter || '',
                         '物资编码': m.code, '物资名称': m.name, '计量单位': m.unit,
                         '数量': m.qty,
@@ -4185,7 +4184,7 @@
                 });
             });
             const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:15},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
+            ws['!cols'] = [{wch:5},{wch:15},{wch:18},{wch:25},{wch:25},{wch:18},{wch:10},{wch:15},{wch:30},{wch:8},{wch:12},{wch:18},{wch:10},{wch:30},{wch:18},{wch:30},{wch:18},{wch:18},{wch:30}];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '借料明细');
             const dateStr = new Date().toISOString().slice(0, 10);
