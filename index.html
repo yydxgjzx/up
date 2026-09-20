@@ -39,11 +39,11 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding: 16px;
+            padding: 8px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -760,6 +760,9 @@
             .stats-row {
                 grid-template-columns: repeat(2, 1fr);
             }
+            .b-stats-row {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
             .form-row {
                 grid-template-columns: 1fr;
             }
@@ -902,11 +905,11 @@
         .borrowing-view { display: none; }
         .borrowing-view.active { display: block; }
         .resistance-view.hidden { display: none; }
-        .b-stat-card {
+        /* Borrowing stat cards */\n        .b-stats-row {\n            grid-template-columns: repeat(5, 1fr) !important;\n            gap: 10px;\n            margin-bottom: 12px;\n        }\n        .b-stat-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius);
-            padding: 18px 22px;
+            padding: 10px 14px;
             position: relative;
             overflow: hidden;
             cursor: pointer;
@@ -930,8 +933,8 @@
         .b-stat-card.rejected::before { background: var(--danger); }
         .b-stat-card.returned_to_borrower::before { background: var(--warning); }
         .b-stat-card.returned::before { background: var(--info); }
-        .b-stat-card .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-        .b-stat-card .stat-value { font-size: 32px; font-weight: 700; }
+        .b-stat-card .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+        .b-stat-card .stat-value { font-size: 22px; font-weight: 700; }
         .b-stat-card.pending .stat-value { color: var(--warning); }
         .b-stat-card.checking .stat-value { color: var(--info); }
         .b-stat-card.checked .stat-value { color: #8b5cf6; }
@@ -1097,7 +1100,7 @@
         <!-- ===== Borrowing View ===== -->
         <div class="borrowing-view" id="view-borrowing">
             <!-- Stats -->
-            <div class="stats-row">
+            <div class="stats-row b-stats-row">
                 <div class="b-stat-card pending" id="b-card-pending" onclick="bClickStatCard('pending')">
                     <div class="stat-label">待核对</div>
                     <div class="stat-value" id="b-stat-pending">0</div>
