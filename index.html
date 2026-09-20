@@ -282,15 +282,17 @@
             display: none;
         }
 
-        tbody td.col-name, tbody td.col-unit {
+        tbody td.col-name {
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-all;
+            line-height: 1.4;
         }
 
         .col-serial { width: 42px; text-align: center; color: var(--text-muted); white-space: nowrap; }
         .col-code { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .col-name { max-width: 420px; min-width: 260px; }
+        .col-name { max-width: 380px; min-width: 260px; }
         .col-unit { max-width: 100px; }
         .col-reporter { width: 55px; white-space: nowrap; }
         .col-hope { width: 120px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
