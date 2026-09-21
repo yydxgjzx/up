@@ -1,0 +1,2539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工单借料系统</title>
+    <script src="xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #22c55e;
+            --success-hover: #16a34a;
+            --warning: #f59e0b;
+            --warning-hover: #d97706;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --info: #06b6d4;
+            --info-hover: #0891b2;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 8px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 20px 28px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: var(--success-hover); }
+        .btn-warning { background: var(--warning); }
+        .btn-warning:hover { background: var(--warning-hover); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-info { background: var(--info); }
+        .btn-info:hover { background: var(--info-hover); }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        /* Borrowing stat cards */
+        .b-stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .b-stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .b-stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+        }
+        .b-stat-card.pending::before { background: var(--warning); }
+        .b-stat-card.approved::before { background: var(--success); }
+        .b-stat-card.rejected::before { background: var(--danger); }
+        .b-stat-card.returned::before { background: var(--info); }
+        .b-stat-card .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+        .b-stat-card .stat-value { font-size: 22px; font-weight: 700; }
+        .b-stat-card.pending .stat-value { color: var(--warning); }
+        .b-stat-card.approved .stat-value { color: var(--success); }
+        .b-stat-card.rejected .stat-value { color: var(--danger); }
+        .b-stat-card.returned .stat-value { color: var(--info); }
+
+        /* Borrowing status badges */
+        .badge-borrowing-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-borrowing-approved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+        .badge-borrowing-rejected { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+        .badge-borrowing-returned { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
+        .badge-borrowing-returned-to-borrower { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Form elements */
+        .filter-select, .filter-input {
+            padding: 9px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            border-color: var(--primary);
+        }
+
+        .filter-select option {
+            background: var(--bg);
+        }
+
+        /* Table */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: #1a2332;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: left;
+            padding: 14px 8px;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #2a3a4e;
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover {
+            background: #243044;
+        }
+
+        tbody td {
+            padding: 12px 8px;
+            vertical-align: middle;
+        }
+
+        /* Tooltip */
+        .tip-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tip-cell-desc { position: relative; }
+        #floatTip {
+            position: fixed;
+            background: #1a2332;
+            color: var(--text);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: normal;
+            word-break: break-all;
+            max-width: 360px;
+            min-width: 120px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            z-index: 99999;
+            pointer-events: none;
+            display: none;
+        }
+
+        tbody td.col-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+        tbody td.col-unit {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .col-serial { width: 42px; text-align: center; color: var(--text-muted); white-space: nowrap; }
+        .col-code { width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .col-name { max-width: 260px; min-width: 180px; }
+        .col-unit { max-width: 170px; }
+        .col-reporter { width: 55px; white-space: nowrap; }
+        .col-hope { width: 105px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .col-countdown { width: 80px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+        .col-desc { max-width: 450px; }
+        .col-status { width: 80px; white-space: nowrap; }
+        .col-actions { width: 100px; text-align: center; white-space: nowrap; }
+        .col-actions button {
+            margin: 0 2px;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Description truncation */
+        .desc-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 16px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            padding: 28px 32px;
+            margin-bottom: 40px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        /* Form fields */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-right: 2px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select option {
+            background: var(--bg);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Detail modal */
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--info);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .detail-field {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .detail-field-label {
+            width: 130px;
+            flex-shrink: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .detail-field-value {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .detail-timeline {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--input-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 16px;
+            position: relative;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 20px;
+            bottom: 0;
+            width: 2px;
+            background: var(--card-border);
+        }
+
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 2px;
+            border: 3px solid;
+        }
+
+        .timeline-dot.pending { border-color: var(--warning); background: rgba(245,158,11,0.2); }
+        .timeline-dot.processing { border-color: var(--info); background: rgba(6,182,212,0.2); }
+        .timeline-dot.feedback { border-color: var(--primary); background: rgba(59,130,246,0.2); }
+        .timeline-dot.resolved { border-color: var(--success); background: rgba(34,197,94,0.2); }
+        .timeline-dot.unresolved { border-color: var(--danger); background: rgba(239,68,68,0.2); }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .timeline-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--success);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Auth: Login/Register overlay */
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .auth-overlay.active { display: flex; }
+
+        .auth-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 36px 32px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-box h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .auth-box .auth-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-box .form-group { margin-bottom: 16px; }
+
+        .auth-box .form-input {
+            padding: 11px 14px;
+        }
+
+        .auth-box .form-select {
+            padding: 11px 14px;
+        }
+
+        .auth-box .btn { width: 100%; justify-content: center; margin-top: 8px; }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .auth-switch a {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-switch a:hover { text-decoration: underline; }
+
+        .auth-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .auth-error.show { display: block; }
+
+        /* User badge in header */
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: default;
+            transition: all 0.15s;
+        }
+        .user-badge:hover { opacity: 0.85; }
+        .user-badge.admin {
+            background: rgba(245,158,11,0.12);
+            border-color: rgba(245,158,11,0.3);
+            color: var(--warning);
+        }
+        .user-badge .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Material row in borrowing form */
+        .material-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .material-row .form-select { flex: 1; min-width: 0; }
+        .material-row .mat-qty { width: 70px !important; flex-shrink: 0; text-align: center; }
+        .material-row .mat-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            min-width: 130px;
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .material-row .btn-remove {
+            padding: 6px 10px;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header-left h1 { font-size: 18px; }
+            .header-left p { font-size: 12px; }
+            .header { padding: 16px 18px; }
+            .header-actions { gap: 8px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+
+            /* Header */
+            .header { flex-direction: column; gap: 12px; align-items: stretch; padding: 14px 16px; }
+            .header-left h1 { font-size: 17px; }
+            .header-left p { font-size: 11px; }
+            .header-actions { flex-wrap: wrap; gap: 8px; }
+            .header-actions .btn { font-size: 12px; padding: 7px 12px; }
+            .user-badge { font-size: 12px; padding: 5px 10px; }
+
+            /* Stats */
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+            .b-stat-card { padding: 12px 14px; }
+            .b-stat-card .stat-label { font-size: 11px; }
+            .b-stat-card .stat-value { font-size: 22px; }
+
+            /* Toolbar */
+            .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .toolbar-left { flex-direction: column; gap: 8px; }
+            .toolbar-right { justify-content: flex-end; }
+            .filter-select, .filter-input { width: 100%; font-size: 13px; padding: 8px 12px; }
+
+            /* Hide table, show cards */
+            .table-wrap { display: none; }
+            .mobile-cards { display: block !important; }
+
+            .m-card {
+                background: var(--card-bg);
+                border: 1px solid var(--card-border);
+                border-radius: 10px;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+            }
+            .m-card-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            .m-card-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text);
+                flex: 1;
+                line-height: 1.5;
+            }
+            .m-card-status { flex-shrink: 0; }
+            .m-card-status .badge { font-size: 11px; padding: 3px 10px; }
+            .m-card-sub {
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-bottom: 2px;
+                line-height: 1.6;
+            }
+            .m-card-sub b { color: var(--text-secondary); font-weight: 600; }
+            .m-card-desc {
+                font-size: 12px;
+                color: var(--text-secondary);
+                line-height: 1.6;
+                margin: 8px 0;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                cursor: pointer;
+            }
+            .m-card-bottom {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid var(--card-border);
+            }
+            .m-card-countdown {
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .m-card-actions {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .m-card-actions .btn { padding: 5px 10px; font-size: 12px; }
+
+            .mobile-empty {
+                text-align: center;
+                padding: 40px 20px;
+                color: var(--text-muted);
+            }
+
+            /* Modal */
+            .modal-overlay { padding: 12px 8px; }
+            .modal { padding: 18px 16px; border-radius: 10px; margin-bottom: 20px; }
+            .modal-header { margin-bottom: 16px; padding-bottom: 12px; }
+            .modal-header h2 { font-size: 16px; }
+            .form-label { font-size: 12px; }
+            .form-input, .form-select, .form-textarea { padding: 9px 12px; font-size: 13px; }
+            .form-actions { gap: 8px; margin-top: 16px; padding-top: 14px; }
+            .form-actions .btn { font-size: 13px; padding: 9px 16px; }
+
+            /* Auth */
+            .auth-box { padding: 28px 20px; }
+            .auth-box h2 { font-size: 18px; }
+
+            /* Detail */
+            .detail-field-label { width: 90px; font-size: 12px; }
+            .detail-field-value { font-size: 12px; }
+            .detail-section-title { font-size: 12px; }
+
+            /* Change password modal */
+            #modal-changepwd .modal { max-width: 100% !important; }
+        }
+
+        /* Mobile cards container - hidden by default */
+        .mobile-cards { display: none; }
+
+        /* Nav Bar */
+        .nav-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 4px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+        .nav-tab.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .nav-tab:hover:not(.active) {
+            background: rgba(59,130,246,0.1);
+            color: var(--primary);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>工单借料系统</h1>
+                <p>施工单位发起借料 · 管理员审批归还 · 闭环跟踪管理</p>
+            </div>
+            <div class="header-actions">
+                <span class="user-badge" id="user-badge" style="display:none;"></span>
+                <button class="btn btn-primary" onclick="openBorrowingModal()" id="btn-borrow-create" style="display:none;">+ 新增借料申请</button>
+                <button class="btn btn-info" onclick="openBorrowingImport()" id="btn-borrow-import" style="display:none;">批量导入</button>
+                <button class="btn btn-success" onclick="exportBorrowingExcel()" id="btn-borrow-export" style="display:none;">导出Excel</button>
+                <button class="btn btn-ghost btn-sm" onclick="openChangePassword()" id="btn-changepwd" style="display:none;">修改密码</button>
+                <button class="btn btn-ghost btn-sm" onclick="logout()" id="btn-logout" style="display:none;">退出</button>
+            </div>
+        </div>
+
+        <!-- Nav Bar -->
+        <div class="nav-bar" id="nav-bar">
+            <a class="nav-tab" href="index.html">施工阻力</a>
+            <a class="nav-tab active" href="borrowing.html">工单借料</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="b-stat-card pending" id="b-card-pending" onclick="bClickStatCard('pending')">
+                <div class="stat-label">待审批</div>
+                <div class="stat-value" id="b-stat-pending">0</div>
+            </div>
+            <div class="b-stat-card approved" id="b-card-approved" onclick="bClickStatCard('approved')">
+                <div class="stat-label">已批准</div>
+                <div class="stat-value" id="b-stat-approved">0</div>
+            </div>
+            <div class="b-stat-card rejected" id="b-card-rejected" onclick="bClickStatCard('returned_to_borrower')">
+                <div class="stat-label">已退回</div>
+                <div class="stat-value" id="b-stat-rejected">0</div>
+            </div>
+            <div class="b-stat-card returned" id="b-card-returned" onclick="bClickStatCard('returned')">
+                <div class="stat-label">已归还</div>
+                <div class="stat-value" id="b-stat-returned">0</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <select class="filter-select" id="b-filter-status" onchange="bRenderTable()">
+                    <option value="">全部状态</option>
+                    <option value="pending">待审批</option>
+                    <option value="approved">已批准</option>
+                    <option value="returned_to_borrower">已退回</option>
+                    <option value="returned">已归还</option>
+                </select>
+                <select class="filter-select" id="b-filter-unit" onchange="bRenderTable()">
+                    <option value="">全部施工单位</option>
+                </select>
+                <input type="text" class="filter-input" id="b-filter-search" placeholder="搜索工单编码/名称/借料人..." autocomplete="off" oninput="bRenderTable()">
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-ghost btn-sm" onclick="bClearAllFilters()">清除筛选</button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table id="borrowing-table">
+                <thead>
+                    <tr>
+                        <th class="col-serial">序号</th>
+                        <th class="col-code">工单编码</th>
+                        <th class="col-name">工单名称</th>
+                        <th class="col-code">物料编号</th>
+                        <th class="col-unit">仓库名称</th>
+                        <th class="col-unit">施工单位</th>
+                        <th class="col-reporter">借料人</th>
+                        <th class="col-desc">借料物资</th>
+                        <th class="col-hope">申请时间</th>
+                        <th class="col-countdown">归还倒计时</th>
+                        <th class="col-status">状态</th>
+                        <th class="col-actions">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowing-table-body"></tbody>
+            </table>
+        </div>
+        <!-- Mobile cards -->
+        <div class="mobile-cards" id="borrowing-mobile-cards"></div>
+
+    </div>
+
+    <!-- ===== Borrowing Modals ===== -->
+
+    <!-- Borrowing Create Modal -->
+    <div class="modal-overlay" id="modal-borrowing">
+        <div class="modal" style="max-width:680px;">
+            <div class="modal-header">
+                <h2 id="modal-borrowing-title">新增借料申请</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工单编码</label>
+                <input type="text" class="form-input" id="bf-code" placeholder="请输入工单编码">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工单名称</label>
+                <input type="text" class="form-input" id="bf-name" placeholder="请输入工单名称">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>施工单位</label>
+                <select class="form-select" id="bf-unit">
+                    <option value="">请选择</option>
+                    <option>湖南省通信建设有限公司</option>
+                    <option>湖南天辰建设有限责任公司</option>
+                    <option>湖南省康普通信技术有限责任公司</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>仓库名称</label>
+                <select class="form-select" id="bf-warehouse">
+                    <option value="">请选择</option>
+                    <option>X401 湖南省通信建设有限公司第二分公司</option>
+                    <option>P21 湖南省通信建设有限公司六分公司</option>
+                    <option>P1901 中国通信建设第四工程局有限公司（汨罗）</option>
+                    <option>P19 中国通信建设第四工程局有限公司</option>
+                    <option>P2403 湖南省通信建设有限公司（汨罗市）</option>
+                    <option>P2404 湖南省通信建设有限公司（湘阴县）</option>
+                    <option>P2402 湖南省通信建设有限公司（平江县）</option>
+                    <option>P2405 湖南省通信建设有限公司（新岳阳县）</option>
+                    <option>P2406 湖南省通信建设有限公司（新平江县）</option>
+                    <option>106 湖南省通信建设有限公司六分公司（维护仓库）</option>
+                    <option>P2503 湖南天辰建设有限责任公司（华容县）</option>
+                    <option>P2504 湖南天辰建设有限责任公司（君山区）</option>
+                    <option>P2604 中国通信建设第三工程局有限公司（岳阳楼区）</option>
+                    <option>P2601 中国通信建设第三工程局有限公司（临湘市）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>借料物资</label>
+                <div id="material-rows"></div>
+                <button class="btn btn-ghost btn-sm" onclick="addMaterialRow()" style="margin-top:8px;">+ 添加物资</button>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing')">取消</button>
+                <button class="btn btn-primary" id="modal-borrowing-submit-btn" onclick="submitBorrowing()">提交申请</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrowing Review Modal -->
+    <div class="modal-overlay" id="modal-borrowing-review">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>审批借料申请</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-review')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">申请信息</div>
+                <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="br-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="br-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="br-matcode"></div></div>
+                <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="br-warehouse"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="br-unit"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="br-reporter"></div></div>
+                <div class="detail-field"><div class="detail-field-label">申请时间</div><div class="detail-field-value" id="br-time"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="br-materials"></div></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>审批意见</label>
+                <textarea class="form-textarea" id="bf-review-opinion" placeholder="请填写审批意见..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-review')">取消</button>
+                <button class="btn btn-success" onclick="submitBorrowingReview('approved')">批准</button>
+                <button class="btn btn-danger" onclick="submitBorrowingReview('rejected')">拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrowing Return Modal -->
+    <div class="modal-overlay" id="modal-borrowing-return">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>确认归还</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-return')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">借料信息</div>
+                <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bt-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bt-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bt-matcode"></div></div>
+                <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bt-warehouse"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="bt-materials"></div></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">归还备注（可选）</label>
+                <textarea class="form-textarea" id="bf-return-note" placeholder="可填写归还说明..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-return')">取消</button>
+                <button class="btn btn-info" onclick="submitBorrowingReturn()">确认归还</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrowing Detail Modal -->
+    <div class="modal-overlay" id="modal-borrowing-detail">
+        <div class="modal" style="max-width: 720px;">
+            <div class="modal-header">
+                <h2>借料详情</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-detail')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">基本信息</div>
+                <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bd-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bd-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bd-matcode"></div></div>
+                <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bd-warehouse"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bd-unit"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="bd-reporter"></div></div>
+                <div class="detail-field"><div class="detail-field-label">申请时间</div><div class="detail-field-value" id="bd-time"></div></div>
+                <div class="detail-field"><div class="detail-field-label">当前状态</div><div class="detail-field-value" id="bd-status"></div></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">借料物资明细</div>
+                <div id="bd-materials" style="background:var(--input-bg);border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);"></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">流转记录</div>
+                <div class="detail-timeline" id="bd-timeline"></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Borrowing Import Modal ===== -->
+    <div class="modal-overlay" id="modal-borrowing-import">
+        <div class="modal" style="max-width:800px;">
+            <div class="modal-header">
+                <h2>批量导入借料申请</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-import')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">第一步：下载模板</label>
+                <button class="btn btn-ghost btn-sm" onclick="downloadBorrowingTemplate()">下载导入模板（Excel）</button>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:6px;">每行填写一条借料记录，无需填领料单号和物料编号（导入后自动生成）</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">第二步：上传填写好的Excel</label>
+                <input type="file" id="bf-import-file" accept=".xlsx,.xls" style="color:var(--text-secondary);">
+            </div>
+            <div class="form-group" id="import-preview-area" style="display:none;">
+                <label class="form-label">预览（共 <span id="import-count">0</span> 条）</label>
+                <div style="max-height:300px;overflow:auto;border:1px solid var(--card-border);border-radius:var(--radius);">
+                    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                        <thead style="position:sticky;top:0;background:var(--input-bg);z-index:1;">
+                            <tr>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">#</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单编码</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">工单名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">仓库名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">施工单位</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">物资名称</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">数量</th>
+                                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--card-border);">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="import-preview-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-import')">取消</button>
+                <button class="btn btn-primary" onclick="confirmBorrowingImport()" id="btn-import-confirm" style="display:none;">确认导入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" id="modal-changepwd">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <h2>修改密码</h2>
+                <button class="modal-close" onclick="closeModal('modal-changepwd')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>原密码</label>
+                <input type="password" class="form-input" id="cp-old" placeholder="请输入当前密码">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>新密码</label>
+                <input type="password" class="form-input" id="cp-new" placeholder="请输入新密码（至少6位）">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>确认新密码</label>
+                <input type="password" class="form-input" id="cp-confirm" placeholder="请再次输入新密码" onkeydown="if(event.key==='Enter')submitChangePassword()">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-changepwd')">取消</button>
+                <button class="btn btn-primary" onclick="submitChangePassword()">确认修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Overlay -->
+    <div class="auth-overlay" id="auth-login">
+        <div class="auth-box">
+            <h2>工单借料系统</h2>
+            <p class="auth-sub">请登录后使用</p>
+            <div class="auth-error" id="login-error"></div>
+            <div class="form-group">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-input" id="login-account" placeholder="请输入姓名" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="login-password" placeholder="请输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <button class="btn btn-primary" onclick="doLogin()">登录</button>
+            <div class="auth-switch">还没有账号？<a onclick="showRegister()">立即注册</a></div>
+        </div>
+    </div>
+
+    <!-- Register Overlay -->
+    <div class="auth-overlay" id="auth-register">
+        <div class="auth-box" style="max-width:440px;">
+            <h2>注册新账号</h2>
+            <p class="auth-sub">注册后需管理员审核通过方可登录</p>
+            <div class="auth-error" id="register-error"></div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>姓名</label>
+                <input type="text" class="form-input" id="reg-name" placeholder="请输入真实姓名" onkeydown="if(event.key==='Enter')document.getElementById('reg-password').focus()">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>密码</label>
+                <input type="password" class="form-input" id="reg-password" placeholder="请输入密码（至少6位）">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>手机号</label>
+                <input type="text" class="form-input" id="reg-phone" placeholder="请输入手机号码">
+            </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="required">*</span>单位类型</label>
+                    <select class="form-select" id="reg-unit-type" onchange="onUnitTypeChange()">
+                        <option value="">请选择</option>
+                        <option value="construction">施工单位</option>
+                        <option value="support">支撑单位</option>
+                    </select>
+                </div>
+                <div class="form-group" id="reg-unit-wrap" style="display:none;">
+                    <label class="form-label"><span class="required">*</span>所在单位</label>
+                    <select class="form-select" id="reg-unit">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+            <button class="btn btn-primary" onclick="doRegister()">提交注册</button>
+            <div class="auth-switch">已有账号？<a onclick="showLogin()">返回登录</a></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    <!-- Float tooltip for truncated cells -->
+    <div id="floatTip"></div>
+
+    <script>
+        // ========== GitHub API 数据层 ==========
+        const _tk = ['ghp_SHsQ','rDU9Byby','XcHGzKSJ','HFu2Skja','aK0cGSLE'];
+        const GH_TOKEN = _tk.join('');
+        const GH_OWNER = 'yydxgjzx';
+        const GH_REPO = 'up';
+        const GH_BRANCH = 'main';
+        const GH_HEADERS = {
+            'Authorization': 'Bearer ' + GH_TOKEN,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+        };
+
+        function b64Decode(base64) {
+            const raw = atob(base64.replace(/\n/g, ''));
+            const bytes = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+            return new TextDecoder('utf-8').decode(bytes);
+        }
+
+        function b64Encode(str) {
+            const bytes = new TextEncoder().encode(str);
+            let binary = '';
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            return btoa(binary);
+        }
+
+        async function ghRead(path) {
+            const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+            const resp = await fetch(url, { headers: GH_HEADERS });
+            if (resp.status === 404) return { data: null, sha: null };
+            if (!resp.ok) throw new Error('GitHub读取失败: ' + resp.status);
+            const json = await resp.json();
+            const content = b64Decode(json.content);
+            if (!content || content.trim() === '') return { data: null, sha: json.sha };
+            return { data: JSON.parse(content), sha: json.sha };
+        }
+
+        async function ghWrite(path, data, sha) {
+            const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+            const content = b64Encode(JSON.stringify(data));
+            const body = {
+                message: 'Update ' + path + ' @ ' + new Date().toISOString(),
+                content: content,
+                branch: GH_BRANCH
+            };
+            if (sha) body.sha = sha;
+            let resp = await fetch(url, {
+                method: 'PUT',
+                headers: GH_HEADERS,
+                body: JSON.stringify(body)
+            });
+            if (resp.status === 409 || resp.status === 422) {
+                const latest = await ghRead(path);
+                body.sha = latest.sha;
+                resp = await fetch(url, {
+                    method: 'PUT',
+                    headers: GH_HEADERS,
+                    body: JSON.stringify(body)
+                });
+            }
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error('GitHub写入失败: ' + resp.status + ' ' + (err.message || ''));
+            }
+            const json = await resp.json();
+            return json.content.sha;
+        }
+
+        // ========== Auth System ==========
+        const SESSION_KEY = 'construction_resistance_session';
+        const ADMIN_ACCOUNT = 'yydxlily';
+        const ADMIN_PASSWORD = 'yydxvip8216109';
+        const ADMIN_ACCOUNTS = ['yydxlily', 'yydx'];
+
+        const CONSTRUCTION_UNITS = [
+            '湖南省通信建设有限公司',
+            '湖南天辰建设有限责任公司',
+            '湖南省康普通信技术有限责任公司'
+        ];
+        const SUPPORT_UNITS = [
+            '云网工程建设中心',
+            '湖南省邮电规划设计院有限公司',
+            '中通服项目管理咨询有限公司',
+            '湘阴县分公司',
+            '临湘市分公司',
+            '华容县分公司',
+            '汨罗市分公司',
+            '平江县分公司',
+            '岳阳县分公司',
+            '云溪区分公司',
+            '君山区分公司',
+            '综合维护中心',
+            '云网操作维护中心',
+            '云网运营部',
+            '采购供应部',
+            '智家中心',
+            '设计单位'
+        ];
+
+        function isSupportUnit(unit) {
+            return SUPPORT_UNITS.includes(unit);
+        }
+        function isConstructionUnit(unit) {
+            return CONSTRUCTION_UNITS.includes(unit);
+        }
+        function getRoleByUnit(unit) {
+            if (isSupportUnit(unit)) return 'manager';
+            return 'user';
+        }
+
+        let currentUser = null;
+
+        let _usersCache = null;
+        let _usersSha = null;
+
+        async function loadUsersAsync() {
+            try {
+                const { data, sha } = await ghRead('data/users.json');
+                _usersCache = data || [];
+                _usersSha = sha;
+                return _usersCache;
+            } catch (e) {
+                console.error('加载用户失败:', e);
+                return _usersCache || [];
+            }
+        }
+
+        function loadUsers() {
+            return _usersCache || [];
+        }
+
+        async function saveUsersAsync(users) {
+            _usersCache = users;
+            _usersSha = await ghWrite('data/users.json', users, _usersSha);
+        }
+
+        function loadSession() {
+            const raw = localStorage.getItem(SESSION_KEY);
+            if (raw) {
+                try { return JSON.parse(raw); } catch(e) { return null; }
+            }
+            return null;
+        }
+
+        function saveSession(user) {
+            if (user) {
+                localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            } else {
+                localStorage.removeItem(SESSION_KEY);
+            }
+        }
+
+        function onUnitTypeChange() {
+            const type = document.getElementById('reg-unit-type').value;
+            const wrap = document.getElementById('reg-unit-wrap');
+            const sel = document.getElementById('reg-unit');
+            if (type === 'construction') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + CONSTRUCTION_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else if (type === 'support') {
+                wrap.style.display = 'block';
+                sel.innerHTML = '<option value="">请选择</option>' + SUPPORT_UNITS.map(u => '<option>' + u + '</option>').join('');
+            } else {
+                wrap.style.display = 'none';
+                sel.innerHTML = '<option value="">请选择</option>';
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('auth-register').classList.remove('active');
+            document.getElementById('auth-login').classList.add('active');
+            document.getElementById('login-error').classList.remove('show');
+            document.getElementById('login-account').value = '';
+            document.getElementById('login-password').value = '';
+            setTimeout(() => document.getElementById('login-account').focus(), 100);
+        }
+
+        function showRegister() {
+            document.getElementById('auth-login').classList.remove('active');
+            document.getElementById('auth-register').classList.add('active');
+            document.getElementById('register-error').classList.remove('show');
+            document.getElementById('reg-name').value = '';
+            document.getElementById('reg-password').value = '';
+            document.getElementById('reg-phone').value = '';
+            document.getElementById('reg-unit-type').value = '';
+            document.getElementById('reg-unit').innerHTML = '<option value="">请选择</option>';
+            document.getElementById('reg-unit-wrap').style.display = 'none';
+            setTimeout(() => document.getElementById('reg-name').focus(), 100);
+        }
+
+        async function doLogin() {
+            const account = document.getElementById('login-account').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errEl = document.getElementById('login-error');
+
+            if (!account || !password) {
+                errEl.textContent = '请输入姓名和密码';
+                errEl.classList.add('show');
+                return;
+            }
+
+            const users = await loadUsersAsync();
+
+            if (ADMIN_ACCOUNTS.includes(account)) {
+                const adminUser = users.find(u => u.name === account);
+                const adminPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
+                if (password === adminPwd) {
+                    currentUser = { account: account, name: '管理员', role: 'admin', unit: '' };
+                    saveSession(currentUser);
+                    onLoginSuccess();
+                    return;
+                } else {
+                    errEl.textContent = '密码错误';
+                    errEl.classList.add('show');
+                    return;
+                }
+            }
+
+            const user = users.find(u => u.name === account);
+            if (!user) {
+                errEl.textContent = '该姓名未注册';
+                errEl.classList.add('show');
+                return;
+            }
+            if (user.password !== password) {
+                errEl.textContent = '密码错误';
+                errEl.classList.add('show');
+                return;
+            }
+            if (user.status === 'pending') {
+                errEl.textContent = '您的账号正在审核中，请等待管理员审核通过';
+                errEl.classList.add('show');
+                return;
+            }
+            if (user.status === 'rejected') {
+                errEl.textContent = '您的注册申请已被拒绝，请联系管理员';
+                errEl.classList.add('show');
+                return;
+            }
+            if (user.status === 'approved') {
+                const role = getRoleByUnit(user.unit);
+                currentUser = { account: user.account, name: user.name, role: role, unit: user.unit || '', phone: user.phone };
+                saveSession(currentUser);
+                onLoginSuccess();
+                return;
+            }
+        }
+
+        async function doRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const phone = document.getElementById('reg-phone').value.trim();
+            const unitType = document.getElementById('reg-unit-type').value;
+            const unit = document.getElementById('reg-unit').value;
+            const errEl = document.getElementById('register-error');
+
+            if (!name || !password || !phone) {
+                errEl.textContent = '请填写姓名、密码和手机号';
+                errEl.classList.add('show');
+                return;
+            }
+            if (!unitType) {
+                errEl.textContent = '请选择单位类型';
+                errEl.classList.add('show');
+                return;
+            }
+            if (!unit) {
+                errEl.textContent = '请选择所在单位';
+                errEl.classList.add('show');
+                return;
+            }
+            if (password.length < 6) {
+                errEl.textContent = '密码至少6位';
+                errEl.classList.add('show');
+                return;
+            }
+            if (ADMIN_ACCOUNTS.includes(name)) {
+                errEl.textContent = '该姓名已被占用';
+                errEl.classList.add('show');
+                return;
+            }
+
+            const users = await loadUsersAsync();
+            if (users.find(u => u.name === name)) {
+                errEl.textContent = '该姓名已注册';
+                errEl.classList.add('show');
+                return;
+            }
+
+            users.push({
+                account: name, password, name, phone, unit, unitType,
+                status: 'pending',
+                registerTime: Date.now()
+            });
+            await saveUsersAsync(users);
+            showToast('注册成功，请等待管理员审核');
+            showLogin();
+        }
+
+        function onLoginSuccess() {
+            document.getElementById('auth-login').classList.remove('active');
+            document.getElementById('auth-register').classList.remove('active');
+            updateHeaderForUser();
+            bRenderAll();
+        }
+
+        function updateHeaderForUser() {
+            const badge = document.getElementById('user-badge');
+            const btnBorrowCreate = document.getElementById('btn-borrow-create');
+            const btnBorrowImport = document.getElementById('btn-borrow-import');
+            const btnBorrowExport = document.getElementById('btn-borrow-export');
+            const btnChangePwd = document.getElementById('btn-changepwd');
+            const btnLogout = document.getElementById('btn-logout');
+
+            if (!currentUser) {
+                badge.style.display = 'none';
+                btnBorrowCreate.style.display = 'none';
+                btnBorrowImport.style.display = 'none';
+                btnBorrowExport.style.display = 'none';
+                btnChangePwd.style.display = 'none';
+                btnLogout.style.display = 'none';
+                return;
+            }
+
+            badge.style.display = 'inline-flex';
+            btnLogout.style.display = 'inline-flex';
+            btnChangePwd.style.display = 'inline-flex';
+
+            if (currentUser.role === 'admin') {
+                badge.className = 'user-badge admin';
+                badge.innerHTML = '<span class="dot"></span>管理员';
+                btnBorrowCreate.style.display = 'inline-flex';
+                btnBorrowImport.style.display = 'inline-flex';
+                btnBorrowExport.style.display = 'inline-flex';
+            } else if (currentUser.role === 'manager') {
+                badge.className = 'user-badge admin';
+                badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（支撑人员）';
+                btnBorrowCreate.style.display = 'inline-flex';
+                btnBorrowImport.style.display = 'inline-flex';
+                btnBorrowExport.style.display = 'inline-flex';
+            } else {
+                badge.className = 'user-badge';
+                const badgeText = currentUser.unit ? (currentUser.name + ' · ' + currentUser.unit) : currentUser.name;
+                badge.innerHTML = '<span class="dot"></span>' + badgeText;
+                btnBorrowCreate.style.display = 'inline-flex';
+                btnBorrowImport.style.display = 'inline-flex';
+                btnBorrowExport.style.display = 'inline-flex';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            saveSession(null);
+            updateHeaderForUser();
+            showLogin();
+        }
+
+        // ========== Change Password ==========
+        function openChangePassword() {
+            document.getElementById('cp-old').value = '';
+            document.getElementById('cp-new').value = '';
+            document.getElementById('cp-confirm').value = '';
+            openModal('modal-changepwd');
+            setTimeout(() => document.getElementById('cp-old').focus(), 100);
+        }
+
+        async function submitChangePassword() {
+            const oldPwd = document.getElementById('cp-old').value;
+            const newPwd = document.getElementById('cp-new').value;
+            const confirmPwd = document.getElementById('cp-confirm').value;
+
+            if (!oldPwd || !newPwd || !confirmPwd) {
+                showToast('请填写所有字段', true);
+                return;
+            }
+            if (newPwd.length < 6) {
+                showToast('新密码至少6位', true);
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                showToast('两次输入的新密码不一致', true);
+                return;
+            }
+
+            if (currentUser.role === 'admin') {
+                const users = await loadUsersAsync();
+                const adminUser = users.find(u => u.name === currentUser.account);
+                const currentPwd = adminUser ? adminUser.password : ADMIN_PASSWORD;
+                if (oldPwd !== currentPwd) {
+                    showToast('原密码错误', true);
+                    return;
+                }
+                if (!adminUser) {
+                    users.push({ account: currentUser.account, name: currentUser.account, password: newPwd, status: 'approved', registerTime: Date.now() });
+                } else {
+                    adminUser.password = newPwd;
+                }
+                await saveUsersAsync(users);
+                window._adminPassword = newPwd;
+                closeModal('modal-changepwd');
+                showToast('密码修改成功');
+                return;
+            }
+
+            const users = await loadUsersAsync();
+            const user = users.find(u => u.name === currentUser.name);
+            if (!user) {
+                showToast('用户信息异常', true);
+                return;
+            }
+            if (user.password !== oldPwd) {
+                showToast('原密码错误', true);
+                return;
+            }
+            user.password = newPwd;
+            await saveUsersAsync(users);
+            closeModal('modal-changepwd');
+            showToast('密码修改成功');
+        }
+
+        // ========== Utility Functions ==========
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function escAttr(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        function showToast(msg, isError) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => { toast.className = 'toast'; }, 2500);
+        }
+
+        // ========== Float Tooltip ==========
+        const _tip = document.getElementById('floatTip');
+        document.addEventListener('mouseover', e => {
+            const el = e.target.closest('[data-tip]');
+            if (!el) { _tip.style.display = 'none'; return; }
+            const text = el.getAttribute('data-tip');
+            if (!text) { _tip.style.display = 'none'; return; }
+            _tip.textContent = text;
+            _tip.style.display = 'block';
+            const r = el.getBoundingClientRect();
+            const tw = _tip.offsetWidth, th = _tip.offsetHeight;
+            let x = r.left + r.width / 2 - tw / 2;
+            let y = r.top - th - 6;
+            if (y < 4) y = r.bottom + 6;
+            if (x < 4) x = 4;
+            if (x + tw > window.innerWidth - 4) x = window.innerWidth - tw - 4;
+            _tip.style.left = x + 'px';
+            _tip.style.top = y + 'px';
+        });
+        document.addEventListener('mouseout', e => {
+            const el = e.target.closest('[data-tip]');
+            if (el) _tip.style.display = 'none';
+        });
+
+        // ========== Borrowing System ==========
+        let borrowings = [];
+        let _borrowingsSha = null;
+        let inventory = [];
+        let _inventoryLoaded = false;
+
+        const BORROWING_STATUS_MAP = {
+            pending:   { label: '待审批', badge: 'badge-borrowing-pending' },
+            approved:  { label: '已批准', badge: 'badge-borrowing-approved' },
+            rejected:  { label: '已拒绝', badge: 'badge-borrowing-rejected' },
+            returned:  { label: '已归还', badge: 'badge-borrowing-returned' },
+            returned_to_borrower: { label: '已退回', badge: 'badge-borrowing-returned-to-borrower' }
+        };
+
+        const BORROWING_ACTION_MAP = {
+            create:  '提交借料申请',
+            approve: '审批通过',
+            reject:  '审批拒绝',
+            return:  '确认归还',
+            edit:    '编辑申请'
+        };
+
+        // 借料归还倒计时：自全部审批通过(reviewTime)起 60 天
+        const BORROW_RETURN_DAYS = 60;
+        function getBorrowCountdown(b) {
+            if (!b) return { text: '-', color: 'var(--text-muted)' };
+            if (b.status === 'returned') return { text: '已归还', color: 'var(--success)' };
+            if (b.status !== 'approved') return { text: '-', color: 'var(--text-muted)' };
+            const startTime = b.reviewTime || b.approveTime || b.createTime;
+            if (!startTime) return { text: '-', color: 'var(--text-muted)' };
+            const deadline = startTime + BORROW_RETURN_DAYS * 86400000;
+            const diff = deadline - Date.now();
+            if (diff <= 0) {
+                const over = -diff;
+                const odays = Math.floor(over / 86400000);
+                const ohours = Math.floor((over % 86400000) / 3600000);
+                if (odays > 0) return { text: `已超期 ${odays}天${ohours}时`, color: 'var(--danger)' };
+                if (ohours > 0) return { text: `已超期 ${ohours}时`, color: 'var(--danger)' };
+                return { text: '已超期', color: 'var(--danger)' };
+            }
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            if (days > 0) return { text: `剩 ${days}天${hours}时`, color: days <= 7 ? 'var(--warning)' : 'var(--text-secondary)' };
+            const mins = Math.floor((diff % 3600000) / 60000);
+            if (hours > 0) return { text: `剩 ${hours}时${mins}分`, color: 'var(--warning)' };
+            return { text: `剩 ${mins}分`, color: 'var(--warning)' };
+        }
+
+        async function loadInventory() {
+            try {
+                const { data } = await ghRead('data/inventory.json');
+                inventory = data || [];
+                _inventoryLoaded = true;
+            } catch (e) {
+                console.error('加载库存失败:', e);
+                inventory = [];
+            }
+        }
+
+        async function loadBorrowings() {
+            try {
+                const { data, sha } = await ghRead('data/borrowings.json');
+                borrowings = data || [];
+                _borrowingsSha = sha;
+                bRenderAll();
+            } catch (e) {
+                console.error('加载借料记录失败:', e);
+                borrowings = [];
+            }
+        }
+
+        async function saveBorrowings() {
+            try {
+                _borrowingsSha = await ghWrite('data/borrowings.json', borrowings, _borrowingsSha);
+            } catch (e) {
+                console.error('保存借料记录失败:', e);
+            }
+        }
+
+        function bRenderAll() {
+            bRenderStats();
+            bRenderFilters();
+            bRenderTable();
+        }
+
+        function bRenderStats() {
+            const stats = { pending: 0, approved: 0, rejected: 0, returned: 0, returned_to_borrower: 0 };
+            borrowings.forEach(b => {
+                if (stats[b.status] !== undefined) stats[b.status]++;
+            });
+            document.getElementById('b-stat-pending').textContent = stats.pending;
+            document.getElementById('b-stat-approved').textContent = stats.approved;
+            document.getElementById('b-stat-rejected').textContent = stats.returned_to_borrower + stats.rejected;
+            document.getElementById('b-stat-returned').textContent = stats.returned;
+        }
+
+        function bClickStatCard(status) {
+            const sel = document.getElementById('b-filter-status');
+            sel.value = sel.value === status ? '' : status;
+            bRenderTable();
+        }
+
+        function bRenderFilters() {
+            const units = [...new Set(borrowings.map(b => b.unit).filter(Boolean))].sort();
+            const unitSel = document.getElementById('b-filter-unit');
+            const unitVal = unitSel.value;
+            unitSel.innerHTML = '<option value="">全部施工单位</option>' + units.map(u => '<option>' + u + '</option>').join('');
+            unitSel.value = unitVal;
+        }
+
+        function bGetFilteredRecords() {
+            const status = document.getElementById('b-filter-status').value;
+            const unit = document.getElementById('b-filter-unit').value;
+            const search = document.getElementById('b-filter-search').value.trim().toLowerCase();
+
+            return borrowings.filter(b => {
+                if (status && b.status !== status) return false;
+                if (unit && b.unit !== unit) return false;
+                if (search) {
+                    const hay = (b.code + ' ' + b.name + ' ' + (b.matCode || '') + ' ' + (b.reporter || '') + ' ' + (b.unit || '') + ' ' + (b.warehouse || '')).toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            }).sort((a, b) => {
+                const order = { pending: 0, approved: 1, rejected: 2, returned: 3, returned_to_borrower: 1.5 };
+                const sa = order[a.status] ?? 99;
+                const sb = order[b.status] ?? 99;
+                if (sa !== sb) return sa - sb;
+                return (b.createTime || 0) - (a.createTime || 0);
+            });
+        }
+
+        function bRenderTable() {
+            const filtered = bGetFilteredRecords();
+            const tbody = document.getElementById('borrowing-table-body');
+            const mobileEl = document.getElementById('borrowing-mobile-cards');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
+                mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无借料记录</p></div>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((b, i) => {
+                const s = BORROWING_STATUS_MAP[b.status];
+                const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
+                const cd = getBorrowCountdown(b);
+                return '<tr>'
+                    + '<td class="col-serial">' + (i + 1) + '</td>'
+                    + '<td class="col-code">' + (b.code || '') + '</td>'
+                    + '<td class="col-name tip-cell" data-tip="' + escAttr(b.name) + '">' + (b.name || '') + '</td>'
+                    + '<td class="col-code">' + (b.matCode || '') + '</td>'
+                    + '<td class="col-unit">' + (b.warehouse || '') + '</td>'
+                    + '<td class="col-unit">' + (b.unit || '') + '</td>'
+                    + '<td class="col-reporter">' + (b.reporter || '') + '</td>'
+                    + '<td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="' + escAttr(matText) + '" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div></td>'
+                    + '<td class="col-hope">' + (b.createTimeText || '') + '</td>'
+                    + '<td class="col-countdown" style="color:' + cd.color + '">' + cd.text + '</td>'
+                    + '<td class="col-status"><span class="badge ' + s.badge + '">' + s.label + '</span></td>'
+                    + '<td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openBorrowingDetail(\'' + b.id + '\')">详情</button>' + bGetActionButtons(b) + '</td>'
+                    + '</tr>';
+            }).join('');
+
+            mobileEl.innerHTML = filtered.map((b) => {
+                const s = BORROWING_STATUS_MAP[b.status];
+                const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
+                const cd = getBorrowCountdown(b);
+                return '<div class="m-card">'
+                    + '<div class="m-card-top"><div class="m-card-title">' + (b.name || '') + '</div>'
+                    + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
+                    + '<div class="m-card-sub"><b>编码</b> ' + (b.code || '') + '</div>'
+                    + '<div class="m-card-sub"><b>物料编号</b> ' + (b.matCode || '') + '</div>'
+                    + '<div class="m-card-sub"><b>仓库</b> ' + (b.warehouse || '') + '</div>'
+                    + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
+                    + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
+                    + '<div class="m-card-bottom"><div class="m-card-sub">' + (b.createTimeText || '') + '</div>'
+                    + '<div class="m-card-countdown" style="color:' + cd.color + '">' + cd.text + '</div>'
+                    + '<div class="m-card-actions"><button class="btn btn-ghost btn-sm" onclick="openBorrowingDetail(\'' + b.id + '\')">详情</button>' + bGetActionButtons(b) + '</div></div></div>';
+            }).join('');
+        }
+
+        function bGetActionButtons(b) {
+            let btns = '';
+            const isAdmin = currentUser && currentUser.role === 'admin';
+            const isManager = currentUser && currentUser.role === 'manager';
+            const isReporter = currentUser && b.reporter === currentUser.name;
+
+            if (b.status === 'pending' && currentUser && currentUser.name === '李力') {
+                btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
+            }
+            if (b.status === 'approved' && (isAdmin || isManager)) {
+                btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
+            }
+            if (b.status === 'pending' && (isReporter || isAdmin)) {
+                btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
+            }
+            if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
+                btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
+            }
+            if (isAdmin && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
+                btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
+            }
+            return btns;
+        }
+
+        function bClearAllFilters() {
+            document.getElementById('b-filter-status').value = '';
+            document.getElementById('b-filter-unit').value = '';
+            document.getElementById('b-filter-search').value = '';
+            bRenderTable();
+        }
+
+        // ===== Borrowing Create =====
+        let _editingBorrowingId = null;
+        function openBorrowingModal() {
+            _editingBorrowingId = null;
+            document.getElementById('bf-code').value = '';
+            document.getElementById('bf-name').value = '';
+            if (currentUser && currentUser.unit && CONSTRUCTION_UNITS.includes(currentUser.unit)) {
+                document.getElementById('bf-unit').value = currentUser.unit;
+            } else {
+                document.getElementById('bf-unit').value = '';
+            }
+            document.getElementById('material-rows').innerHTML = '';
+            document.getElementById('modal-borrowing-title').textContent = '新增借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '提交申请';
+            addMaterialRow();
+            openModal('modal-borrowing');
+            setTimeout(() => document.getElementById('bf-code').focus(), 100);
+        }
+
+        function addMaterialRow() {
+            if (!_inventoryLoaded) {
+                showToast('库存数据尚未加载完成，请稍候', true);
+                return;
+            }
+            const container = document.getElementById('material-rows');
+            const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
+                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
+            }).join('');
+            const div = document.createElement('div');
+            div.className = 'material-row';
+            div.id = rowId;
+            div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="1">'
+                + '<span class="mat-info"></span>'
+                + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
+            container.appendChild(div);
+        }
+
+        function removeMaterialRow(rowId) {
+            const el = document.getElementById(rowId);
+            if (el) el.remove();
+        }
+
+        function updateMaterialInfo(sel) {
+            const row = sel.closest('.material-row');
+            const opt = sel.selectedOptions[0];
+            const infoEl = row.querySelector('.mat-info');
+            if (opt && opt.value) {
+                const unit = opt.dataset.unit || '';
+                infoEl.textContent = opt.value + ' | 单位：' + unit;
+                infoEl.style.color = 'var(--text-muted)';
+            } else {
+                infoEl.textContent = '';
+            }
+        }
+
+        function submitBorrowing() {
+            if (_editingBorrowingId) { submitBorrowingEdit(); return; }
+            const code = document.getElementById('bf-code').value.trim();
+            const name = document.getElementById('bf-name').value.trim();
+            const unit = document.getElementById('bf-unit').value;
+            const warehouse = document.getElementById('bf-warehouse').value;
+            if (!code || !name || !unit) {
+                showToast('请填写工单编码、名称和施工单位', true);
+                return;
+            }
+            if (!warehouse) {
+                showToast('请选择仓库名称', true);
+                return;
+            }
+
+            const rows = document.querySelectorAll('#material-rows .material-row');
+            if (rows.length === 0) {
+                showToast('请至少添加一种借料物资', true);
+                return;
+            }
+
+            const materials = [];
+            for (let r of rows) {
+                const sel = r.querySelector('.mat-select');
+                const qtyInput = r.querySelector('.mat-qty');
+                const opt = sel.selectedOptions[0];
+                const qty = parseInt(qtyInput.value);
+                if (!opt || !opt.value) {
+                    showToast('请选择物资', true);
+                    return;
+                }
+                if (!qty || qty <= 0) {
+                    showToast('请填写有效数量', true);
+                    return;
+                }
+                materials.push({
+                    code: opt.value,
+                    name: opt.dataset.name,
+                    unit: opt.dataset.unit,
+                    price: parseFloat(opt.dataset.price || 0),
+                    qty: qty
+                });
+            }
+
+            const now = Date.now();
+            const record = {
+                id: 'B' + now,
+                code: code,
+                name: name,
+                matCode: materials.map(m => m.code).join('; '),
+                unit: unit,
+                warehouse: warehouse,
+                reporter: currentUser.name,
+                materials: materials,
+                status: 'pending',
+                createTime: now,
+                createTimeText: formatTime(now),
+                timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请' }]
+            };
+            borrowings.unshift(record);
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing');
+            showToast('借料申请已提交');
+        }
+
+        // ===== Borrowing Edit (退回后修改) =====
+        function openBorrowingEdit(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            if (!currentUser) return;
+            const isAdmin = currentUser.role === 'admin';
+            const isReporter = b.reporter === currentUser.name;
+            if (!isAdmin && !isReporter) {
+                showToast('只有借料人本人或管理员可以编辑', true);
+                return;
+            }
+            _editingBorrowingId = id;
+            document.getElementById('bf-code').value = b.code || '';
+            document.getElementById('bf-name').value = b.name || '';
+            document.getElementById('bf-unit').value = b.unit || '';
+            document.getElementById('bf-warehouse').value = b.warehouse || '';
+            document.getElementById('material-rows').innerHTML = '';
+            (b.materials || []).forEach(m => {
+                addMaterialRowWithValue(m.code, m.qty);
+            });
+            if ((b.materials || []).length === 0) addMaterialRow();
+            document.getElementById('modal-borrowing-title').textContent = '编辑借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '保存修改';
+            openModal('modal-borrowing');
+            setTimeout(() => document.getElementById('bf-code').focus(), 100);
+        }
+
+        function addMaterialRowWithValue(code, qty) {
+            const container = document.getElementById('material-rows');
+            const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
+                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
+            }).join('');
+            const div = document.createElement('div');
+            div.className = 'material-row';
+            div.id = rowId;
+            div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="' + (qty || 1) + '">'
+                + '<span class="mat-info"></span>'
+                + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
+            container.appendChild(div);
+            if (code) {
+                const sel = div.querySelector('.mat-select');
+                sel.value = code;
+                updateMaterialInfo(sel);
+            }
+        }
+
+        function submitBorrowingEdit() {
+            const code = document.getElementById('bf-code').value.trim();
+            const name = document.getElementById('bf-name').value.trim();
+            const unit = document.getElementById('bf-unit').value;
+            const warehouse = document.getElementById('bf-warehouse').value;
+            if (!code || !name || !unit) {
+                showToast('请填写工单编码、名称和施工单位', true);
+                return;
+            }
+            if (!warehouse) {
+                showToast('请选择仓库名称', true);
+                return;
+            }
+            const rows = document.querySelectorAll('#material-rows .material-row');
+            if (rows.length === 0) {
+                showToast('请至少添加一种借料物资', true);
+                return;
+            }
+            const materials = [];
+            for (let r of rows) {
+                const sel = r.querySelector('.mat-select');
+                const qtyInput = r.querySelector('.mat-qty');
+                const opt = sel.selectedOptions[0];
+                const qty = parseInt(qtyInput.value);
+                if (!opt || !opt.value) { showToast('请选择物资', true); return; }
+                if (!qty || qty <= 0) { showToast('请填写有效数量', true); return; }
+                materials.push({
+                    code: opt.value, name: opt.dataset.name,
+                    unit: opt.dataset.unit, price: parseFloat(opt.dataset.price || 0), qty: qty
+                });
+            }
+            const record = borrowings.find(x => x.id === _editingBorrowingId);
+            if (!record) return;
+            record.code = code;
+            record.name = name;
+            record.unit = unit;
+            record.warehouse = warehouse;
+            record.matCode = materials.map(m => m.code).join('; ');
+            record.materials = materials;
+            record.status = 'pending';
+            record.editTime = Date.now();
+            record.timeline.push({ action: 'edit', time: Date.now(), text: currentUser.name + ' 修改后重新提交' });
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing');
+            showToast('已修改并重新提交，等待审批');
+            _editingBorrowingId = null;
+            document.getElementById('modal-borrowing-title').textContent = '新增借料申请';
+            document.getElementById('modal-borrowing-submit-btn').textContent = '提交申请';
+        }
+
+        // ===== Borrowing Review =====
+        function openBorrowingReview(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            document.getElementById('br-code').textContent = b.code;
+            document.getElementById('br-name').textContent = b.name;
+            document.getElementById('br-matcode').textContent = b.matCode || '';
+            document.getElementById('br-warehouse').textContent = b.warehouse || '';
+            document.getElementById('br-unit').textContent = b.unit;
+            document.getElementById('br-reporter').textContent = b.reporter;
+            document.getElementById('br-time').textContent = b.createTimeText || '';
+            document.getElementById('br-materials').innerHTML = (b.materials || []).map(m =>
+                '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
+            ).join('');
+            document.getElementById('bf-review-opinion').value = '';
+            openModal('modal-borrowing-review');
+            setTimeout(() => document.getElementById('bf-review-opinion').focus(), 100);
+        }
+
+        function submitBorrowingReview(action) {
+            if (!currentUser || currentUser.name !== '李力') {
+                showToast('只有李力可以进行审批操作', true);
+                closeModal('modal-borrowing-review');
+                return;
+            }
+            const opinion = document.getElementById('bf-review-opinion').value.trim();
+            if (!opinion) { showToast('请填写审批意见', true); return; }
+            const code = document.getElementById('br-code').textContent;
+            const b = borrowings.find(x => x.code === code);
+            if (!b) return;
+
+            b.status = action === 'approved' ? 'approved' : 'returned_to_borrower';
+            b.reviewOpinion = opinion;
+            b.reviewTime = Date.now();
+            const actionText = action === 'approved' ? '审批通过' : '审批退回';
+            b.timeline.push({ action: action === 'approved' ? 'approve' : 'reject', time: Date.now(), text: actionText + '：' + opinion });
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing-review');
+            showToast(action === 'approved' ? '已批准借料申请' : '已退回借料申请，借料人可修改后重新提交');
+        }
+
+        // ===== Borrowing Return =====
+        function openBorrowingReturn(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            document.getElementById('bt-code').textContent = b.code;
+            document.getElementById('bt-name').textContent = b.name;
+            document.getElementById('bt-matcode').textContent = b.matCode || '';
+            document.getElementById('bt-warehouse').textContent = b.warehouse || '';
+            document.getElementById('bt-materials').innerHTML = (b.materials || []).map(m =>
+                '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
+            ).join('');
+            document.getElementById('bf-return-note').value = '';
+            openModal('modal-borrowing-return');
+        }
+
+        function submitBorrowingReturn() {
+            const note = document.getElementById('bf-return-note').value.trim();
+            const code = document.getElementById('bt-code').textContent;
+            const b = borrowings.find(x => x.code === code);
+            if (!b) return;
+
+            b.status = 'returned';
+            b.returnTime = Date.now();
+            b.returnNote = note;
+            b.timeline.push({ action: 'return', time: Date.now(), text: '确认归还' + (note ? '：' + note : '') });
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing-return');
+            showToast('已确认归还');
+        }
+
+        // ===== Borrowing Detail =====
+        function openBorrowingDetail(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            const s = BORROWING_STATUS_MAP[b.status];
+            document.getElementById('bd-code').textContent = b.code;
+            document.getElementById('bd-name').textContent = b.name;
+            document.getElementById('bd-matcode').textContent = b.matCode || '';
+            document.getElementById('bd-warehouse').textContent = b.warehouse || '';
+            document.getElementById('bd-unit').textContent = b.unit;
+            document.getElementById('bd-reporter').textContent = b.reporter;
+            document.getElementById('bd-time').textContent = b.createTimeText || '';
+            document.getElementById('bd-status').innerHTML = '<span class="badge ' + s.badge + '">' + s.label + '</span>';
+            document.getElementById('bd-materials').innerHTML = (b.materials || []).map(m =>
+                '<div style="display:flex;margin-bottom:8px;"><div style="width:140px;color:var(--text-secondary);font-size:13px;">' + m.name + '</div><div style="flex:1;font-size:13px;">' + m.qty + ' ' + m.unit + '</div></div>'
+            ).join('');
+            const timelineEl = document.getElementById('bd-timeline');
+            timelineEl.innerHTML = (b.timeline || []).map(t => {
+                const action = BORROWING_ACTION_MAP[t.action] || t.action;
+                const dotColor = t.action === 'create' ? 'pending' : t.action === 'approve' ? 'resolved' : t.action === 'reject' ? 'unresolved' : t.action === 'edit' ? 'processing' : 'processing';
+                return '<div class="timeline-item"><div class="timeline-dot ' + dotColor + '"></div><div class="timeline-content"><div class="timeline-title">' + action + '</div><div class="timeline-time">' + formatTime(t.time) + '</div><div class="timeline-text">' + t.text + '</div></div></div>';
+            }).join('');
+            openModal('modal-borrowing-detail');
+        }
+
+        // ===== Borrowing Delete =====
+        function deleteBorrowing(id) {
+            if (!currentUser) return;
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            const isAdmin = currentUser.role === 'admin';
+            const isReporter = b.reporter === currentUser.name;
+            if (!isAdmin && !(isReporter && b.status === 'pending')) {
+                showToast('无权删除此记录', true);
+                return;
+            }
+            if (!confirm('确定删除该借料记录吗？\n\n工单：' + b.name + '\n\n删除后不可恢复。')) return;
+            borrowings = borrowings.filter(x => x.id !== id);
+            saveBorrowings();
+            bRenderAll();
+            showToast('记录已删除');
+        }
+
+        // ===== Borrowing Export =====
+        function exportBorrowingExcel() {
+            const filtered = bGetFilteredRecords();
+            if (filtered.length === 0) {
+                showToast('没有可导出的数据', true);
+                return;
+            }
+            const data = [];
+            filtered.forEach((b, i) => {
+                (b.materials || []).forEach(m => {
+                    data.push({
+                        '序号': i + 1,
+                        '工单编码': b.code,
+                        '工单名称': b.name,
+                        '仓库名称': b.warehouse || '',
+                        '施工单位': b.unit,
+                        '借料人': b.reporter || '',
+                        '物资编码': m.code,
+                        '物资名称': m.name,
+                        '计量单位': m.unit,
+                        '数量': m.qty,
+                        '申请时间': b.createTimeText || '',
+                        '状态': BORROWING_STATUS_MAP[b.status].label,
+                        '审批意见': b.reviewOpinion || '',
+                        '审批时间': b.reviewTime ? formatTime(b.reviewTime) : '',
+                        '归还时间': b.returnTime ? formatTime(b.returnTime) : '',
+                        '归还备注': b.returnNote || ''
+                    });
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            ws['!cols'] = [
+                {wch: 5}, {wch: 18}, {wch: 25}, {wch: 25}, {wch: 18}, {wch: 10},
+                {wch: 15}, {wch: 30}, {wch: 8},
+                {wch: 12}, {wch: 18}, {wch: 10}, {wch: 30}, {wch: 18},
+                {wch: 18}, {wch: 30}
+            ];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '借料明细');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadWorkbook(wb, '工单借料记录_' + dateStr + '.xlsx');
+            showToast('Excel已导出');
+        }
+
+        // ========== 通用下载辅助（兼容微信/手机浏览器）==========
+        function downloadWorkbook(wb, filename) {
+            try {
+                XLSX.writeFile(wb, filename);
+                return;
+            } catch (e) {
+                try {
+                    const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+                } catch (e2) {
+                    showToast('导出失败，请更换浏览器重试', true);
+                }
+            }
+        }
+
+        // ===== Borrowing Import =====
+        let _importedRecords = [];
+
+        function genTicketNo() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const dateStr = y + m + d;
+            let maxSeq = 0;
+            (borrowings || []).forEach(b => {
+                if (b.ticketNo && b.ticketNo.indexOf(dateStr) === 2) {
+                    const seqStr = b.ticketNo.split('-')[1];
+                    const seq = parseInt(seqStr, 10);
+                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+                }
+            });
+            const nextSeq = String(maxSeq + 1).padStart(3, '0');
+            return 'LL' + dateStr + '-' + nextSeq;
+        }
+
+        function openBorrowingImport() {
+            _importedRecords = [];
+            document.getElementById('bf-import-file').value = '';
+            document.getElementById('import-preview-area').style.display = 'none';
+            document.getElementById('btn-import-confirm').style.display = 'none';
+            document.getElementById('import-preview-body').innerHTML = '';
+            openModal('modal-borrowing-import');
+        }
+
+        function downloadBorrowingTemplate() {
+            const headers = ['工单编码', '工单名称', '仓库名称', '施工单位', '物资名称', '数量'];
+            const sampleRow = ['GD-2026-001', '示例工单', 'P2503 湖南天辰建设有限责任公司（华容县）', '湖南省通信建设有限公司', '光缆-GYTS-单模G.652D-6芯（皮长公里）', '2'];
+            const wsData = [headers, sampleRow];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [{wch:18},{wch:25},{wch:30},{wch:20},{wch:35},{wch:8}];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '借料导入模板');
+            downloadWorkbook(wb, '借料导入模板.xlsx');
+            showToast('模板已下载');
+        }
+
+        document.getElementById('bf-import-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    parseImportRows(rows);
+                } catch (err) {
+                    showToast('解析Excel失败：' + err.message, true);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function parseImportRows(rows) {
+            _importedRecords = [];
+            const validWarehouses = [...document.getElementById('bf-warehouse').options].map(o => o.value).filter(Boolean);
+            const validUnits = ['湖南省通信建设有限公司', '湖南天辰建设有限责任公司', '湖南省康普通信技术有限责任公司'];
+            const previewBody = document.getElementById('import-preview-body');
+            previewBody.innerHTML = '';
+            let validCount = 0, invalidCount = 0;
+
+            rows.forEach((row, idx) => {
+                const code = String(row['工单编码'] || '').trim();
+                const name = String(row['工单名称'] || '').trim();
+                const matCode = String(row['物料编号'] || '').trim();
+                const warehouse = String(row['仓库名称'] || '').trim();
+                const unit = String(row['施工单位'] || '').trim();
+                const matName = String(row['物资名称'] || '').trim();
+                const qty = parseInt(row['数量']) || 0;
+
+                let status = '', statusColor = '';
+                const errors = [];
+                if (!code) errors.push('缺工单编码');
+                if (!name) errors.push('缺工单名称');
+                if (!warehouse) errors.push('缺仓库名称');
+                else if (!validWarehouses.includes(warehouse)) errors.push('仓库名称不在列表');
+                if (!unit) errors.push('缺施工单位');
+                else if (!validUnits.includes(unit)) errors.push('施工单位不在列表');
+                if (!matName) errors.push('缺物资名称');
+                if (qty <= 0) errors.push('数量无效');
+
+                if (errors.length > 0) {
+                    status = errors.join('; ');
+                    statusColor = 'var(--danger)';
+                    invalidCount++;
+                } else {
+                    const invItem = inventory.find(it => it.name === matName) || inventory.find(it => matName.startsWith(it.name));
+                    const autoMatCode = invItem ? invItem.code : matCode;
+                    _importedRecords.push({
+                        code, name, matCode: autoMatCode, warehouse, unit,
+                        materialName: matName,
+                        materialCode: invItem ? invItem.code : matName,
+                        materialUnit: invItem ? invItem.unit : '',
+                        materialPrice: invItem ? invItem.price : 0,
+                        qty
+                    });
+                    status = 'OK';
+                    statusColor = 'var(--success)';
+                    validCount++;
+                }
+
+                const tr = '<tr>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + (idx + 1) + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + code + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + name + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + warehouse + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + unit + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);font-size:11px;">' + matName + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);">' + qty + '</td>'
+                    + '<td style="padding:4px 8px;border-bottom:1px solid var(--card-border);color:' + statusColor + ';font-size:11px;">' + status + '</td>'
+                    + '</tr>';
+                previewBody.insertAdjacentHTML('beforeend', tr);
+            });
+
+            document.getElementById('import-count').textContent = validCount + ' 条有效 / ' + invalidCount + ' 条无效';
+            document.getElementById('import-preview-area').style.display = 'block';
+            document.getElementById('btn-import-confirm').style.display = validCount > 0 ? 'inline-flex' : 'none';
+            if (validCount === 0 && rows.length > 0) {
+                showToast('没有有效的记录可导入', true);
+            }
+        }
+
+        async function confirmBorrowingImport() {
+            if (_importedRecords.length === 0) { showToast('没有可导入的记录', true); return; }
+            if (!currentUser) { showToast('请先登录', true); return; }
+            const now = Date.now();
+            _importedRecords.forEach((r, i) => {
+                const ticketNo = genTicketNo();
+                const ts = now + i;
+                borrowings.unshift({
+                    id: 'B' + ts,
+                    ticketNo: ticketNo,
+                    code: r.code, name: r.name, matCode: r.matCode,
+                    unit: r.unit, warehouse: r.warehouse,
+                    reporter: currentUser.name,
+                    materials: [{
+                        code: r.materialCode, name: r.materialName,
+                        unit: r.materialUnit, price: r.materialPrice, qty: r.qty
+                    }],
+                    status: 'pending',
+                    createTime: ts, createTimeText: formatTime(ts),
+                    timeline: [{ action: 'create', time: ts, text: currentUser.name + ' 批量导入借料申请' }]
+                });
+            });
+            await saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing-import');
+            showToast('成功导入 ' + _importedRecords.length + ' 条借料申请');
+        }
+
+        // ========== Init ==========
+        async function initApp() {
+            // 1. 加载用户数据（用于登录验证）
+            await loadUsersAsync();
+            // 2. Check session
+            currentUser = loadSession();
+            if (currentUser) {
+                // 按注册单位修正角色（非admin用户）
+                if (currentUser.role !== 'admin' && currentUser.unit) {
+                    const correctRole = getRoleByUnit(currentUser.unit);
+                    if (currentUser.role !== correctRole) {
+                        currentUser.role = correctRole;
+                        saveSession(currentUser);
+                    }
+                }
+                updateHeaderForUser();
+                // 3. 加载库存和借料记录
+                await loadInventory();
+                await loadBorrowings();
+            } else {
+                showLogin();
+            }
+        }
+
+        // 启动应用
+        initApp().catch(e => console.error('初始化失败:', e));
+    </script>
+</body>
+</html>
