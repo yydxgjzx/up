@@ -1175,6 +1175,7 @@
                             <th class="col-reporter">借料人</th>
                             <th class="col-desc">借料物资</th>
                             <th class="col-hope">申请时间</th>
+                            <th class="col-countdown">归还倒计时</th>
                             <th class="col-status">状态</th>
                             <th class="col-actions">操作</th>
                         </tr>
@@ -3727,6 +3728,33 @@
             edit:     '编辑申请'
         };
 
+        // 借料归还倒计时：自全部审批通过(reviewTime)起 60 天
+        const BORROW_RETURN_DAYS = 60;
+        function getBorrowCountdown(b) {
+            if (!b) return { text: '-', color: 'var(--text-muted)' };
+            // 仅"已批准"状态显示倒计时；已归还显示"已归还"；其他状态显示"-"
+            if (b.status === 'returned') return { text: '已归还', color: 'var(--success)' };
+            if (b.status !== 'approved') return { text: '-', color: 'var(--text-muted)' };
+            const startTime = b.reviewTime || b.approveTime || b.createTime;
+            if (!startTime) return { text: '-', color: 'var(--text-muted)' };
+            const deadline = startTime + BORROW_RETURN_DAYS * 86400000;
+            const diff = deadline - Date.now();
+            if (diff <= 0) {
+                const over = -diff;
+                const odays = Math.floor(over / 86400000);
+                const ohours = Math.floor((over % 86400000) / 3600000);
+                if (odays > 0) return { text: `已超期 ${odays}天${ohours}时`, color: 'var(--danger)' };
+                if (ohours > 0) return { text: `已超期 ${ohours}时`, color: 'var(--danger)' };
+                return { text: '已超期', color: 'var(--danger)' };
+            }
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            if (days > 0) return { text: `剩 ${days}天${hours}时`, color: days <= 7 ? 'var(--warning)' : 'var(--text-secondary)' };
+            const mins = Math.floor((diff % 3600000) / 60000);
+            if (hours > 0) return { text: `剩 ${hours}时${mins}分`, color: 'var(--warning)' };
+            return { text: `剩 ${mins}分`, color: 'var(--warning)' };
+        }
+
         function switchTab(tab) {
             _currentBorrowingTab = tab;
             document.getElementById('tab-resistance').classList.toggle('active', tab === 'resistance');
@@ -3838,13 +3866,14 @@
             const tbody = document.getElementById('borrowing-table-body');
             const mobileEl = document.getElementById('borrowing-mobile-cards');
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><p>暂无借料记录</p></div></td></tr>';
                 mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无借料记录</p></div>';
                 return;
             }
             tbody.innerHTML = filtered.map((b, i) => {
                 const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
+                const cd = getBorrowCountdown(b);
                     return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
                     + '<td class="col-code">' + (b.ticketNo || '') + '</td>'
@@ -3856,6 +3885,7 @@
                     + '<td class="col-reporter">' + (b.reporter || '') + '</td>'
                     + '<td class="col-desc tip-cell-desc"><div class="desc-text" data-tip="' + escAttr(matText) + '" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div></td>'
                     + '<td class="col-hope">' + (b.createTimeText || '') + '</td>'
+                    + '<td class="col-countdown" style="color:' + cd.color + '">' + cd.text + '</td>'
                     + '<td class="col-status"><span class="badge ' + s.badge + '">' + s.label + '</span></td>'
                     + '<td class="col-actions"><button class="btn btn-ghost btn-sm" onclick="openBorrowingDetail(\'' + b.id + '\')">详情</button>' + bGetActionButtons(b) + '</td>'
                     + '</tr>';
@@ -3863,6 +3893,7 @@
             mobileEl.innerHTML = filtered.map((b) => {
                 const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
+                const cd = getBorrowCountdown(b);
                     return '<div class="m-card">'
                     + '<div class="m-card-top"><div class="m-card-title">' + (b.name || '') + '</div>'
                     + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
@@ -3873,6 +3904,7 @@
                     + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
                     + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
                     + '<div class="m-card-bottom"><div class="m-card-sub">' + (b.createTimeText || '') + '</div>'
+                    + '<div class="m-card-countdown" style="color:' + cd.color + '">' + cd.text + '</div>'
                     + '<div class="m-card-actions"><button class="btn btn-ghost btn-sm" onclick="openBorrowingDetail(\'' + b.id + '\')">详情</button>' + bGetActionButtons(b) + '</div></div></div>';
             }).join('');
         }
