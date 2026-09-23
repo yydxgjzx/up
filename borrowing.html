@@ -162,6 +162,7 @@
 
         /* Borrowing status badges */
         .badge-borrowing-pending { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-borrowing-checked { background: rgba(139,92,246,0.15); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.3); }
         .badge-borrowing-approved { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
         .badge-borrowing-rejected { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         .badge-borrowing-returned { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
@@ -1742,7 +1743,8 @@
         let _inventoryLoaded = false;
 
         const BORROWING_STATUS_MAP = {
-            pending:   { label: '待审批', badge: 'badge-borrowing-pending' },
+            pending:   { label: '待核对', badge: 'badge-borrowing-pending' },
+            checked:   { label: '待审批', badge: 'badge-borrowing-checked' },
             approved:  { label: '已批准', badge: 'badge-borrowing-approved' },
             rejected:  { label: '已拒绝', badge: 'badge-borrowing-rejected' },
             returned:  { label: '已归还', badge: 'badge-borrowing-returned' },
@@ -1751,10 +1753,11 @@
 
         const BORROWING_ACTION_MAP = {
             create:  '提交借料申请',
-            approve: '审批通过',
-            reject:  '审批拒绝',
-            return:  '确认归还',
-            edit:    '编辑申请'
+            check:    '核对通过',
+            reject:   '退回/拒绝',
+            approve:  '审批通过',
+            return:   '确认归还',
+            edit:     '编辑申请'
         };
 
         // 借料归还倒计时：自全部审批通过(reviewTime)起 60 天
@@ -1821,11 +1824,11 @@
         }
 
         function bRenderStats() {
-            const stats = { pending: 0, approved: 0, rejected: 0, returned: 0, returned_to_borrower: 0 };
+            const stats = { pending: 0, checked: 0, approved: 0, rejected: 0, returned: 0, returned_to_borrower: 0 };
             borrowings.forEach(b => {
                 if (stats[b.status] !== undefined) stats[b.status]++;
             });
-            document.getElementById('b-stat-pending').textContent = stats.pending;
+            document.getElementById('b-stat-pending').textContent = stats.pending + stats.checked;
             document.getElementById('b-stat-approved').textContent = stats.approved;
             document.getElementById('b-stat-rejected').textContent = stats.returned_to_borrower + stats.rejected;
             document.getElementById('b-stat-returned').textContent = stats.returned;
@@ -1851,7 +1854,10 @@
             const search = document.getElementById('b-filter-search').value.trim().toLowerCase();
 
             return borrowings.filter(b => {
-                if (status && b.status !== status) return false;
+                // "待审批"筛选同时匹配 pending 与 checked 状态
+                if (status === 'checked') {
+                    if (b.status !== 'checked' && b.status !== 'pending') return false;
+                } else if (status && b.status !== status) return false;
                 if (unit && b.unit !== unit) return false;
                 if (search) {
                     const hay = (b.code + ' ' + b.name + ' ' + (b.matCode || '') + ' ' + (b.reporter || '') + ' ' + (b.unit || '') + ' ' + (b.warehouse || '')).toLowerCase();
@@ -1859,7 +1865,7 @@
                 }
                 return true;
             }).sort((a, b) => {
-                const order = { pending: 0, approved: 1, rejected: 2, returned: 3, returned_to_borrower: 1.5 };
+                const order = { pending: 0, checked: 0.5, approved: 1, rejected: 2, returned: 3, returned_to_borrower: 1.5 };
                 const sa = order[a.status] ?? 99;
                 const sb = order[b.status] ?? 99;
                 if (sa !== sb) return sa - sb;
@@ -1879,7 +1885,7 @@
             }
 
             tbody.innerHTML = filtered.map((b, i) => {
-                const s = BORROWING_STATUS_MAP[b.status];
+                const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
                 const cd = getBorrowCountdown(b);
                 return '<tr>'
@@ -1899,7 +1905,7 @@
             }).join('');
 
             mobileEl.innerHTML = filtered.map((b) => {
-                const s = BORROWING_STATUS_MAP[b.status];
+                const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
                 const matText = (b.materials || []).map(m => m.name + ' x' + m.qty).join('; ');
                 const cd = getBorrowCountdown(b);
                 return '<div class="m-card">'
@@ -1922,7 +1928,7 @@
             const isManager = currentUser && currentUser.role === 'manager';
             const isReporter = currentUser && b.reporter === currentUser.name;
 
-            if (b.status === 'pending' && currentUser && currentUser.name === '李力') {
+            if ((b.status === 'pending' || b.status === 'checked') && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
             }
             if (b.status === 'approved' && (isAdmin || isManager)) {
@@ -2246,7 +2252,7 @@
         function openBorrowingDetail(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
-            const s = BORROWING_STATUS_MAP[b.status];
+            const s = BORROWING_STATUS_MAP[b.status] || { label: b.status, badge: '' };
             document.getElementById('bd-code').textContent = b.code;
             document.getElementById('bd-name').textContent = b.name;
             document.getElementById('bd-matcode').textContent = b.matCode || '';
@@ -2307,7 +2313,7 @@
                         '计量单位': m.unit,
                         '数量': m.qty,
                         '申请时间': b.createTimeText || '',
-                        '状态': BORROWING_STATUS_MAP[b.status].label,
+                        '状态': (BORROWING_STATUS_MAP[b.status] || {label: b.status}).label,
                         '审批意见': b.reviewOpinion || '',
                         '审批时间': b.reviewTime ? formatTime(b.reviewTime) : '',
                         '归还时间': b.returnTime ? formatTime(b.returnTime) : '',
