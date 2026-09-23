@@ -3767,11 +3767,14 @@
             if (tab === 'borrowing') {
                 titleEl.textContent = '工单借料系统';
                 subtitleEl.textContent = '施工单位发起借料 · 设计单位核对 · 管理员审批归还';
-                if (!_inventoryLoaded) { loadInventory(); }
-                if (borrowings.length === 0) { loadBorrowings(); }
+                // 每次切换 Tab 都从云端重新拉取最新数据，确保多端数据同步
+                loadInventory();
+                loadBorrowings();
             } else {
                 titleEl.textContent = '施工阻力协调系统';
-                subtitleEl.textContent = '施工单位填报施工阻力 · 支撑人员受理反馈 · 闭环跟踪管理';
+                subtitleEl.textContent = '施工单位填报施工阻力 · 支撑人员反馈处理 · 闭环跟踪管理';
+                // 每次切换 Tab 都从云端重新拉取最新数据，确保多端数据同步
+                loadDataAsync().then(() => renderAll());
             }
             if (currentUser) { updateHeaderForUser(); }
         }
