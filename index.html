@@ -3935,8 +3935,8 @@
             if (b.status === 'pending' && isAdmin) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
-            // 已退回：借料人或admin可编辑修改后重新提交
-            if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
+            // 待核对/已退回：借料人或admin可编辑修改后重新提交
+            if ((b.status === 'pending' || b.status === 'returned_to_borrower') && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
             }
             if (isAdmin && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
@@ -4088,6 +4088,10 @@
             const isReporter = b.reporter === currentUser.name;
             if (!isAdmin && !isReporter) {
                 showToast('只有借料人本人或管理员可以编辑', true);
+                return;
+            }
+            if (b.status !== 'pending' && b.status !== 'returned_to_borrower') {
+                showToast('当前状态不可编辑，仅待核对/已退回可修改', true);
                 return;
             }
             _editingBorrowingId = id;
