@@ -3932,8 +3932,8 @@
             if (b.status === 'checked' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
             }
-            // 已批准：admin或manager可归还
-            if (b.status === 'approved' && (isAdmin || isManager)) {
+            // 已批准：仅李力可归还
+            if (b.status === 'approved' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
             // 删除权限：仅管理员(yydxlily)可删除
@@ -4282,6 +4282,10 @@
         function openBorrowingReturn(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
+            if (!currentUser || currentUser.name !== '李力') {
+                showToast('只有李力可以确认归还', true);
+                return;
+            }
             document.getElementById('bt-ticket').textContent = b.ticketNo || '';
             document.getElementById('bt-code').textContent = b.code;
             document.getElementById('bt-name').textContent = b.name;
@@ -4295,6 +4299,11 @@
         }
 
         function submitBorrowingReturn() {
+            if (!currentUser || currentUser.name !== '李力') {
+                showToast('只有李力可以确认归还', true);
+                closeModal('modal-borrowing-return');
+                return;
+            }
             const note = document.getElementById('bf-return-note').value.trim();
             const code = document.getElementById('bt-code').textContent;
             const b = borrowings.find(x => x.code === code);
