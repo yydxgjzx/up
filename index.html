@@ -582,6 +582,12 @@
             line-height: 1.5;
         }
 
+        .timeline-actor {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
         /* Toast notification */
         .toast {
             position: fixed;
@@ -4067,7 +4073,7 @@
                 id: 'B' + now, ticketNo: ticketNo, code: code, name: name, unit: unit, warehouse: warehouse, matCode: materials.map(m => m.code).join('; '),
                 reporter: currentUser.name, materials: materials,
                 status: 'pending', createTime: now, createTimeText: formatTime(now),
-                timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请' }]
+                timeline: [{ action: 'create', time: now, text: currentUser.name + ' 提交借料申请', user: currentUser.name, unit: currentUser.unit || '' }]
             };
             borrowings.unshift(record);
             saveBorrowings();
@@ -4174,7 +4180,7 @@
             record.materials = materials;
             record.status = 'pending';
             record.editTime = Date.now();
-            record.timeline.push({ action: 'edit', time: Date.now(), text: currentUser.name + ' 修改后重新提交' });
+            record.timeline.push({ action: 'edit', time: Date.now(), text: currentUser.name + ' 修改后重新提交', user: currentUser.name, unit: currentUser.unit || '' });
             saveBorrowings();
             bRenderAll();
             closeModal('modal-borrowing');
@@ -4215,13 +4221,13 @@
                 record.status = 'checked';
                 record.checkOpinion = opinion;
                 record.checkTime = Date.now();
-                record.timeline.push({ action: 'check', time: Date.now(), text: '核对通过：' + opinion });
+                record.timeline.push({ action: 'check', time: Date.now(), text: '核对通过：' + opinion, user: currentUser.name, unit: currentUser.unit || '' });
                 showToast('已核对通过，转入审批');
             } else {
                 record.status = 'returned_to_borrower';
                 record.checkOpinion = opinion;
                 record.checkTime = Date.now();
-                record.timeline.push({ action: 'reject', time: Date.now(), text: '核对退回：' + opinion });
+                record.timeline.push({ action: 'reject', time: Date.now(), text: '核对退回：' + opinion, user: currentUser.name, unit: currentUser.unit || '' });
                 showToast('已退回借料申请，借料人可修改后重新提交');
             }
             saveBorrowings();
@@ -4265,7 +4271,7 @@
             b.reviewOpinion = opinion;
             b.reviewTime = Date.now();
             const actionText = action === 'approved' ? '审批通过' : '审批退回';
-            b.timeline.push({ action: action === 'approved' ? 'approve' : 'reject', time: Date.now(), text: actionText + '：' + opinion });
+            b.timeline.push({ action: action === 'approved' ? 'approve' : 'reject', time: Date.now(), text: actionText + '：' + opinion, user: currentUser.name, unit: currentUser.unit || '' });
             saveBorrowings();
             bRenderAll();
             closeModal('modal-borrowing-review');
@@ -4296,7 +4302,7 @@
             b.status = 'returned';
             b.returnTime = Date.now();
             b.returnNote = note;
-            b.timeline.push({ action: 'return', time: Date.now(), text: '确认归还' + (note ? '：' + note : '') });
+            b.timeline.push({ action: 'return', time: Date.now(), text: '确认归还' + (note ? '：' + note : ''), user: currentUser.name, unit: currentUser.unit || '' });
             saveBorrowings();
             bRenderAll();
             closeModal('modal-borrowing-return');
@@ -4324,7 +4330,8 @@
             timelineEl.innerHTML = (b.timeline || []).map(t => {
                 const action = BORROWING_ACTION_MAP[t.action] || t.action;
                 const dotColor = t.action === 'create' ? 'pending' : t.action === 'check' ? 'processing' : t.action === 'approve' ? 'resolved' : t.action === 'reject' ? 'unresolved' : t.action === 'edit' ? 'processing' : 'processing';
-                return '<div class="timeline-item"><div class="timeline-dot ' + dotColor + '"></div><div class="timeline-content"><div class="timeline-title">' + action + '</div><div class="timeline-time">' + formatTime(t.time) + '</div><div class="timeline-text">' + t.text + '</div></div></div>';
+                const actorHtml = t.user ? '<div class="timeline-actor">反馈人：' + escAttr(t.user) + (t.unit ? ' · ' + escAttr(t.unit) : '') + '</div>' : (t.action === 'create' && b.reporter ? '<div class="timeline-actor">反馈人：' + escAttr(b.reporter) + (b.unit ? ' · ' + escAttr(b.unit) : '') + '</div>' : '');
+                return '<div class="timeline-item"><div class="timeline-dot ' + dotColor + '"></div><div class="timeline-content"><div class="timeline-title">' + action + '</div><div class="timeline-time">' + formatTime(t.time) + '</div><div class="timeline-text">' + t.text + '</div>' + actorHtml + '</div></div>';
             }).join('');
             openModal('modal-borrowing-detail');
         }
@@ -4506,7 +4513,7 @@
                     }],
                     status: 'pending',
                     createTime: ts, createTimeText: formatTime(ts),
-                    timeline: [{ action: 'create', time: ts, text: currentUser.name + ' 批量导入借料申请' }]
+                    timeline: [{ action: 'create', time: ts, text: currentUser.name + ' 批量导入借料申请', user: currentUser.name, unit: currentUser.unit || '' }]
                 });
             });
             await saveBorrowings();
