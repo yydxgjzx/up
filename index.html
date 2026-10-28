@@ -2984,9 +2984,10 @@
             if (currentUser && r.status === 'feedback' && r.reporter === currentUser.name) {
                 btns += `<button class="btn btn-success btn-sm" onclick="openConfirm('${r.id}')">确认</button>`;
             }
-            // 填报人：仅自己填报的待受理记录可以编辑
+            // 填报人：仅自己填报的待受理记录可以编辑/删除
             if (currentUser && r.status === 'pending' && r.reporter === currentUser.name) {
                 btns += `<button class="btn btn-warning btn-sm" onclick="openEdit('${r.id}')">编辑</button>`;
+                btns += `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">删除</button>`;
             }
             // 管理员：任意状态都可以编辑申报内容
             if (isAdmin) {
@@ -3364,12 +3365,18 @@
             }
         }
 
-        // ========== Delete (管理员删除) ==========
+        // ========== Delete (管理员删任意状态；填报人仅删自己填报的待受理工单) ==========
         function deleteRecord(id) {
-            if (!currentUser || currentUser.role !== 'admin') return;
+            if (!currentUser) return;
             const r = findRecord(id);
             if (!r) return;
-            if (!confirm(`确定删除该阻力记录吗？\n\n工程编码：${r.code}\n工程名称：${r.name}\n\n删除后不可恢复。`)) return;
+            const isAdmin = currentUser.role === 'admin';
+            const isOwnerPending = r.reporter === currentUser.name && r.status === 'pending';
+            if (!isAdmin && !isOwnerPending) return;
+            const tip = (!isAdmin && isOwnerPending)
+                ? `确定删除您填报的待受理工单吗？\n\n工程编码：${r.code}\n工程名称：${r.name}\n\n仅待受理工单可由填报人删除，删除后不可恢复。`
+                : `确定删除该阻力记录吗？\n\n工程编码：${r.code}\n工程名称：${r.name}\n\n删除后不可恢复。`;
+            if (!confirm(tip)) return;
             records = records.filter(x => x.id !== id);
             saveData();
             renderAll();
