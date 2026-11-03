@@ -289,7 +289,7 @@
         }
 
         .col-serial { width: 42px; text-align: center; color: var(--text-muted); white-space: nowrap; }
-        .col-code { width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .col-code { min-width: 100px; white-space: normal; word-break: break-all; line-height: 1.5; vertical-align: top; }
         .col-name { max-width: 260px; min-width: 180px; }
         .col-unit { max-width: 170px; }
         .col-reporter { width: 55px; white-space: nowrap; }
@@ -1920,6 +1920,13 @@
             });
         }
 
+        function formatCodeCell(s) {
+            if (s == null || s === '') return '';
+            const parts = String(s).split(/[、，,;；/\s]+/).filter(Boolean);
+            if (parts.length <= 1) return escAttr(String(s).trim());
+            return parts.map(p => '<div>' + escAttr(p) + '</div>').join('');
+        }
+
         function bRenderTable() {
             const filtered = bGetFilteredRecords();
             const tbody = document.getElementById('borrowing-table-body');
@@ -1937,9 +1944,9 @@
                 const cd = getBorrowCountdown(b);
                 return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
-                    + '<td class="col-code">' + (b.code || '') + '</td>'
+                    + '<td class="col-code">' + formatCodeCell(b.code) + '</td>'
                     + '<td class="col-name tip-cell" data-tip="' + escAttr(b.name) + '">' + (b.name || '') + '</td>'
-                    + '<td class="col-code">' + (b.matCode || '') + '</td>'
+                    + '<td class="col-code">' + formatCodeCell(b.matCode) + '</td>'
                     + '<td class="col-unit">' + (b.warehouse || '') + '</td>'
                     + '<td class="col-unit">' + (b.unit || '') + '</td>'
                     + '<td class="col-reporter">' + (b.reporter || '') + '</td>'
@@ -1958,8 +1965,8 @@
                 return '<div class="m-card">'
                     + '<div class="m-card-top"><div class="m-card-title">' + (b.name || '') + '</div>'
                     + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
-                    + '<div class="m-card-sub"><b>编码</b> ' + (b.code || '') + '</div>'
-                    + '<div class="m-card-sub"><b>物料编号</b> ' + (b.matCode || '') + '</div>'
+                    + '<div class="m-card-sub"><b>编码</b> ' + formatCodeCell(b.code) + '</div>'
+                    + '<div class="m-card-sub"><b>物料编号</b> ' + formatCodeCell(b.matCode) + '</div>'
                     + '<div class="m-card-sub"><b>仓库</b> ' + (b.warehouse || '') + '</div>'
                     + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
                     + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
