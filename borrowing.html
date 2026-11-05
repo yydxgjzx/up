@@ -708,39 +708,6 @@
             flex-shrink: 0;
         }
 
-        /* Signature upload in borrow form */
-        .signature-zone {
-            border: 2px dashed var(--card-border);
-            border-radius: var(--radius);
-            padding: 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color .2s;
-        }
-        .signature-zone:hover {
-            border-color: var(--primary);
-        }
-        .signature-zone .sig-hint {
-            color: var(--text-muted);
-            font-size: 13px;
-            line-height: 1.7;
-        }
-        .signature-zone .sig-hint strong {
-            color: var(--text);
-            font-size: 15px;
-        }
-        #bf-signature-preview {
-            display: none;
-            max-width: 100%;
-            max-height: 220px;
-            border-radius: var(--radius);
-            border: 1px solid var(--card-border);
-            margin-top: 8px;
-            object-fit: contain;
-            background: #fff;
-        }
-        .text-muted { color: var(--text-muted); }
-
         /* Responsive */
         @media (max-width: 900px) {
             .stats-row {
@@ -1056,15 +1023,6 @@
                 <div id="material-rows"></div>
                 <button class="btn btn-ghost btn-sm" onclick="addMaterialRow()" style="margin-top:8px;">+ 添加物资</button>
             </div>
-            <div class="form-group">
-                <label class="form-label"><span class="required">*</span>签字确认</label>
-                <div class="signature-zone" id="bf-signature-placeholder" onclick="document.getElementById('bf-signature-file').click()">
-                    <div class="sig-hint"><strong>点击上传签字图片</strong><br>请上传申请人签字确认的图片（拍照或扫描件）</div>
-                </div>
-                <input type="file" id="bf-signature-file" accept="image/*" style="display:none;">
-                <img id="bf-signature-preview" alt="签字图片预览">
-                <button class="btn btn-danger btn-sm" id="bf-signature-remove" onclick="removeBorrowSignature()" style="display:none;margin-top:8px;">移除签字图片</button>
-            </div>
 
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-borrowing')">取消</button>
@@ -1090,7 +1048,6 @@
                 <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="br-reporter"></div></div>
                 <div class="detail-field"><div class="detail-field-label">申请时间</div><div class="detail-field-value" id="br-time"></div></div>
                 <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="br-materials"></div></div>
-                <div class="detail-field"><div class="detail-field-label">签字确认</div><div class="detail-field-value" id="br-signature"><span class="text-muted">无签字图片</span></div></div>
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>审批意见</label>
@@ -1151,10 +1108,6 @@
             <div class="detail-section">
                 <div class="detail-section-title">借料物资明细</div>
                 <div id="bd-materials" style="background:var(--input-bg);border-radius:var(--radius);padding:16px;border:1px solid var(--card-border);"></div>
-            </div>
-            <div class="detail-section">
-                <div class="detail-section-title">签字确认</div>
-                <div id="bd-signature"><span class="text-muted">无签字图片</span></div>
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">流转记录</div>
@@ -2018,60 +1971,10 @@
             bRenderTable();
         }
 
-        // ===== Borrowing Signature Upload =====
-        let _borrowSignature = '';
-        function onBorrowingSignatureSelected(file) {
-            if (!file) return;
-            if (!file.type.match(/^image\//)) {
-                showToast('请上传图片格式的签字文件', true);
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                const img = new Image();
-                img.onload = function() {
-                    const maxW = 900;
-                    let w = img.width, h = img.height;
-                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    _borrowSignature = canvas.toDataURL('image/jpeg', 0.8);
-                    document.getElementById('bf-signature-preview').src = _borrowSignature;
-                    document.getElementById('bf-signature-preview').style.display = 'block';
-                    document.getElementById('bf-signature-placeholder').style.display = 'none';
-                    document.getElementById('bf-signature-remove').style.display = 'inline-block';
-                };
-                img.onerror = function() { showToast('图片读取失败，请重新选择', true); };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function removeBorrowSignature() {
-            _borrowSignature = '';
-            const f = document.getElementById('bf-signature-file');
-            if (f) f.value = '';
-            document.getElementById('bf-signature-preview').style.display = 'none';
-            document.getElementById('bf-signature-preview').src = '';
-            document.getElementById('bf-signature-placeholder').style.display = 'block';
-            document.getElementById('bf-signature-remove').style.display = 'none';
-        }
-
-        function setBorrowSignaturePreview(src) {
-            _borrowSignature = src || '';
-            const has = !!src;
-            document.getElementById('bf-signature-preview').style.display = has ? 'block' : 'none';
-            document.getElementById('bf-signature-preview').src = has ? src : '';
-            document.getElementById('bf-signature-placeholder').style.display = has ? 'none' : 'block';
-            document.getElementById('bf-signature-remove').style.display = has ? 'inline-block' : 'none';
-        }
-
         // ===== Borrowing Create =====
         let _editingBorrowingId = null;
         function openBorrowingModal() {
             _editingBorrowingId = null;
-            setBorrowSignaturePreview('');
             document.getElementById('bf-code').value = '';
             document.getElementById('bf-name').value = '';
             if (currentUser && currentUser.unit && CONSTRUCTION_UNITS.includes(currentUser.unit)) {
@@ -2139,10 +2042,6 @@
                 showToast('请选择仓库名称', true);
                 return;
             }
-            if (!_borrowSignature) {
-                showToast('请上传签字确认图片', true);
-                return;
-            }
 
             const rows = document.querySelectorAll('#material-rows .material-row');
             if (rows.length === 0) {
@@ -2183,7 +2082,6 @@
                 warehouse: warehouse,
                 reporter: currentUser.name,
                 materials: materials,
-                signature: _borrowSignature,
                 status: 'pending',
                 createTime: now,
                 createTimeText: formatTime(now),
@@ -2212,7 +2110,6 @@
             document.getElementById('bf-name').value = b.name || '';
             document.getElementById('bf-unit').value = b.unit || '';
             document.getElementById('bf-warehouse').value = b.warehouse || '';
-            setBorrowSignaturePreview(b.signature || '');
             document.getElementById('material-rows').innerHTML = '';
             (b.materials || []).forEach(m => {
                 addMaterialRowWithValue(m.code, m.qty);
@@ -2258,10 +2155,6 @@
                 showToast('请选择仓库名称', true);
                 return;
             }
-            if (!_borrowSignature) {
-                showToast('请上传签字确认图片', true);
-                return;
-            }
             const rows = document.querySelectorAll('#material-rows .material-row');
             if (rows.length === 0) {
                 showToast('请至少添加一种借料物资', true);
@@ -2288,7 +2181,6 @@
             record.warehouse = warehouse;
             record.matCode = materials.map(m => m.code).join('; ');
             record.materials = materials;
-            record.signature = _borrowSignature;
             record.status = 'pending';
             record.editTime = Date.now();
             record.timeline.push({ action: 'edit', time: Date.now(), text: currentUser.name + ' 修改后重新提交' });
@@ -2315,9 +2207,6 @@
             document.getElementById('br-materials').innerHTML = (b.materials || []).map(m =>
                 '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
             ).join('');
-            document.getElementById('br-signature').innerHTML = b.signature
-                ? '<img src="' + b.signature + '" alt="签字图片" style="max-width:220px;border-radius:6px;border:1px solid var(--card-border);">'
-                : '<span class="text-muted">无签字图片</span>';
             document.getElementById('bf-review-opinion').value = '';
             openModal('modal-borrowing-review');
             setTimeout(() => document.getElementById('bf-review-opinion').focus(), 100);
@@ -2393,9 +2282,6 @@
             document.getElementById('bd-materials').innerHTML = (b.materials || []).map(m =>
                 '<div style="display:flex;margin-bottom:8px;"><div style="width:140px;color:var(--text-secondary);font-size:13px;">' + m.name + '</div><div style="flex:1;font-size:13px;">' + m.qty + ' ' + m.unit + '</div></div>'
             ).join('');
-            document.getElementById('bd-signature').innerHTML = b.signature
-                ? '<img src="' + b.signature + '" alt="签字图片" style="max-width:240px;border-radius:6px;border:1px solid var(--card-border);">'
-                : '<span class="text-muted">无签字图片</span>';
             const timelineEl = document.getElementById('bd-timeline');
             timelineEl.innerHTML = (b.timeline || []).map(t => {
                 const action = BORROWING_ACTION_MAP[t.action] || t.action;
@@ -2530,10 +2416,6 @@
             downloadWorkbook(wb, '借料导入模板.xlsx');
             showToast('模板已下载');
         }
-
-        document.getElementById('bf-signature-file').addEventListener('change', function(e) {
-            onBorrowingSignatureSelected(e.target.files[0]);
-        });
 
         document.getElementById('bf-import-file').addEventListener('change', function(e) {
             const file = e.target.files[0];
