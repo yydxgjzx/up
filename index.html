@@ -976,6 +976,44 @@
         .badge-borrowing-returned { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
         .badge-borrowing-returned-to-borrower { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
 
+        /* ===== Progress Management Styles ===== */
+        .progress-view { display: none; }
+        .progress-view.active { display: block; }
+        .p-prog { display: flex; align-items: center; gap: 8px; }
+        .p-prog-bar { flex: 1; height: 8px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; min-width: 64px; }
+        .p-prog-fill { height: 100%; border-radius: 4px; background: var(--primary); transition: width .3s; }
+        .p-prog.high .p-prog-fill { background: var(--success); }
+        .p-prog.low .p-prog-fill { background: var(--warning); }
+        .p-prog-pct { width: 44px; text-align: right; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .col-pdue { width: 128px; white-space: nowrap; font-size: 12px; }
+        .col-pdue .p-days { display: block; font-size: 11px; font-weight: 600; margin-top: 2px; }
+        .col-pprog { min-width: 128px; }
+        .col-pweek { width: 88px; text-align: center; white-space: nowrap; }
+        .badge-p-filled { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); cursor: pointer; }
+        .badge-p-empty { background: rgba(148,163,184,0.12); color: var(--text-muted); border: 1px solid rgba(148,163,184,0.25); }
+        .badge-p-done { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
+        .badge-p-due { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-p-overdue { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+        .pf-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; background: var(--bg-muted); }
+        .pf-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+        .pf-item-name { font-size: 13px; font-weight: 600; line-height: 1.4; }
+        .pf-item-code { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+        .pf-grid { display: grid; grid-template-columns: 92px 1fr 1fr; gap: 8px; }
+        .pf-grid label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; }
+        .pf-grid textarea { min-height: 66px; }
+        .pf-progress { text-align: center; font-weight: 700; padding: 8px 4px !important; }
+        .pf-hint { font-size: 12px; color: var(--text-muted); margin: 4px 0 12px; line-height: 1.5; }
+        .p-report-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; background: var(--input-bg); }
+        .p-report-week { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .p-report-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .p-report-field { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 2px; }
+        .p-report-field b { color: var(--text-primary); }
+        .p-detail-list { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
+        @media (max-width: 768px) {
+            .pf-grid { grid-template-columns: 1fr; }
+            .p-detail-list { max-height: 60vh; }
+        }
+
         .material-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .material-row .form-select { flex: 1; min-width: 0; }
         .material-row .mat-qty { width: 70px !important; flex-shrink: 0; text-align: center; }
@@ -1024,6 +1062,7 @@
         <div class="nav-bar" id="nav-bar">
             <button class="nav-tab active" id="tab-resistance" onclick="switchTab('resistance')">施工阻力</button>
             <button class="nav-tab" id="tab-borrowing" onclick="switchTab('borrowing')">工单借料</button>
+            <button class="nav-tab" id="tab-progress" onclick="switchTab('progress')">施工进度</button>
         </div>
 
         <!-- Header -->
@@ -1036,9 +1075,12 @@
                 <span class="user-badge" id="user-badge" style="display:none;"></span>
                 <button class="btn btn-primary" onclick="openCreateModal()" id="btn-create" style="display:none;">+ 新增阻力填报</button>
                 <button class="btn btn-success" onclick="exportExcel()" id="btn-export" style="display:none;">导出Excel</button>
-                <button class="btn btn-primary" onclick="openBorrowingModal()" id="btn-borrow-create" style="display:none;">+ 新增借料申请</button>
-                <button class="btn btn-info" onclick="openBorrowingImport()" id="btn-borrow-import" style="display:none;">批量导入</button>
-                <button class="btn btn-success" onclick="exportBorrowingExcel()" id="btn-borrow-export" style="display:none;">导出Excel</button>
+            <button class="btn btn-primary" onclick="openBorrowingModal()" id="btn-borrow-create" style="display:none;">+ 新增借料申请</button>
+            <button class="btn btn-info" onclick="openBorrowingImport()" id="btn-borrow-import" style="display:none;">批量导入</button>
+            <button class="btn btn-success" onclick="exportBorrowingExcel()" id="btn-borrow-export" style="display:none;">导出Excel</button>
+            <button class="btn btn-primary" onclick="pOpenFillModal()" id="btn-prog-fill" style="display:none;">填报周报</button>
+            <button class="btn btn-success" onclick="exportProgressExcel()" id="btn-prog-export" style="display:none;">导出Excel</button>
+            <button class="btn btn-info" onclick="pOpenEditModal()" id="btn-prog-add" style="display:none;">+ 新增工程</button>
                 <button class="btn btn-warning btn-sm" onclick="openAdminReview()" id="btn-admin" style="display:none;">用户审核</button>
                 <button class="btn btn-ghost btn-sm" onclick="openChangePassword()" id="btn-changepwd" style="display:none;">修改密码</button>
                 <button class="btn btn-ghost btn-sm" onclick="logout()" id="btn-logout" style="display:none;">退出</button>
@@ -1195,6 +1237,87 @@
             <!-- Mobile cards -->
             <div class="mobile-cards" id="borrowing-mobile-cards"></div>
         </div><!-- /borrowing-view -->
+
+        <!-- ===== Progress View ===== -->
+        <div class="progress-view" id="view-progress">
+            <!-- Stats -->
+            <div class="stats-row b-stats-row">
+                <div class="b-stat-card checking" onclick="pClickStat('')">
+                    <div class="stat-label">工程总数</div>
+                    <div class="stat-value" id="p-stat-total">0</div>
+                </div>
+                <div class="b-stat-card approved" onclick="pClickStat('reported')">
+                    <div class="stat-label">本周已填报</div>
+                    <div class="stat-value" id="p-stat-reported">0</div>
+                </div>
+                <div class="b-stat-card pending" onclick="pClickStat('unreported')">
+                    <div class="stat-label">本周未填报</div>
+                    <div class="stat-value" id="p-stat-unreported">0</div>
+                </div>
+                <div class="b-stat-card checked" onclick="pClickStat('due')">
+                    <div class="stat-label">30天内到期</div>
+                    <div class="stat-value" id="p-stat-due">0</div>
+                </div>
+                <div class="b-stat-card rejected" onclick="pClickStat('overdue')">
+                    <div class="stat-label">已超期</div>
+                    <div class="stat-value" id="p-stat-overdue">0</div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <select class="filter-select" id="p-filter-leader" onchange="pRenderTable()">
+                        <option value="">全部队长</option>
+                    </select>
+                    <select class="filter-select" id="p-filter-unit" onchange="pRenderTable()">
+                        <option value="">全部施工单位</option>
+                        <option>湖南省通信建设有限公司</option>
+                        <option>湖南天辰建设有限责任公司</option>
+                        <option>湖南省康普通信技术有限责任公司</option>
+                        <option>中国通信建设第三工程局有限公司</option>
+                    </select>
+                    <select class="filter-select" id="p-filter-manager" onchange="pRenderTable()">
+                        <option value="">全部管理员</option>
+                    </select>
+                    <select class="filter-select" id="p-filter-status" onchange="pRenderTable()">
+                        <option value="">全部状态</option>
+                        <option value="reported">本周已填报</option>
+                        <option value="unreported">本周未填报</option>
+                        <option value="due">30天内到期</option>
+                        <option value="overdue">已超期</option>
+                        <option value="unfinished">未完工</option>
+                    </select>
+                    <input type="text" class="filter-input" id="p-filter-search" placeholder="搜索工程名称/编码/队长..." autocomplete="off" oninput="pRenderTable()">
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn btn-ghost btn-sm" onclick="pClearAllFilters()">清除筛选</button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-wrap">
+                <table id="progress-table">
+                    <thead>
+                        <tr>
+                            <th class="col-serial">序号</th>
+                            <th class="col-code">工程编码</th>
+                            <th class="col-name">工程名称</th>
+                            <th class="col-reporter">队长</th>
+                            <th class="col-unit">施工单位</th>
+                            <th class="col-reporter">管理员</th>
+                            <th class="col-pdue">要求完工</th>
+                            <th class="col-pprog">完工进度</th>
+                            <th class="col-pweek">本周周报</th>
+                            <th class="col-actions">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progress-table-body"></tbody>
+                </table>
+            </div>
+            <!-- Mobile cards -->
+            <div class="mobile-cards" id="progress-mobile-cards"></div>
+        </div><!-- /progress-view -->
 
     <!-- Create Modal -->
     <div class="modal-overlay" id="modal-create">
@@ -1862,6 +1985,145 @@
         </div>
     </div>
 
+    <!-- ===== Progress Modals ===== -->
+
+    <!-- Progress Weekly Fill Modal -->
+    <div class="modal-overlay" id="modal-progress-fill">
+        <div class="modal" style="max-width: 860px;">
+            <div class="modal-header">
+                <h2>周报填报</h2>
+                <button class="modal-close" onclick="closeModal('modal-progress-fill')">&times;</button>
+            </div>
+            <div class="form-actions" style="justify-content: flex-start; gap: 12px; margin-bottom: 4px;">
+                <div style="flex:1;">
+                    <label class="form-label">填报周次</label>
+                    <select class="form-select" id="pf-week" onchange="pRenderFillRows()"></select>
+                </div>
+                <div style="flex:1; display:none;" id="pf-leader-wrap">
+                    <label class="form-label">施工队长</label>
+                    <select class="form-select" id="pf-leader" onchange="pRenderFillRows()"></select>
+                </div>
+            </div>
+            <p class="pf-hint" id="pf-hint"></p>
+            <div id="pf-rows"></div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-progress-fill')">取消</button>
+                <button class="btn btn-primary" onclick="pSubmitFill()">提交填报</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Detail Modal -->
+    <div class="modal-overlay" id="modal-progress-detail">
+        <div class="modal" style="max-width: 760px;">
+            <div class="modal-header">
+                <h2>工程进度详情</h2>
+                <button class="modal-close" onclick="closeModal('modal-progress-detail')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">工程信息</div>
+                <div class="detail-field"><div class="detail-field-label">工程编码</div><div class="detail-field-value" id="pd-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工程名称</div><div class="detail-field-value" id="pd-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工队长</div><div class="detail-field-value" id="pd-leader"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="pd-unit"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="pd-manager"></div></div>
+                <div class="detail-field"><div class="detail-field-label">二级专业</div><div class="detail-field-value" id="pd-major"></div></div>
+                <div class="detail-field"><div class="detail-field-label">立项批复日期</div><div class="detail-field-value" id="pd-approval"></div></div>
+                <div class="detail-field"><div class="detail-field-label">MSS要求完工</div><div class="detail-field-value" id="pd-due"></div></div>
+                <div class="detail-field"><div class="detail-field-label">剩余天数</div><div class="detail-field-value" id="pd-left"></div></div>
+                <div class="detail-field"><div class="detail-field-label">当前完工进度</div><div class="detail-field-value" id="pd-progress"></div></div>
+                <div class="detail-field"><div class="detail-field-label">备注</div><div class="detail-field-value" id="pd-remark"></div></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">周报记录</div>
+                <div class="p-detail-list" id="pd-reports"></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-progress-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Project Edit Modal (admin) -->
+    <div class="modal-overlay" id="modal-progress-edit">
+        <div class="modal" style="max-width: 680px;">
+            <div class="modal-header">
+                <h2 id="pe-title">新增工程</h2>
+                <button class="modal-close" onclick="closeModal('modal-progress-edit')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工程编码</label>
+                <input type="text" class="form-input" id="pe-code" placeholder="如 26HN003647001">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>工程名称</label>
+                <input type="text" class="form-input" id="pe-name" placeholder="请输入工程名称">
+            </div>
+            <div class="form-actions" style="justify-content: flex-start; gap: 12px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label"><span class="required">*</span>施工队长</label>
+                    <input type="text" class="form-input" id="pe-leader" placeholder="请输入施工队长姓名">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" class="form-input" id="pe-phone" placeholder="请输入队长电话（登录密码）">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>施工单位</label>
+                <select class="form-select" id="pe-unit">
+                    <option value="">请选择</option>
+                    <option>湖南省通信建设有限公司</option>
+                    <option>湖南天辰建设有限责任公司</option>
+                    <option>湖南省康普通信技术有限责任公司</option>
+                    <option>中国通信建设第三工程局有限公司</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">工程管理员</label>
+                <select class="form-select" id="pe-manager">
+                    <option value="">请选择</option>
+                    <option>曹毅</option>
+                    <option>陈凌</option>
+                    <option>丰中山</option>
+                    <option>蒋志昭</option>
+                    <option>李力</option>
+                    <option>刘益锴</option>
+                    <option>孙志祥</option>
+                </select>
+            </div>
+            <div class="form-actions" style="justify-content: flex-start; gap: 12px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">二级专业</label>
+                    <input type="text" class="form-input" id="pe-major" placeholder="如 管道及杆路">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">当前完工进度(%)</label>
+                    <input type="number" class="form-input" id="pe-progress" min="0" max="100" step="1" placeholder="0-100">
+                </div>
+            </div>
+            <div class="form-actions" style="justify-content: flex-start; gap: 12px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">立项批复日期</label>
+                    <input type="date" class="form-input" id="pe-approval" style="color:var(--text-secondary);">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label"><span class="required">*</span>要求完工日期</label>
+                    <input type="date" class="form-input" id="pe-due" style="color:var(--text-secondary);">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">备注</label>
+                <textarea class="form-textarea" id="pe-remark" placeholder="请输入备注（可空）"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-danger" id="pe-delete-btn" onclick="pDeleteProject()" style="display:none;">删除工程</button>
+                <button class="btn btn-ghost" onclick="closeModal('modal-progress-edit')">取消</button>
+                <button class="btn btn-primary" onclick="pSaveProject()">保存</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // ========== GitHub API 数据层 ==========
@@ -2229,6 +2491,9 @@
             const btnBorrowCreate = document.getElementById('btn-borrow-create');
             const btnBorrowImport = document.getElementById('btn-borrow-import');
             const btnBorrowExport = document.getElementById('btn-borrow-export');
+            const btnProgFill = document.getElementById('btn-prog-fill');
+            const btnProgExport = document.getElementById('btn-prog-export');
+            const btnProgAdd = document.getElementById('btn-prog-add');
 
             if (!currentUser) {
                 badge.style.display = 'none';
@@ -2238,6 +2503,9 @@
                 btnBorrowCreate.style.display = 'none';
                 btnBorrowImport.style.display = 'none';
                 btnBorrowExport.style.display = 'none';
+                btnProgFill.style.display = 'none';
+                btnProgExport.style.display = 'none';
+                btnProgAdd.style.display = 'none';
                 btnChangePwd.style.display = 'none';
                 btnLogout.style.display = 'none';
                 return;
@@ -2250,6 +2518,9 @@
             // 按Tab控制按钮显隐
             const isResTab = _currentBorrowingTab === 'resistance';
             const isBorrowTab = _currentBorrowingTab === 'borrowing';
+            const isProgTab = _currentBorrowingTab === 'progress';
+            const isTeamLeader = currentUser.role === 'user' && pOwnedProjects().length > 0;
+            const canProgFill = currentUser.role === 'admin' || isTeamLeader;
 
             if (currentUser.role === 'admin') {
                 badge.className = 'user-badge admin';
@@ -2262,6 +2533,9 @@
                 btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowImport.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnProgFill.style.display = (isProgTab && canProgFill) ? 'inline-flex' : 'none';
+                btnProgExport.style.display = isProgTab ? 'inline-flex' : 'none';
+                btnProgAdd.style.display = isProgTab ? 'inline-flex' : 'none';
             } else if (currentUser.role === 'manager') {
                 badge.className = 'user-badge admin';
                 const todo = getTodoCount();
@@ -2273,6 +2547,9 @@
                 btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowImport.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnProgFill.style.display = (isProgTab && canProgFill) ? 'inline-flex' : 'none';
+                btnProgExport.style.display = isProgTab ? 'inline-flex' : 'none';
+                btnProgAdd.style.display = 'none';
             } else if (currentUser.role === 'designer') {
                 badge.className = 'user-badge admin';
                 badge.innerHTML = '<span class="dot"></span>' + currentUser.name + '（设计单位）';
@@ -2282,6 +2559,9 @@
                 btnBorrowCreate.style.display = 'none';
                 btnBorrowImport.style.display = 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnProgFill.style.display = 'none';
+                btnProgExport.style.display = isProgTab ? 'inline-flex' : 'none';
+                btnProgAdd.style.display = 'none';
             } else {
                 badge.className = 'user-badge';
                 const todo = getTodoCount();
@@ -2294,6 +2574,9 @@
                 btnBorrowCreate.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowImport.style.display = isBorrowTab ? 'inline-flex' : 'none';
                 btnBorrowExport.style.display = isBorrowTab ? 'inline-flex' : 'none';
+                btnProgFill.style.display = (isProgTab && canProgFill) ? 'inline-flex' : 'none';
+                btnProgExport.style.display = isProgTab ? 'inline-flex' : 'none';
+                btnProgAdd.style.display = 'none';
             }
         }
 
@@ -3774,8 +4057,10 @@
             _currentBorrowingTab = tab;
             document.getElementById('tab-resistance').classList.toggle('active', tab === 'resistance');
             document.getElementById('tab-borrowing').classList.toggle('active', tab === 'borrowing');
+            document.getElementById('tab-progress').classList.toggle('active', tab === 'progress');
             document.getElementById('view-resistance').classList.toggle('hidden', tab !== 'resistance');
             document.getElementById('view-borrowing').classList.toggle('active', tab === 'borrowing');
+            document.getElementById('view-progress').classList.toggle('active', tab === 'progress');
 
             const titleEl = document.getElementById('page-title');
             const subtitleEl = document.getElementById('page-subtitle');
@@ -3785,6 +4070,11 @@
                 // 每次切换 Tab 都从云端重新拉取最新数据，确保多端数据同步
                 loadInventory();
                 loadBorrowings();
+            } else if (tab === 'progress') {
+                titleEl.textContent = '施工进度管理';
+                subtitleEl.textContent = '施工小队队长每周末填报周报 · 工程进度实时管控';
+                // 每次切换 Tab 都从云端重新拉取最新数据，确保多端数据同步
+                pLoadProgress();
             } else {
                 titleEl.textContent = '施工阻力协调系统';
                 subtitleEl.textContent = '施工单位填报施工阻力 · 支撑人员反馈处理 · 闭环跟踪管理';
@@ -4557,13 +4847,1771 @@
             showToast('成功导入 ' + _importedRecords.length + ' 条借料申请');
         }
 
+        // ---------- 施工小队管理表初始数据（2026-11-05 导入） ----------
+const INITIAL_PROGRESS_PROJECTS = [
+ {
+  "code": "26HN003647001",
+  "name": "2026年岳阳铂固科技股份有限公司光伏储能建设工程（产数）",
+  "manager": "蒋志昭",
+  "unit": "湖南省康普通信技术有限责任公司",
+  "leader": "任志红",
+  "phone": "15308407706",
+  "major": "电源及空调",
+  "approvalDate": "2026-07-23",
+  "dueDate": "2027-06-28",
+  "progress": 0.2,
+  "weekNote": "储能柜安装中，光伏部分待招标",
+  "remark": ""
+ },
+ {
+  "code": "26HN003540001",
+  "name": "2026年岳阳湘阴运通科技发展有限公司光伏储能建设工程（产数）",
+  "manager": "蒋志昭",
+  "unit": "湖南省康普通信技术有限责任公司",
+  "leader": "任志红",
+  "phone": "15308407706",
+  "major": "电源及空调",
+  "approvalDate": "2026-07-15",
+  "dueDate": "2027-06-20",
+  "progress": 0.7,
+  "weekNote": "储能柜、光伏设备已安装，待并网",
+  "remark": ""
+ },
+ {
+  "code": "26HN003541001",
+  "name": "2026年岳阳湘阴楚湘尔雅竟洁有限公司储能建设工程（产数）",
+  "manager": "陈凌",
+  "unit": "湖南省康普通信技术有限责任公司",
+  "leader": "任志红",
+  "phone": "15308407706",
+  "major": "电源及空调",
+  "approvalDate": "2026-07-15",
+  "dueDate": "2027-06-20",
+  "progress": 0.95,
+  "weekNote": "摄像头采购中、预计本周到货、10月15日完成安装、",
+  "remark": ""
+ },
+ {
+  "code": "26HN003648001",
+  "name": "2026年岳阳范斯特机械科技有限公司储能建设工程（产数）",
+  "manager": "陈凌",
+  "unit": "湖南省康普通信技术有限责任公司",
+  "leader": "任志红",
+  "phone": "15308407706",
+  "major": "电源及空调",
+  "approvalDate": "2026-07-23",
+  "dueDate": "2027-06-28",
+  "progress": 0.95,
+  "weekNote": "摄像头采购中、预计本周到货、10月15日完成安装",
+  "remark": ""
+ },
+ {
+  "code": "26HN002849001",
+  "name": "(DBXD)2026年岳阳分公司汨罗市长乐镇联江村小改大整村推进工程",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "戴汨军",
+  "phone": "19015110098",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-08",
+  "dueDate": "2026-12-20",
+  "progress": 0.0,
+  "weekNote": "缺光缆施工",
+  "remark": "缺光缆"
+ },
+ {
+  "code": "26HN004383001",
+  "name": "2026年岳阳分公司汨罗团山机房出局管道新建工程",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "黄勇泉",
+  "phone": "19813309518",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-13",
+  "dueDate": "2027-04-21",
+  "progress": 0.3,
+  "weekNote": "机房选址协调中",
+  "remark": ""
+ },
+ {
+  "code": "26HN004406001",
+  "name": "(GXHX)2026年岳阳分公司汩罗罗江镇黄市村三个片区小田改大田杆线焕新工程（小改大）",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "龙彪",
+  "phone": "15343008163",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-14",
+  "dueDate": "2027-04-22",
+  "progress": 0.5,
+  "weekNote": "钢绞线已收",
+  "remark": ""
+ },
+ {
+  "code": "26HN003649001",
+  "name": "2026年岳阳分公司平江县社会治安防控体系交通安全作息化政企新建光缆工程(三期)",
+  "manager": "陈凌",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘峰",
+  "phone": "18507325858",
+  "major": "政企组网型专线光缆和设备",
+  "approvalDate": "2026-07-23",
+  "dueDate": "2027-02-03",
+  "progress": 0.5,
+  "weekNote": "预计11月份全部完工",
+  "remark": ""
+ },
+ {
+  "code": "26HN004405001",
+  "name": "(GXHX)2026年岳阳分公司汨罗市罗江镇红花山村杆线焕新工程(小改大)",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "龙彪",
+  "phone": "15343008163",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-14",
+  "dueDate": "2027-04-22",
+  "progress": 0.6,
+  "weekNote": "钢绞线已收80%",
+  "remark": ""
+ },
+ {
+  "code": "26HN002848001",
+  "name": "2026年岳阳分公司平江县强县凤凰山综合业务接入区主干光缆工程(ZHYWQ)(强县)(HN-YY0319)",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "童春来",
+  "phone": "15367009907",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-08",
+  "dueDate": "2026-12-20",
+  "progress": 0.7,
+  "weekNote": "机房未建，未割接",
+  "remark": ""
+ },
+ {
+  "code": "26HN002435001",
+  "name": "2026年岳阳分公司平江县社会治安防控体系交通安全信息化政企新建光缆工程(二期)",
+  "manager": "陈凌",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘峰",
+  "phone": "18507325858",
+  "major": "政企组网型专线光缆和设备",
+  "approvalDate": "2026-05-22",
+  "dueDate": "2026-12-03",
+  "progress": 0.7,
+  "weekNote": "预计11月份全部完工",
+  "remark": ""
+ },
+ {
+  "code": "26HN000038001",
+  "name": "2026年岳阳分公司湘阴县南湖洲镇镇郊村整村推进工程（GXHX）",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "付兴杰",
+  "phone": "18787240379",
+  "major": "管道及杆路",
+  "approvalDate": "2026-01-15",
+  "dueDate": "2026-08-23",
+  "progress": 0.7,
+  "weekNote": "整体完成60%",
+  "remark": "农田未收一直未施工故超期"
+ },
+ {
+  "code": "25HN001171001",
+  "name": "2025年岳阳分公司汨罗市屈子祠镇永青村AB片杆线焕新工程(小改大)(GXHX)",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "周国强",
+  "phone": "18873061818",
+  "major": "主干配线光缆",
+  "approvalDate": "2025-06-04",
+  "dueDate": "2025-12-16",
+  "progress": 0.7,
+  "weekNote": "缺光缆施工",
+  "remark": "缺光缆"
+ },
+ {
+  "code": "25HN001175001",
+  "name": "2025年岳阳分公司汨罗市屈子祠镇永青村C片杆线焕新工程(小改大)(GXHX)",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "周国强",
+  "phone": "18873061818",
+  "major": "主干配线光缆",
+  "approvalDate": "2025-06-04",
+  "dueDate": "2025-12-16",
+  "progress": 0.7,
+  "weekNote": "缺光缆施工",
+  "remark": "缺光缆"
+ },
+ {
+  "code": "26HN002850001",
+  "name": "2025年岳阳分公司汨罗市天井群英村杆线焕新工程(小改大)(GXHX)",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "戴汨军",
+  "phone": "19015110098",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-08",
+  "dueDate": "2026-12-20",
+  "progress": 0.7,
+  "weekNote": "电杆已立缺光缆",
+  "remark": "缺光缆"
+ },
+ {
+  "code": "26HN002851001",
+  "name": "(DBXD)2025年岳阳分公司平江县石江村杆线焕新工程（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "梁军",
+  "phone": "19398295549",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-08",
+  "dueDate": "2026-12-20",
+  "progress": 0.7,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "26HN004281001",
+  "name": "(GXHX)2026年岳阳分公司平江县东山村等地杆线焕新工程（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "梁军",
+  "phone": "19398295549",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-03",
+  "dueDate": "2027-04-11",
+  "progress": 0.7,
+  "weekNote": "东山村电力杆路整改施工，待电力杆路整改完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN004282001",
+  "name": "2026年岳阳分公司平江县梅仙镇花坪村整村ODN提质工程（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘峰",
+  "phone": "18507325858",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-09-03",
+  "dueDate": "2027-03-17",
+  "progress": 0.8,
+  "weekNote": "花坪机房搬迁以后才能皮线割接，立杆阻工，乡政府，镇政府都出面了无法协调完成。",
+  "remark": ""
+ },
+ {
+  "code": "26HN004284001",
+  "name": "2026年岳阳分公司平江县梅仙镇张韩村ODN提质工程（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘峰",
+  "phone": "18507325858",
+  "major": "FTTH接入光缆和光端口",
+  "approvalDate": "2026-09-03",
+  "dueDate": "2027-03-17",
+  "progress": 0.8,
+  "weekNote": "24芯光缆变更800米左右，原光缆受损光衰大，无材料",
+  "remark": ""
+ },
+ {
+  "code": "26HN004404001",
+  "name": "(GXHX)2026年岳阳分公司汨罗市汨东村（小改大）杆线换新工程",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "付兴杰",
+  "phone": "18787240379",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-14",
+  "dueDate": "2027-04-22",
+  "progress": 0.8,
+  "weekNote": "钢绞线已收",
+  "remark": ""
+ },
+ {
+  "code": "26HN002982001",
+  "name": "2026年岳阳分公司平江县县乡中继光缆工程",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "陈建",
+  "phone": "18973086668",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-06-16",
+  "dueDate": "2026-12-13",
+  "progress": 0.8,
+  "weekNote": "未割接",
+  "remark": ""
+ },
+ {
+  "code": "26HN004187001",
+  "name": "（GXHX）2026年岳阳分公司汨罗市罗江镇嵩山村ODN网络提质工程（小改大）",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "戴汨军",
+  "phone": "19015110098",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-08-28",
+  "dueDate": "2027-03-11",
+  "progress": 0.8,
+  "weekNote": "嵩山完成80%",
+  "remark": ""
+ },
+ {
+  "code": "25HN000534001",
+  "name": "(GXHX)2024年岳阳分公司云溪区松杨湖街道滨湖村方家咀等3处杆线焕新工程",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "杨彬",
+  "phone": "13317307861",
+  "major": "管道及杆路",
+  "approvalDate": "2025-01-26",
+  "dueDate": "2025-09-03",
+  "progress": 0.9,
+  "weekNote": "皮线割接拆旧未完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN004408001",
+  "name": "2026年岳阳分公司岳阳县新墙镇新华村整村推进工程（GXHX）",
+  "manager": "孙志祥",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘旭",
+  "phone": "15367402000",
+  "major": "管道及杆路",
+  "approvalDate": "2026-09-14",
+  "dueDate": "2027-04-22",
+  "progress": 0.9,
+  "weekNote": "割接未完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN002398001",
+  "name": "2026年岳阳分公司平江县盘塘综合业务接入区主干光缆工程(ZHYWQ)（HN-YY0071）（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "陈建",
+  "phone": "18973086668",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-05-21",
+  "dueDate": "2026-12-02",
+  "progress": 0.9,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "26HN004186001",
+  "name": "2026年岳阳分公司汨罗市新市街社区ODN网络提至工程",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "戴汨军",
+  "phone": "19015110098",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-08-28",
+  "dueDate": "2027-03-11",
+  "progress": 0.9,
+  "weekNote": "光缆待割接",
+  "remark": ""
+ },
+ {
+  "code": "26HN002844001",
+  "name": "（DBXD）2025年岳阳分公司平江县思源村等地整村推进工程（强县工程）",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "梁军",
+  "phone": "19398295549",
+  "major": "管道及杆路",
+  "approvalDate": "2026-06-08",
+  "dueDate": "2027-01-14",
+  "progress": 0.9,
+  "weekNote": "割接拆旧未完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN001239001",
+  "name": "2026年岳阳分公司汨罗屈子祠镇新茶村小田改大田杆线焕新项目(GXHX)",
+  "manager": "蒋志昭",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "黄勇泉",
+  "phone": "19813309518",
+  "major": "管道及杆路",
+  "approvalDate": "2026-03-24",
+  "dueDate": "2026-10-30",
+  "progress": 0.9,
+  "weekNote": "移动光缆割接中",
+  "remark": "移动光缆割接中"
+ },
+ {
+  "code": "25HN000992001",
+  "name": "2025年岳阳分公司岳阳县毛田芭蕉村“一村一案”工程(DBXD)",
+  "manager": "孙志祥",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘旭",
+  "phone": "15367402000",
+  "major": "管道及杆路",
+  "approvalDate": "2025-02-26",
+  "dueDate": "2025-10-04",
+  "progress": 0.0,
+  "weekNote": "天辰",
+  "remark": ""
+ },
+ {
+  "code": "24HN001639001",
+  "name": "2024年岳阳分公司白石岭至君山中继光缆工程",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "何理强",
+  "phone": "13212625188",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2024-04-26",
+  "dueDate": "2024-10-23",
+  "progress": 0.0,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "24HN003594001",
+  "name": "(GXHX)2024年岳阳分公司岳阳经开区康王青云村汤家组等4处杆线焕新工程",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "何理强",
+  "phone": "13212625188",
+  "major": "管道及杆路",
+  "approvalDate": "2024-07-16",
+  "dueDate": "2025-02-21",
+  "progress": 0.0,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "24HN005175001",
+  "name": "(GXHX)2024年岳阳分公司云溪区松杨湖街道滨湖村方家咀等3处杆线焕新工程",
+  "manager": "刘益锴",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "何理强",
+  "phone": "13212625188",
+  "major": "管道及杆路",
+  "approvalDate": "2024-10-23",
+  "dueDate": "2025-05-31",
+  "progress": 0.0,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "25HN001080001",
+  "name": "2025年岳阳分公司岳阳县公田倒溪“一村一案”工程(DBXD)",
+  "manager": "孙志祥",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "袁青涛",
+  "phone": "13873078370",
+  "major": "主干配线光缆",
+  "approvalDate": "2025-05-28",
+  "dueDate": "2025-12-09",
+  "progress": 0.0,
+  "weekNote": "天辰",
+  "remark": ""
+ },
+ {
+  "code": "26HN004619001",
+  "name": "2026年岳阳分公司岳阳科技职业学院智慧校园接入网光缆项目",
+  "manager": "孙志祥",
+  "unit": "湖南省通信建设有限公司",
+  "leader": "刘旭",
+  "phone": "15367402000",
+  "major": "FTTH接入光缆和光端口",
+  "approvalDate": "2026-10-16",
+  "dueDate": "2027-04-29",
+  "progress": 0.0,
+  "weekNote": "",
+  "remark": ""
+ },
+ {
+  "code": "26HN004470001",
+  "name": "2026年岳阳分公司汨罗ROADM网络建设工程",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "本地中继传输设备",
+  "approvalDate": "2026-09-20",
+  "dueDate": "2027-06-27",
+  "progress": 0.0,
+  "weekNote": "设备未到货，预计11月上旬到货",
+  "remark": ""
+ },
+ {
+  "code": "26HN004678001",
+  "name": "2026年岳阳分公司-岳阳地区BC类局站蓄电池系统更新工程",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "电源及空调",
+  "approvalDate": "2026-10-23",
+  "dueDate": "2027-09-28",
+  "progress": 0.0,
+  "weekNote": "设备未到货，预计12月中旬旬到货",
+  "remark": ""
+ },
+ {
+  "code": "26HN004690001",
+  "name": "中国电信岳阳分公司2026年电信普遍服务LTE无线网专项工程（岳阳）主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "LTE",
+  "approvalDate": "2026-10-23",
+  "dueDate": "2027-05-31",
+  "progress": 0.0,
+  "weekNote": "铁塔站址未交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN004688001",
+  "name": "中国电信岳阳分公司2026年电信普遍服务5G无线网专项工程（岳阳）800M主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "5G室外主设备",
+  "approvalDate": "2026-10-23",
+  "dueDate": "2027-06-05",
+  "progress": 0.0,
+  "weekNote": "计划施工华容2个已交付站光缆",
+  "remark": ""
+ },
+ {
+  "code": "26HN004689001",
+  "name": "中国电信岳阳分公司2026年电信普遍服务5G无线网专项工程（岳阳）2.1G主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "5G室外主设备",
+  "approvalDate": "2026-10-23",
+  "dueDate": "2027-06-05",
+  "progress": 0.0,
+  "weekNote": "铁塔站址未交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN003885001",
+  "name": "中国电信岳阳分公司2026年4G复建室外（岳阳）800M主设备安装单项工程（第三批）",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "LTE",
+  "approvalDate": "2026-08-05",
+  "dueDate": "2027-03-13",
+  "progress": 0.4,
+  "weekNote": "自建站未交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN001916001",
+  "name": "中国电信岳阳分公司2026年5G八期室内分布系统BBU主设备安装单项工程（第一批）",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "室内分布系统",
+  "approvalDate": "2026-04-29",
+  "dueDate": "2026-12-10",
+  "progress": 0.5,
+  "weekNote": "室分BBU项目根据岁末年初站点规划实施",
+  "remark": ""
+ },
+ {
+  "code": "26HN002023001",
+  "name": "中国电信岳阳分公司2026年4G复建室外（平江）800M主设备安装单项工程（强县行动）（第二批）",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "LTE",
+  "approvalDate": "2026-05-06",
+  "dueDate": "2026-12-12",
+  "progress": 0.5,
+  "weekNote": "自建站未交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN003274001",
+  "name": "中国电信岳阳分公司2026年4G复建室内分布系统（平江鑫城公馆等站点）800M无源主设备安装单项工程（强县行动平江县）",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "刘进",
+  "phone": "19307302131",
+  "major": "LTE",
+  "approvalDate": "2026-06-29",
+  "dueDate": "2027-02-04",
+  "progress": 0.5,
+  "weekNote": "平江金盾局电源负荷不足，3个站点已安装未开通",
+  "remark": ""
+ },
+ {
+  "code": "26HN002963001",
+  "name": "2026年岳阳分公司STN网络设备扩容工程项目",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "STN网络",
+  "approvalDate": "2026-06-16",
+  "dueDate": "2027-05-02",
+  "progress": 0.6,
+  "weekNote": "设备已安装，正在走割接流程",
+  "remark": ""
+ },
+ {
+  "code": "26HN003756001",
+  "name": "2026年岳阳华容县DC机房及电源配套改造工程项目",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "生产能力配套",
+  "approvalDate": "2026-07-29",
+  "dueDate": "2027-06-24",
+  "progress": 0.6,
+  "weekNote": "主设备安装中",
+  "remark": ""
+ },
+ {
+  "code": "25HN006376001",
+  "name": "中国电信岳阳分公司2025年5G八期京广高铁增补室外（岳阳）3.5G主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "5G室外主设备",
+  "approvalDate": "2025-12-05",
+  "dueDate": "2026-07-18",
+  "progress": 0.7,
+  "weekNote": "新建站未交付",
+  "remark": ""
+ },
+ {
+  "code": "25HN006377001",
+  "name": "中国电信岳阳分公司2025年5G八期京广高铁增补室外（岳阳）2.1G主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "5G室外主设备",
+  "approvalDate": "2025-12-05",
+  "dueDate": "2026-07-18",
+  "progress": 0.7,
+  "weekNote": "新建站未交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN004090001",
+  "name": "2026年岳阳平江DC机房土建及电源配套工程项目（二期）",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "生产能力配套",
+  "approvalDate": "2026-08-25",
+  "dueDate": "2027-07-21",
+  "progress": 0.8,
+  "weekNote": "主设备已经安装完成，割接中",
+  "remark": ""
+ },
+ {
+  "code": "25HN005181001",
+  "name": "中国电信岳阳分公司2025年电信普遍服务LTE无线网专项工程（岳阳）主设备安装单项工程",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "曾豪",
+  "phone": "19118831667",
+  "major": "LTE",
+  "approvalDate": "2025-09-28",
+  "dueDate": "2026-05-06",
+  "progress": 0.9,
+  "weekNote": "铁塔站址未交付，需11月中旬交付",
+  "remark": ""
+ },
+ {
+  "code": "26HN001354001",
+  "name": "2026年岳阳分公司平江汨罗第二中心局波分建设工程",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "本地中继传输设备",
+  "approvalDate": "2026-03-27",
+  "dueDate": "2027-01-01",
+  "progress": 0.9,
+  "weekNote": "平江中心局设备无法加电",
+  "remark": ""
+ },
+ {
+  "code": "26HN001355001",
+  "name": "2026年岳阳分公司市县中继ROADM建设工程（岳阳县、平江县、汨罗市）",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "本地中继传输设备",
+  "approvalDate": "2026-03-27",
+  "dueDate": "2027-01-01",
+  "progress": 0.9,
+  "weekNote": "平江中心局设备无法加电",
+  "remark": ""
+ },
+ {
+  "code": "26HN001510001",
+  "name": "2026年岳阳分公司STN承载网核心汇聚层建设工程",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "STN网络",
+  "approvalDate": "2026-04-03",
+  "dueDate": "2027-02-17",
+  "progress": 0.9,
+  "weekNote": "平江中心局设备无法加电",
+  "remark": ""
+ },
+ {
+  "code": "26HN002005001",
+  "name": "2026年岳阳市分公司岳阳楼区综合业务区电源及配套工程(ZHYWQ)(HN-YY0275)(HN-YY0317)(HN-YY0270)",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "电源及空调",
+  "approvalDate": "2026-05-06",
+  "dueDate": "2027-04-11",
+  "progress": 0.9,
+  "weekNote": "新中心医院机房未建设完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN002007001",
+  "name": "2026年岳阳市分公司华容综合业务区电源及配套工程(ZHYWQ)(HN-YY0008)(HN-YY0007)",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "电源及空调",
+  "approvalDate": "2026-05-06",
+  "dueDate": "2027-04-11",
+  "progress": 0.9,
+  "weekNote": "章华政府局机房未建设完成",
+  "remark": ""
+ },
+ {
+  "code": "26HN003757001",
+  "name": "2026年岳阳平江县新城DC机房及电源配套建设项目",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "谌海波",
+  "phone": "15387307388",
+  "major": "生产能力配套",
+  "approvalDate": "2026-07-29",
+  "dueDate": "2027-06-24",
+  "progress": 0.9,
+  "weekNote": "主设备已经安装完成，割接中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002321001",
+  "name": "中国电信岳阳分公司2026年5G八期室内分布系统（平江劲仔食品等站点）2.1G无源安装单项工程（强县行动平江县）",
+  "manager": "曹毅",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "刘进",
+  "phone": "19307302131",
+  "major": "室内分布系统",
+  "approvalDate": "2026-05-19",
+  "dueDate": "2026-12-30",
+  "progress": 0.9,
+  "weekNote": "平江新城局电源负荷不足，凤鸣府设备已安装无法开通",
+  "remark": ""
+ },
+ {
+  "code": "26HN004110001",
+  "name": "2026年岳阳电信IP城域网建设工程",
+  "manager": "李力",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周立",
+  "phone": "17873050690",
+  "major": "IP城域网",
+  "approvalDate": "2026-08-26",
+  "dueDate": "2027-08-21",
+  "progress": 0.95,
+  "weekNote": "已安装完，主电缆需要改直流配电柜",
+  "remark": ""
+ },
+ {
+  "code": "25HN006806001",
+  "name": "（DBXD）2025年岳阳分公司临湘市文白社区整村推进工程",
+  "manager": "刘益锴",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "李程峰",
+  "phone": "18107307078",
+  "major": "管道及杆路",
+  "approvalDate": "2025-12-17",
+  "dueDate": "2026-07-25",
+  "progress": 0.2,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "25HN003432001",
+  "name": "(DBXD)2025年岳阳分公司临湘市羊楼司镇黄金村整村推进ODN网络优化工程",
+  "manager": "刘益锴",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "刘波",
+  "phone": "13973035699",
+  "major": "管道及杆路",
+  "approvalDate": "2025-06-09",
+  "dueDate": "2026-01-15",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN004354001",
+  "name": "2026年岳阳临湘至湘鄂省界架空光缆工程",
+  "manager": "刘益锴",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "戴四丑",
+  "phone": "13341305566",
+  "major": "省内干线传输光缆",
+  "approvalDate": "2026-09-09",
+  "dueDate": "2027-10-04",
+  "progress": 0.8,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "25HN006719001",
+  "name": "（DBXD）2025年岳阳分公司云溪区槠木桥社区整村推进工程",
+  "manager": "丰中山",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "周龙",
+  "phone": "18974023365",
+  "major": "管道及杆路",
+  "approvalDate": "2025-12-15",
+  "dueDate": "2026-07-23",
+  "progress": 0.9,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "25HN001840001",
+  "name": "2025年岳阳分公司临湘市忠防镇沙坪村杆线焕新工程(GXHX)",
+  "manager": "刘益锴",
+  "unit": "湖南天辰建设有限责任公司",
+  "leader": "刘波",
+  "phone": "13973035699",
+  "major": "管道及杆路",
+  "approvalDate": "2025-03-29",
+  "dueDate": "2025-11-04",
+  "progress": 0.9,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN004558001",
+  "name": "（GXHX）2026年岳阳分公司岳阳楼区康王乡长岭社区整村推进工程",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "戴四丑",
+  "phone": "13341305566",
+  "major": "管道及杆路",
+  "approvalDate": "2026-10-09",
+  "dueDate": "2027-05-17",
+  "progress": 0.0,
+  "weekNote": "材料准备，现场查勘",
+  "remark": ""
+ },
+ {
+  "code": "26HN002903001",
+  "name": "2026年岳阳分公司岳阳楼区市县中继光缆工程",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "周海",
+  "phone": "19324918639",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-07",
+  "progress": 0.7,
+  "weekNote": "管道修复",
+  "remark": ""
+ },
+ {
+  "code": "26HN002904001",
+  "name": "2026年岳阳分公司岳阳楼区县乡中继光缆工程",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "李凡夫",
+  "phone": "19173076189",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-07",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002907001",
+  "name": "2026年岳阳分公司岳阳楼区制冷局综合业务区主干光缆工程（ZHYWQ)（HNYY0270）",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "李凡夫",
+  "phone": "19173076189",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-22",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002908001",
+  "name": "2026年岳阳分公司岳阳楼区新中心医院综合业务区主干光缆工程（ZHYWQ)(ZHYWQ)（HNYY0317）",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "周海",
+  "phone": "19324918639",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-22",
+  "progress": 0.7,
+  "weekNote": "中心医院机房未建设",
+  "remark": "中心医院机房未建设"
+ },
+ {
+  "code": "26HN002495001",
+  "name": "2026年岳阳分公司临湘市坪上综合业务接入区主干光缆工程(ZHYWQ)（HNYY0229）",
+  "manager": "刘益锴",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "陈新满",
+  "phone": "18973037813",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-05-25",
+  "dueDate": "2026-12-06",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002683001",
+  "name": "2026年岳阳分公司临湘市县乡中继光缆工程2",
+  "manager": "刘益锴",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "李程峰",
+  "phone": "18107307078",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-05-29",
+  "dueDate": "2026-11-25",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002910001",
+  "name": "2026年岳阳分公司临湘市城南综合业务区主干光缆工程（ZHYWQ)（HNYY0215）",
+  "manager": "刘益锴",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "陈新满",
+  "phone": "18973037813",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-22",
+  "progress": 0.7,
+  "weekNote": "施工中",
+  "remark": "前期管道城管阻工"
+ },
+ {
+  "code": "26HN002728001",
+  "name": "2026年岳阳分公司云溪区长岭综合业务区主干光缆工程（ZHYWQ)（HN-YY0242）",
+  "manager": "丰中山",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "李凡夫",
+  "phone": "19173076189",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-02",
+  "dueDate": "2026-12-14",
+  "progress": 0.9,
+  "weekNote": "等县分机房设备割接后，才能进行光缆割接",
+  "remark": "等县分机房设备割接后，才能进行光缆割接"
+ },
+ {
+  "code": "26HN002682001",
+  "name": "2026年岳阳分公司临湘市县乡中继光缆工程1",
+  "manager": "刘益锴",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "陈新满",
+  "phone": "18973037813",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-05-29",
+  "dueDate": "2026-11-25",
+  "progress": 0.9,
+  "weekNote": "待割接",
+  "remark": "前期管道城管阻工"
+ },
+ {
+  "code": "26HN002906001",
+  "name": "2026年岳阳分公司临湘市桃林综合业务区主干光缆工程（ZHYWQ)（HNYY0230",
+  "manager": "刘益锴",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "陈新满",
+  "phone": "18973037813",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-10",
+  "dueDate": "2026-12-22",
+  "progress": 0.9,
+  "weekNote": "待割接",
+  "remark": ""
+ },
+ {
+  "code": "26HN001704001",
+  "name": "2026年岳阳分公司华容县易家综合业务接入区主干光缆工程(ZHYWQ)（HN-YY0008）",
+  "manager": "孙志祥",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "袁明",
+  "phone": "17373068890",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-04-19",
+  "dueDate": "2026-10-31",
+  "progress": 0.9,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002350001",
+  "name": "2026年岳阳分公司华容县益稼至团洲中继光缆工程",
+  "manager": "孙志祥",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "袁明",
+  "phone": "17373068890",
+  "major": "本地中继传输光缆",
+  "approvalDate": "2026-05-20",
+  "dueDate": "2026-11-16",
+  "progress": 0.9,
+  "weekNote": "施工中",
+  "remark": ""
+ },
+ {
+  "code": "26HN002737001",
+  "name": "2026年岳阳分公司华容县胜峰综合业务区主干光缆工程（ZHYWQ)（HNYY0007）",
+  "manager": "孙志祥",
+  "unit": "中国通信建设第三工程局有限公司",
+  "leader": "袁明",
+  "phone": "17373068890",
+  "major": "主干配线光缆",
+  "approvalDate": "2026-06-02",
+  "dueDate": "2026-12-14",
+  "progress": 0.9,
+  "weekNote": "施工中",
+  "remark": ""
+ }
+];
+
+const PROGRESS_TEAM_LEADERS = [
+ {
+  "name": "付兴杰",
+  "phone": "18787240379",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "任志红",
+  "phone": "15308407706",
+  "unit": "湖南省康普通信技术有限责任公司"
+ },
+ {
+  "name": "何理强",
+  "phone": "13212625188",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "刘峰",
+  "phone": "18507325858",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "刘旭",
+  "phone": "15367402000",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "刘波",
+  "phone": "13973035699",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "刘进",
+  "phone": "19307302131",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "周国强",
+  "phone": "18873061818",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "周海",
+  "phone": "19324918639",
+  "unit": "中国通信建设第三工程局有限公司"
+ },
+ {
+  "name": "周立",
+  "phone": "17873050690",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "周龙",
+  "phone": "18974023365",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "戴四丑",
+  "phone": "13341305566",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "戴汨军",
+  "phone": "19015110098",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "曾豪",
+  "phone": "19118831667",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "李凡夫",
+  "phone": "19173076189",
+  "unit": "中国通信建设第三工程局有限公司"
+ },
+ {
+  "name": "李程峰",
+  "phone": "18107307078",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "杨彬",
+  "phone": "13317307861",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "梁军",
+  "phone": "19398295549",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "童春来",
+  "phone": "15367009907",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "袁明",
+  "phone": "17373068890",
+  "unit": "中国通信建设第三工程局有限公司"
+ },
+ {
+  "name": "袁青涛",
+  "phone": "13873078370",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "谌海波",
+  "phone": "15387307388",
+  "unit": "湖南天辰建设有限责任公司"
+ },
+ {
+  "name": "陈建",
+  "phone": "18973086668",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "陈新满",
+  "phone": "18973037813",
+  "unit": "中国通信建设第三工程局有限公司"
+ },
+ {
+  "name": "黄勇泉",
+  "phone": "19813309518",
+  "unit": "湖南省通信建设有限公司"
+ },
+ {
+  "name": "龙彪",
+  "phone": "15343008163",
+  "unit": "湖南省通信建设有限公司"
+ }
+];
+
+        // ========== Progress Management (施工进度管理) ==========
+        // 施工小队队长每周末填报：本周工程进度、下周施工计划、工程完工进度比例
+        // 数据存储：data/progress.json（{ projects: [...], reports: [...], meta: {...} }）
+        let progressProjects = [];
+        let progressReports = [];
+        let _progressSha = null;
+        let _pfInit = {};
+        const PROGRESS_SEED_WEEK = '2026-10-26'; // 施工小队管理表"2026年10月31日第四周"数据
+
+        // ---------- 周日期工具 ----------
+        function pParseKey(k) { const a = String(k).split('-'); return new Date(+a[0], +a[1] - 1, +a[2]); }
+        function pFmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        function pMondayOf(d) { const dt = new Date(d); const day = (dt.getDay() + 6) % 7; dt.setHours(0, 0, 0, 0); dt.setDate(dt.getDate() - day); return dt; }
+        function pCurrentWeekKey() { return pFmtDate(pMondayOf(new Date())); }
+        function pWeekEnd(key) { const e = pParseKey(key); e.setDate(e.getDate() + 6); return e; }
+        function pWeekLabel(key) {
+            const s = pParseKey(key), e = pWeekEnd(key);
+            return (s.getMonth() + 1) + '.' + String(s.getDate()).padStart(2, '0') + '~' + (e.getMonth() + 1) + '.' + String(e.getDate()).padStart(2, '0');
+        }
+        function pWeekNo(key) {
+            const t = pParseKey(key); const dayNr = (t.getDay() + 6) % 7;
+            t.setDate(t.getDate() - dayNr + 3);
+            const fy = new Date(t.getFullYear(), 0, 4); const fd = (fy.getDay() + 6) % 7;
+            fy.setDate(fy.getDate() - fd + 3);
+            return 1 + Math.round((t - fy) / (7 * 864e5));
+        }
+        function pDaysLeft(p) {
+            if (!p.dueDate) return null;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const due = pParseKey(p.dueDate);
+            return Math.round((due - today) / 864e5);
+        }
+        function pDaysLeftText(p) {
+            const d = pDaysLeft(p);
+            if (d === null) return { text: '—', cls: '' };
+            if (d < 0) return { text: '已超期' + (-d) + '天', cls: 'badge-p-overdue' };
+            if (d === 0) return { text: '今日到期', cls: 'badge-p-due' };
+            if (d <= 30) return { text: '剩' + d + '天', cls: 'badge-p-due' };
+            return { text: '剩' + d + '天', cls: '' };
+        }
+
+        // ---------- 数据层 ----------
+        const PROGRESS_DATA_META = { leadersSeeded: true, version: 1 };
+        async function saveProgressData() {
+            _progressSha = await ghWrite('data/progress.json', { projects: progressProjects, reports: progressReports, meta: PROGRESS_DATA_META }, _progressSha);
+        }
+
+        async function pLoadProgress() {
+            try {
+                const { data, sha } = await ghRead('data/progress.json');
+                if (data && Array.isArray(data.projects)) {
+                    progressProjects = data.projects;
+                    progressReports = data.reports || [];
+                    _progressSha = sha;
+                    if (!data.meta || !data.meta.leadersSeeded) {
+                        await seedTeamLeaderAccounts();
+                        await saveProgressData();
+                    }
+                } else {
+                    // 首次使用：用施工小队管理表数据初始化
+                    progressProjects = INITIAL_PROGRESS_PROJECTS.map(p => ({
+                        code: p.code, name: p.name, manager: p.manager, unit: p.unit,
+                        leader: p.leader, leaderPhone: p.phone || '', major: p.major || '',
+                        approvalDate: p.approvalDate || '', dueDate: p.dueDate || '',
+                        progress: p.progress || 0, remark: p.remark || ''
+                    }));
+                    progressReports = [];
+                    const seedTs = new Date('2026-10-31T16:00:00+08:00').getTime();
+                    INITIAL_PROGRESS_PROJECTS.forEach(p => {
+                        if (p.code && p.weekNote) {
+                            progressReports.push({
+                                id: 'W0-' + p.code, projectCode: p.code, weekKey: PROGRESS_SEED_WEEK,
+                                progress: p.progress || 0, thisWeek: p.weekNote, nextWeek: '',
+                                reporter: p.leader, createTime: seedTs, updateTime: seedTs, seeded: true
+                            });
+                        }
+                    });
+                    await seedTeamLeaderAccounts();
+                    await saveProgressData();
+                }
+            } catch (e) { console.error('加载施工进度数据失败:', e); }
+            pRenderAll();
+        }
+
+        // ---------- 队长账号预置（账号=姓名、密码=电话，与既有规则一致） ----------
+        async function seedTeamLeaderAccounts() {
+            try {
+                const users = await loadUsersAsync();
+                let changed = false;
+                PROGRESS_TEAM_LEADERS.forEach(s => {
+                    if (!s.phone) return;
+                    if (!users.some(u => u.name === s.name)) {
+                        users.push({
+                            account: s.name, password: s.phone, name: s.name, phone: s.phone,
+                            unit: s.unit, unitType: 'construction', status: 'approved', registerTime: Date.now()
+                        });
+                        changed = true;
+                    }
+                });
+                if (changed) await saveUsersAsync(users);
+            } catch (e) { console.error('预置队长账号失败:', e); }
+        }
+
+        // ---------- 权限 ----------
+        function pIsAdmin() { return !!currentUser && currentUser.role === 'admin'; }
+        function pIsOwned(p) {
+            if (!currentUser) return false;
+            return p.leader === currentUser.name && (!p.leaderPhone || !currentUser.phone || p.leaderPhone === currentUser.phone);
+        }
+        function pOwnedProjects() { return progressProjects.filter(p => pIsOwned(p)); }
+
+        // ---------- 周报存取 ----------
+        function pReportsOf(code) { return progressReports.filter(r => r.projectCode === code); }
+        function pReportOf(code, weekKey) { return progressReports.find(r => r.projectCode === code && r.weekKey === weekKey); }
+        function pLatestReport(code) {
+            const list = pReportsOf(code).sort((a, b) =>
+                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || (b.updateTime || b.createTime || 0) - (a.updateTime || a.createTime || 0));
+            return list[0] || null;
+        }
+        function pIsReportedThisWeek(p) { return !!pReportOf(p.code, pCurrentWeekKey()); }
+        function pProgCls(pct) { return 'p-prog' + (pct >= 90 ? ' high' : (pct > 0 && pct < 30 ? ' low' : '')); }
+
+        // ---------- 渲染 ----------
+        function pRenderAll() {
+            pRenderStats();
+            pRenderFilters();
+            pRenderTable();
+            updateHeaderForUser();
+        }
+
+        function pRenderStats() {
+            const wk = pCurrentWeekKey();
+            const codes = new Set(progressReports.filter(r => r.weekKey === wk).map(r => r.projectCode));
+            const total = progressProjects.length;
+            const reported = progressProjects.filter(p => codes.has(p.code)).length;
+            let due = 0, overdue = 0;
+            progressProjects.forEach(p => {
+                const d = pDaysLeft(p);
+                if (d === null) return;
+                if (d < 0) overdue++;
+                else if (d <= 30) due++;
+            });
+            document.getElementById('p-stat-total').textContent = total;
+            document.getElementById('p-stat-reported').textContent = reported;
+            document.getElementById('p-stat-unreported').textContent = total - reported;
+            document.getElementById('p-stat-due').textContent = due;
+            document.getElementById('p-stat-overdue').textContent = overdue;
+        }
+
+        function pRenderFilters() {
+            const leaderSel = document.getElementById('p-filter-leader');
+            const leaderVal = leaderSel.value;
+            const leaders = [...new Set(progressProjects.map(p => p.leader).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
+            leaderSel.innerHTML = '<option value="">全部队长</option>' + leaders.map(l => '<option>' + escAttr(l) + '</option>').join('');
+            leaderSel.value = leaders.includes(leaderVal) ? leaderVal : '';
+
+            const mgrSel = document.getElementById('p-filter-manager');
+            const mgrVal = mgrSel.value;
+            const mgrs = [...new Set(progressProjects.map(p => p.manager).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
+            mgrSel.innerHTML = '<option value="">全部管理员</option>' + mgrs.map(m => '<option>' + escAttr(m) + '</option>').join('');
+            mgrSel.value = mgrs.includes(mgrVal) ? mgrVal : '';
+        }
+
+        function pGetFiltered() {
+            const leader = document.getElementById('p-filter-leader').value;
+            const unit = document.getElementById('p-filter-unit').value;
+            const manager = document.getElementById('p-filter-manager').value;
+            const status = document.getElementById('p-filter-status').value;
+            const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
+            return progressProjects.filter(p => {
+                if (leader && p.leader !== leader) return false;
+                if (unit && p.unit !== unit) return false;
+                if (manager && p.manager !== manager) return false;
+                if (status === 'reported' && !pIsReportedThisWeek(p)) return false;
+                if (status === 'unreported' && pIsReportedThisWeek(p)) return false;
+                if (status === 'unfinished' && (p.progress || 0) >= 0.999) return false;
+                if (status === 'due' || status === 'overdue') {
+                    const d = pDaysLeft(p);
+                    if (d === null) return false;
+                    if (status === 'due' && !(d >= 0 && d <= 30)) return false;
+                    if (status === 'overdue' && d >= 0) return false;
+                }
+                if (search) {
+                    const hay = (p.code + ' ' + p.name + ' ' + p.leader + ' ' + p.manager + ' ' + p.unit + ' ' + (p.major || '')).toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            }).sort((a, b) => {
+                const da = pDaysLeft(a), db = pDaysLeft(b);
+                const va = da === null ? 1e9 : da, vb = db === null ? 1e9 : db;
+                if (va !== vb) return va - vb;
+                return String(a.leader || '').localeCompare(String(b.leader || ''), 'zh') || String(a.code).localeCompare(String(b.code));
+            });
+        }
+
+        function pRenderTable() {
+            const filtered = pGetFiltered();
+            const tbody = document.getElementById('progress-table-body');
+            const mobileEl = document.getElementById('progress-mobile-cards');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>暂无工程数据</p></div></td></tr>';
+                mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无工程数据</p></div>';
+                return;
+            }
+            const wk = pCurrentWeekKey();
+            tbody.innerHTML = filtered.map((p, i) => {
+                const pct = Math.round((p.progress || 0) * 100);
+                const r = pReportOf(p.code, wk);
+                const latest = r || pLatestReport(p.code);
+                const dl = pDaysLeftText(p);
+                const weekTip = r
+                    ? '第' + pWeekNo(wk) + '周 ' + pWeekLabel(wk) + ' 本周进度：' + (r.thisWeek || '—') + (r.nextWeek ? '；下周计划：' + r.nextWeek : '')
+                    : (latest ? '最近填报：第' + pWeekNo(latest.weekKey) + '周（' + pWeekLabel(latest.weekKey) + '）：' + (latest.thisWeek || '') : '尚无周报');
+                const weekBadge = r
+                    ? '<span class="badge badge-p-filled tip-cell" data-tip="' + escAttr(weekTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已填报</span>'
+                    : (pct >= 100 ? '<span class="badge badge-p-done tip-cell" data-tip="' + escAttr(weekTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已完工</span>'
+                        : '<span class="badge badge-p-empty tip-cell" data-tip="' + escAttr(weekTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">未填报</span>');
+                const daysHtml = dl.cls
+                    ? '<span class="p-days badge ' + dl.cls + '">' + dl.text + '</span>'
+                    : '<span class="p-days" style="color:var(--text-muted)">' + dl.text + '</span>';
+                const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
+                    + ((pIsOwned(p) || pIsAdmin()) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
+                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>' : '');
+                return '<tr>'
+                    + '<td class="col-serial">' + (i + 1) + '</td>'
+                    + '<td class="col-code">' + escAttr(p.code) + '</td>'
+                    + '<td class="col-name tip-cell" data-tip="' + escAttr(p.name) + '">' + escAttr(p.name) + '</td>'
+                    + '<td class="col-reporter tip-cell" data-tip="' + escAttr(p.leaderPhone || p.leader || '') + '">' + escAttr(p.leader || '') + '</td>'
+                    + '<td class="col-unit tip-cell" data-tip="' + escAttr(p.unit) + '">' + escAttr(p.unit) + '</td>'
+                    + '<td class="col-reporter">' + escAttr(p.manager || '') + '</td>'
+                    + '<td class="col-pdue">' + escAttr(p.dueDate || '—') + daysHtml + '</td>'
+                    + '<td class="col-pprog"><div class="' + pProgCls(pct) + '"><div class="p-prog-bar"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div></td>'
+                    + '<td class="col-pweek">' + weekBadge + '</td>'
+                    + '<td class="col-actions">' + acts + '</td>'
+                    + '</tr>';
+            }).join('');
+
+            mobileEl.innerHTML = filtered.map((p, i) => {
+                const pct = Math.round((p.progress || 0) * 100);
+                const r = pReportOf(p.code, wk);
+                const latest = r || pLatestReport(p.code);
+                const dl = pDaysLeftText(p);
+                const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
+                    + ((pIsOwned(p) || pIsAdmin()) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
+                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>' : '');
+                return '<div class="m-card">'
+                    + '<div class="m-card-top"><div class="m-card-title">' + escAttr(p.name) + '</div>'
+                    + '<div class="m-card-status">' + (r ? '<span class="badge badge-p-filled">已填报</span>' : (pct >= 100 ? '<span class="badge badge-p-done">已完工</span>' : '<span class="badge badge-p-empty">未填报</span>')) + '</div></div>'
+                    + '<div class="m-card-sub"><b>编码</b> ' + escAttr(p.code) + '</div>'
+                    + '<div class="m-card-sub"><b>队长</b> ' + escAttr(p.leader || '') + ' | <b>单位</b> ' + escAttr(p.unit) + '</div>'
+                    + '<div class="m-card-sub"><b>管理员</b> ' + escAttr(p.manager || '') + ' | <b>完工期限</b> ' + escAttr(p.dueDate || '—') + ' <span style="' + (dl.cls ? 'color:var(--warning)' : 'color:var(--text-muted)') + '">' + dl.text + '</span></div>'
+                    + '<div class="m-card-sub"><div class="' + pProgCls(pct) + '" style="margin-top:4px;"><div class="p-prog-bar"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div></div>'
+                    + (latest ? '<div class="m-card-desc">' + escAttr(latest.thisWeek || '') + '</div>' : '')
+                    + '<div class="m-card-bottom"><div class="m-card-countdown">' + (r ? '第' + pWeekNo(wk) + '周已填报' : '本周未填报') + '</div><div class="m-card-actions">' + acts + '</div></div>'
+                    + '</div>';
+            }).join('');
+        }
+
+        function pipsafe(s) { return String(s == null ? '' : s); }
+
+        function pClickStat(key) {
+            const sel = document.getElementById('p-filter-status');
+            sel.value = (!key || sel.value === key) ? '' : key;
+            pRenderTable();
+        }
+
+        function pClearAllFilters() {
+            ['p-filter-leader', 'p-filter-unit', 'p-filter-manager', 'p-filter-status'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('p-filter-search').value = '';
+            pRenderTable();
+        }
+
+        // ---------- 周报填报 ----------
+        function pWeekOptions() {
+            const opts = [];
+            const base = pMondayOf(new Date());
+            for (let i = 3; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - 7 * i); opts.push(pFmtDate(d)); }
+            return opts; // 升序，最后一项为本周
+        }
+
+        function pOpenFillModal(focusCode) {
+            if (!currentUser) { showToast('请先登录', true); return; }
+            const admin = pIsAdmin();
+            if (!admin && pOwnedProjects().length === 0) { showToast('您当前没有负责的工程，无需填报周报', true); return; }
+            const wkSel = document.getElementById('pf-week');
+            wkSel.innerHTML = pWeekOptions().map(k => {
+                const cur = k === pCurrentWeekKey();
+                return '<option value="' + k + '">' + (cur ? '本周 ' : '') + pWeekLabel(k) + '（第' + pWeekNo(k) + '周）</option>';
+            }).join('');
+            wkSel.value = pCurrentWeekKey();
+            const wrap = document.getElementById('pf-leader-wrap');
+            const leaderSel = document.getElementById('pf-leader');
+            if (admin) {
+                wrap.style.display = 'block';
+                let focusLeader = '';
+                if (focusCode) { const fp = progressProjects.find(x => x.code === focusCode); if (fp) focusLeader = fp.leader; }
+                const leaders = [...new Set(progressProjects.map(p => p.leader).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
+                leaderSel.innerHTML = '<option value="">请选择队长</option>' + leaders.map(l => '<option>' + escAttr(l) + '</option>').join('');
+                leaderSel.value = focusLeader;
+            } else {
+                wrap.style.display = 'none';
+                leaderSel.innerHTML = '';
+            }
+            pRenderFillRows();
+            openModal('modal-progress-fill');
+        }
+
+        function pFillProjectList() {
+            if (pIsAdmin()) {
+                const lname = document.getElementById('pf-leader').value;
+                if (!lname) return [];
+                return progressProjects.filter(p => p.leader === lname);
+            }
+            return pOwnedProjects();
+        }
+
+        function pRenderFillRows() {
+            const rowsEl = document.getElementById('pf-rows');
+            const hintEl = document.getElementById('pf-hint');
+            const weekKey = document.getElementById('pf-week').value;
+            const list = pFillProjectList();
+            _pfInit = {};
+            if (list.length === 0) {
+                rowsEl.innerHTML = '';
+                hintEl.textContent = pIsAdmin() ? '请先选择施工队长，再逐项填报该队长的工程周报。' : '您当前没有负责的工程。';
+                return;
+            }
+            hintEl.textContent = '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。';
+            rowsEl.innerHTML = list.map(p => {
+                const r = pReportOf(p.code, weekKey);
+                const pct = Math.round((r ? (r.progress || 0) : (p.progress || 0)) * 100);
+                _pfInit[p.code] = { pg: pct, this: r ? (r.thisWeek || '') : '', next: r ? (r.nextWeek || '') : '' };
+                return '<div class="pf-item" data-code="' + escAttr(p.code) + '">'
+                    + '<div class="pf-item-head"><div class="pf-item-name">' + escAttr(p.name)
+                    + '<span class="pf-item-code">' + escAttr(p.code) + (p.dueDate ? ' · 完工期限 ' + escAttr(p.dueDate) : '') + '</span></div>'
+                    + (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>')
+                    + '</div>'
+                    + '<div class="pf-grid">'
+                    + '<div><label>完工进度(%)</label><input type="number" class="form-input pf-progress" min="0" max="100" step="1" value="' + pct + '"></div>'
+                    + '<div><label>本周工程进度</label><textarea class="form-textarea pf-this" placeholder="本周完成了哪些工作、遇到什么问题…">' + escAttr(r ? r.thisWeek : '') + '</textarea></div>'
+                    + '<div><label>下周施工计划</label><textarea class="form-textarea pf-next" placeholder="下周计划安排（进度100%可不填）">' + escAttr(r ? r.nextWeek : '') + '</textarea></div>'
+                    + '</div></div>';
+            }).join('');
+        }
+
+        async function pSubmitFill() {
+            if (!currentUser) { showToast('请先登录', true); return; }
+            const admin = pIsAdmin();
+            const weekKey = document.getElementById('pf-week').value;
+            if (!weekKey) { showToast('请选择填报周次', true); return; }
+            let reporter = '';
+            if (admin) {
+                reporter = document.getElementById('pf-leader').value;
+                if (!reporter) { showToast('请选择施工队长', true); return; }
+            } else {
+                reporter = currentUser.name;
+            }
+            const items = document.querySelectorAll('#pf-rows .pf-item');
+            if (items.length === 0) { showToast('没有可填报的工程', true); return; }
+            const now = Date.now();
+            let count = 0;
+            let firstError = '';
+            items.forEach(it => {
+                if (firstError) return;
+                const code = it.getAttribute('data-code');
+                const pgRaw = it.querySelector('.pf-progress').value.trim();
+                const thisW = it.querySelector('.pf-this').value.trim();
+                const nextW = it.querySelector('.pf-next').value.trim();
+                const init = _pfInit[code] || { pg: -1, this: '', next: '' };
+                const p = progressProjects.find(x => x.code === code);
+                const label = p ? p.name : code;
+                // 未改动或完全未填写的行跳过
+                const pct = pgRaw === '' ? init.pg : Math.round(parseFloat(pgRaw));
+                const engaged = (thisW !== init.this) || (nextW !== init.next) || (pgRaw !== '' && pct !== init.pg);
+                if (!engaged) return;
+                if (!thisW) { firstError = '【' + label + '】请填写本周工程进度'; return; }
+                if (pgRaw === '' || isNaN(pct) || pct < 0 || pct > 100) { firstError = '【' + label + '】完工进度需在0-100之间'; return; }
+                const pg = pct / 100;
+                if (pg < 1 && !nextW) { firstError = '【' + label + '】未完工工程需填写下周施工计划'; return; }
+                let rep = pReportOf(code, weekKey);
+                if (rep) {
+                    rep.progress = pg; rep.thisWeek = thisW; rep.nextWeek = nextW;
+                    rep.updateTime = now;
+                    if (!rep.reporter) rep.reporter = reporter;
+                } else {
+                    progressReports.push({
+                        id: 'W' + now + '-' + code, projectCode: code, weekKey: weekKey,
+                        progress: pg, thisWeek: thisW, nextWeek: nextW,
+                        reporter: reporter, createTime: now, updateTime: now
+                    });
+                }
+                count++;
+            });
+            if (firstError) { showToast(firstError, true); return; }
+            if (count === 0) { showToast('请至少填写一个工程的周报', true); return; }
+            // 按最新一期周报同步工程当前进度
+            progressProjects.forEach(p => {
+                const latest = pLatestReport(p.code);
+                if (latest) p.progress = latest.progress;
+            });
+            try { await saveProgressData(); } catch (e) { return; }
+            closeModal('modal-progress-fill');
+            pRenderAll();
+            showToast('已提交 ' + count + ' 个工程的第' + pWeekNo(weekKey) + '周周报');
+        }
+
+        // ---------- 工程详情 ----------
+        function pOpenDetail(code) {
+            const p = progressProjects.find(x => x.code === code);
+            if (!p) return;
+            window._pdCode = code;
+            const pct = Math.round((p.progress || 0) * 100);
+            document.getElementById('pd-code').textContent = p.code;
+            document.getElementById('pd-name').textContent = p.name;
+            document.getElementById('pd-leader').textContent = (p.leader || '') + (p.leaderPhone ? '（' + p.leaderPhone + '）' : '');
+            document.getElementById('pd-unit').textContent = p.unit || '';
+            document.getElementById('pd-manager').textContent = p.manager || '';
+            document.getElementById('pd-major').textContent = p.major || '—';
+            document.getElementById('pd-approval').textContent = p.approvalDate || '—';
+            document.getElementById('pd-due').textContent = p.dueDate || '—';
+            const dl = pDaysLeftText(p);
+            document.getElementById('pd-left').innerHTML = dl.cls ? '<span class="badge ' + dl.cls + '">' + dl.text + '</span>' : dl.text;
+            document.getElementById('pd-progress').innerHTML = '<div class="' + pProgCls(pct) + '"><div class="p-prog-bar" style="min-width:120px;"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div>';
+            document.getElementById('pd-remark').textContent = p.remark || '—';
+            const list = pReportsOf(code).sort((a, b) =>
+                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || (b.updateTime || 0) - (a.updateTime || 0));
+            document.getElementById('pd-reports').innerHTML = list.length === 0
+                ? '<div class="empty-state" style="padding:12px;"><p style="margin:0;">暂无周报记录</p></div>'
+                : list.map(r => '<div class="p-report-item">'
+                    + '<div class="p-report-week"><span>第' + pWeekNo(r.weekKey) + '周 · ' + pWeekLabel(r.weekKey) + '</span>'
+                    + '<span class="badge ' + (Math.round((r.progress || 0) * 100) >= 100 ? 'badge-p-done' : 'badge-p-filled') + '">' + Math.round((r.progress || 0) * 100) + '%</span></div>'
+                    + '<div class="p-report-meta">填报人：' + escAttr(r.reporter || '—') + (r.updateTime ? ' · ' + formatTime(r.updateTime) : '') + (r.seeded ? ' · 初始导入' : '') + '</div>'
+                    + '<div class="p-report-field"><b>本周工程进度：</b>' + escAttr(r.thisWeek || '—') + '</div>'
+                    + '<div class="p-report-field"><b>下周施工计划：</b>' + escAttr(r.nextWeek || '—') + '</div>'
+                    + '</div>').join('');
+            openModal('modal-progress-detail');
+        }
+
+        // ---------- 导出Excel ----------
+        function exportProgressExcel() {
+            const filtered = pGetFiltered();
+            if (filtered.length === 0) { showToast('没有可导出的数据', true); return; }
+            const wk = pCurrentWeekKey();
+            const data = filtered.map((p, i) => {
+                const cur = pReportOf(p.code, wk);
+                const latest = cur || pLatestReport(p.code);
+                const d = pDaysLeft(p);
+                return {
+                    '序号': i + 1, '工程编码': p.code, '工程名称': p.name, '施工队长': p.leader || '',
+                    '队长电话': p.leaderPhone || '', '施工单位': p.unit, '工程管理员': p.manager || '',
+                    '二级专业': p.major || '', '立项批复日期': p.approvalDate || '', '要求完工日期': p.dueDate || '',
+                    '剩余天数': d === null ? '' : d, '完工进度(%)': Math.round((p.progress || 0) * 100),
+                    '本周周报': pipsafe(cur ? '已填报' : '未填报'), '本周工程进度': pipsafe(cur ? cur.thisWeek : ''),
+                    '下周施工计划': pipsafe(cur ? cur.nextWeek : ''),
+                    '最近填报时间': latest && latest.updateTime ? formatTime(latest.updateTime) : ''
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 40 }, { wch: 10 }, { wch: 13 }, { wch: 18 }, { wch: 10 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 45 }, { wch: 40 }, { wch: 18 }];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '施工进度');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadWorkbook(wb, '施工进度管理_' + dateStr + '.xlsx');
+            showToast('Excel已导出');
+        }
+
+        // ---------- 工程管理（管理员） ----------
+        let _peMode = 'add';
+        let _peCodeOrig = '';
+        function pOpenEditModal(code) {
+            if (!pIsAdmin()) { showToast('仅管理员可管理工程', true); return; }
+            _peMode = code ? 'edit' : 'add';
+            _peCodeOrig = code || '';
+            document.getElementById('pe-title').textContent = code ? '编辑工程' : '新增工程';
+            document.getElementById('pe-delete-btn').style.display = code ? 'inline-flex' : 'none';
+            const p = code ? progressProjects.find(x => x.code === code) : null;
+            document.getElementById('pe-code').value = p ? p.code : '';
+            document.getElementById('pe-name').value = p ? p.name : '';
+            document.getElementById('pe-leader').value = p ? (p.leader || '') : '';
+            document.getElementById('pe-phone').value = p ? (p.leaderPhone || '') : '';
+            document.getElementById('pe-unit').value = p ? (p.unit || '') : '';
+            document.getElementById('pe-manager').value = p ? (p.manager || '') : '';
+            document.getElementById('pe-major').value = p ? (p.major || '') : '';
+            document.getElementById('pe-progress').value = p ? Math.round((p.progress || 0) * 100) : 0;
+            document.getElementById('pe-approval').value = p ? (p.approvalDate || '') : '';
+            document.getElementById('pe-due').value = p ? (p.dueDate || '') : '';
+            document.getElementById('pe-remark').value = p ? (p.remark || '') : '';
+            openModal('modal-progress-edit');
+        }
+
+        async function pSaveProject() {
+            if (!pIsAdmin()) { showToast('仅管理员可管理工程', true); return; }
+            const code = document.getElementById('pe-code').value.trim();
+            const name = document.getElementById('pe-name').value.trim();
+            const leader = document.getElementById('pe-leader').value.trim();
+            const phone = document.getElementById('pe-phone').value.trim();
+            const unit = document.getElementById('pe-unit').value;
+            const manager = document.getElementById('pe-manager').value;
+            const major = document.getElementById('pe-major').value.trim();
+            const pgRaw = document.getElementById('pe-progress').value.trim();
+            const approval = document.getElementById('pe-approval').value;
+            const due = document.getElementById('pe-due').value;
+            const remark = document.getElementById('pe-remark').value.trim();
+            if (!code) { showToast('请填写工程编码', true); return; }
+            if (!name) { showToast('请填写工程名称', true); return; }
+            if (!leader) { showToast('请填写施工队长', true); return; }
+            if (!unit) { showToast('请选择施工单位', true); return; }
+            if (!due) { showToast('请选择要求完工日期', true); return; }
+            let pg = 0;
+            if (pgRaw === '') { pg = 0; }
+            else {
+                const pct = parseFloat(pgRaw);
+                if (isNaN(pct) || pct < 0 || pct > 100) { showToast('完工进度需在0-100之间', true); return; }
+                pg = Math.round(pct) / 100;
+            }
+            if (_peMode === 'add' && progressProjects.some(x => x.code === code)) { showToast('工程编码已存在', true); return; }
+            if (_peMode === 'edit' && code !== _peCodeOrig && progressProjects.some(x => x.code === code)) { showToast('工程编码已存在', true); return; }
+            if (_peMode === 'add') {
+                progressProjects.push({
+                    code: code, name: name, manager: manager, unit: unit, leader: leader,
+                    leaderPhone: phone, major: major, approvalDate: approval, dueDate: due,
+                    progress: pg, remark: remark
+                });
+            } else {
+                const p = progressProjects.find(x => x.code === _peCodeOrig);
+                if (p) {
+                    if (code !== _peCodeOrig) {
+                        progressReports.forEach(r => { if (r.projectCode === _peCodeOrig) r.projectCode = code; });
+                    }
+                    p.code = code; p.name = name; p.manager = manager; p.unit = unit;
+                    p.leader = leader; p.leaderPhone = phone; p.major = major;
+                    p.approvalDate = approval; p.dueDate = due; p.progress = pg; p.remark = remark;
+                }
+            }
+            try { await saveProgressData(); } catch (e) { return; }
+            closeModal('modal-progress-edit');
+            pRenderAll();
+            showToast(_peMode === 'add' ? '工程已新增，队长登录密码为其电话号码' : '工程信息已保存');
+        }
+
+        async function pDeleteProject() {
+            if (!pIsAdmin()) { showToast('仅管理员可管理工程', true); return; }
+            const p = progressProjects.find(x => x.code === _peCodeOrig);
+            if (!p) return;
+            const cnt = pReportsOf(p.code).length;
+            const tip = '确定删除该工程吗？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n周报记录：' + cnt + ' 条\n\n删除后不可恢复。';
+            if (!confirm(tip)) return;
+            progressProjects = progressProjects.filter(x => x.code !== _peCodeOrig);
+            progressReports = progressReports.filter(r => r.projectCode !== _peCodeOrig);
+            try { await saveProgressData(); } catch (e) { return; }
+            closeModal('modal-progress-edit');
+            pRenderAll();
+            showToast('工程已删除');
+        }
+
         // ========== Init ==========
         async function initApp() {
             // 1. 从云端加载数据
             await loadDataAsync();
             // 2. 预置支撑人员账号（同步到云端）
             await seedSupportUsers();
-            // 3. Check session
+            // 3. 加载施工进度数据（首次自动初始化工程清单 + 预置施工队长账号）
+            await pLoadProgress();
+            // 4. Check session
             currentUser = loadSession();
             if (currentUser) {
                 // 按注册单位修正角色（非admin用户）
@@ -4575,7 +6623,7 @@
                     }
                 }
                 updateHeaderForUser();
-                // 4. 加载借料数据
+                // 5. 加载借料数据
                 await loadInventory();
                 await loadBorrowings();
             } else {
