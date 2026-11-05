@@ -1093,16 +1093,16 @@
     <div class="container">
         <!-- Nav Bar -->
         <div class="nav-bar" id="nav-bar">
-            <button class="nav-tab active" id="tab-resistance" onclick="switchTab('resistance')">施工阻力</button>
+            <button class="nav-tab active" id="tab-progress" onclick="switchTab('progress')">施工进度</button>
+            <button class="nav-tab" id="tab-resistance" onclick="switchTab('resistance')">施工阻力</button>
             <button class="nav-tab" id="tab-borrowing" onclick="switchTab('borrowing')">工单借料</button>
-            <button class="nav-tab" id="tab-progress" onclick="switchTab('progress')">施工进度</button>
         </div>
 
         <!-- Header -->
         <div class="header">
             <div class="header-left">
-                <h1 id="page-title">施工阻力协调系统</h1>
-                <p id="page-subtitle">施工单位填报施工阻力 · 支撑人员受理反馈 · 闭环跟踪管理</p>
+                <h1 id="page-title">施工进度管理</h1>
+                <p id="page-subtitle">施工小队队长每周末填报周报 · 工程进度实时管控</p>
             </div>
             <div class="header-actions">
                 <span class="user-badge" id="user-badge" style="display:none;"></span>
@@ -1121,7 +1121,7 @@
         </div>
 
         <!-- ===== Resistance View ===== -->
-        <div class="resistance-view" id="view-resistance">
+        <div class="resistance-view hidden" id="view-resistance">
 
         <!-- Stats -->
         <div class="stats-row">
@@ -1272,7 +1272,7 @@
         </div><!-- /borrowing-view -->
 
         <!-- ===== Progress View ===== -->
-        <div class="progress-view" id="view-progress">
+        <div class="progress-view active" id="view-progress">
             <!-- Stats -->
             <div class="stats-row b-stats-row">
                 <div class="b-stat-card checking" onclick="pClickStat('')">
@@ -2513,6 +2513,7 @@
             document.getElementById('auth-register').classList.remove('active');
             updateHeaderForUser();
             renderAll();
+            if (_currentBorrowingTab === 'progress') pRenderAll();
         }
 
         function updateHeaderForUser() {
@@ -4040,7 +4041,7 @@
         let _borrowingsSha = null;
         let inventory = [];
         let _inventoryLoaded = false;
-        let _currentBorrowingTab = 'resistance';
+        let _currentBorrowingTab = 'progress';
 
         const BORROWING_STATUS_MAP = {
             pending:   { label: '待核对', badge: 'badge-borrowing-pending' },
@@ -6700,6 +6701,7 @@ const PROGRESS_TEAM_LEADERS = [
                 showLogin();
             }
             renderAll();
+            pRenderAll();
         }
 
         // 启动应用
