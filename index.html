@@ -979,38 +979,71 @@
         /* ===== Progress Management Styles ===== */
         .progress-view { display: none; }
         .progress-view.active { display: block; }
+        /* 统计卡：数值居中（仅进度视图） */
+        .progress-view .b-stat-card { text-align: center; }
+        /* 进度条 */
         .p-prog { display: flex; align-items: center; gap: 8px; }
-        .p-prog-bar { flex: 1; height: 8px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; min-width: 64px; }
+        .p-prog-bar { flex: 1; height: 8px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; min-width: 72px; }
         .p-prog-fill { height: 100%; border-radius: 4px; background: var(--primary); transition: width .3s; }
         .p-prog.high .p-prog-fill { background: var(--success); }
         .p-prog.low .p-prog-fill { background: var(--warning); }
         .p-prog-pct { width: 44px; text-align: right; font-size: 12px; font-weight: 700; white-space: nowrap; }
-        .col-pdue { width: 128px; white-space: nowrap; font-size: 12px; }
-        .col-pdue .p-days { display: block; font-size: 11px; font-weight: 600; margin-top: 2px; }
-        .col-pprog { min-width: 128px; }
-        .col-pweek { width: 88px; text-align: center; white-space: nowrap; }
+        /* 表格列 */
+        .col-pname { min-width: 320px; max-width: 560px; }
+        .p-name-main { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .p-name-main:hover { color: var(--primary); }
+        .p-name-sub { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .col-punit { width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92px; }
+        .col-pdue { width: 108px; white-space: nowrap; font-size: 12px; }
+        .col-pdue .p-due-date { display: block; color: var(--text-secondary); }
+        .col-pdue .p-days { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 8px; margin-top: 4px; border-radius: 10px; line-height: 1.6; }
+        .col-pdue .p-due { color: var(--text-muted); }
+        .col-pprog { min-width: 150px; }
+        .col-pweek { width: 86px; text-align: center; white-space: nowrap; }
+        .col-p-actions { width: 176px; text-align: center; white-space: nowrap; }
+        .col-p-actions button { margin: 0 2px; }
+        /* 状态徽标 */
         .badge-p-filled { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); cursor: pointer; }
-        .badge-p-empty { background: rgba(148,163,184,0.12); color: var(--text-muted); border: 1px solid rgba(148,163,184,0.25); }
-        .badge-p-done { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); }
+        .badge-p-empty { background: rgba(148,163,184,0.14); color: #b6c2d4; border: 1px solid rgba(148,163,184,0.3); cursor: pointer; }
+        .badge-p-done { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); cursor: pointer; }
         .badge-p-due { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
         .badge-p-overdue { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
-        .pf-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; background: var(--bg-muted); }
-        .pf-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
-        .pf-item-name { font-size: 13px; font-weight: 600; line-height: 1.4; }
-        .pf-item-code { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
-        .pf-grid { display: grid; grid-template-columns: 92px 1fr 1fr; gap: 8px; }
-        .pf-grid label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px; font-weight: 600; }
-        .pf-grid textarea { min-height: 66px; }
-        .pf-progress { text-align: center; font-weight: 700; padding: 8px 4px !important; }
-        .pf-hint { font-size: 12px; color: var(--text-muted); margin: 4px 0 12px; line-height: 1.5; }
-        .p-report-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; background: var(--input-bg); }
+        /* 填报弹窗：顶部控制区 */
+        .pf-controls { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 4px; }
+        .pf-hint { grid-column: 1 / -1; margin: 2px 0 12px; font-size: 12px; color: var(--text-secondary); line-height: 1.6; background: rgba(59,130,246,0.06); border: 1px solid var(--card-border); border-left: 3px solid var(--primary); border-radius: var(--radius); padding: 9px 12px; }
+        /* 填报弹窗：工程卡片 */
+        .pf-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; background: var(--bg-muted); }
+        .pf-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .pf-item-titles { min-width: 0; flex: 1; }
+        .pf-item-name { font-size: 13px; font-weight: 600; line-height: 1.5; }
+        .pf-item-code { display: block; font-size: 11px; color: var(--text-secondary); font-weight: 400; margin-top: 2px; }
+        .pf-item-aside { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .pf-prog-ctl { display: inline-flex; align-items: center; gap: 4px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--radius); padding: 3px 10px; }
+        .pf-prog-ctl .pf-prog-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+        .pf-progress { width: 58px; text-align: center; font-weight: 700; padding: 5px 2px !important; border: none !important; background: transparent !important; box-shadow: none !important; font-size: 14px; color: var(--primary); }
+        .pf-prog-unit { font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-left: 2px; }
+        .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pf-field label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-weight: 600; }
+        .pf-field label em { color: var(--danger); font-style: normal; }
+        .pf-field label .pf-label-tip { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+        .pf-grid textarea { min-height: 78px; }
+        .pf-grid textarea.p-next-disabled { opacity: .55; cursor: not-allowed; }
+        .pf-next-tip { transition: color .15s; }
+        /* 详情弹窗：信息两列 */
+        .detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 28px; }
+        .detail-grid-2 .detail-span2 { grid-column: 1 / -1; }
+        /* 周报记录 */
+        .p-report-item { border: 1px solid var(--card-border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; background: var(--input-bg); }
         .p-report-week { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .p-report-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-        .p-report-field { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 2px; }
+        .p-report-meta { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+        .p-report-field { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 4px; }
         .p-report-field b { color: var(--text-primary); }
         .p-detail-list { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
         @media (max-width: 768px) {
+            .pf-controls { grid-template-columns: 1fr; }
             .pf-grid { grid-template-columns: 1fr; }
+            .pf-item-head { align-items: stretch; }
+            .detail-grid-2 { grid-template-columns: 1fr; }
             .p-detail-list { max-height: 60vh; }
         }
 
@@ -1301,15 +1334,14 @@
                     <thead>
                         <tr>
                             <th class="col-serial">序号</th>
-                            <th class="col-code">工程编码</th>
-                            <th class="col-name">工程名称</th>
+                            <th class="col-pname">工程名称</th>
                             <th class="col-reporter">队长</th>
-                            <th class="col-unit">施工单位</th>
+                            <th class="col-punit">施工单位</th>
                             <th class="col-reporter">管理员</th>
-                            <th class="col-pdue">要求完工</th>
+                            <th class="col-pdue">完工期限</th>
                             <th class="col-pprog">完工进度</th>
                             <th class="col-pweek">本周周报</th>
-                            <th class="col-actions">操作</th>
+                            <th class="col-p-actions">操作</th>
                         </tr>
                     </thead>
                     <tbody id="progress-table-body"></tbody>
@@ -1994,17 +2026,17 @@
                 <h2>周报填报</h2>
                 <button class="modal-close" onclick="closeModal('modal-progress-fill')">&times;</button>
             </div>
-            <div class="form-actions" style="justify-content: flex-start; gap: 12px; margin-bottom: 4px;">
-                <div style="flex:1;">
-                    <label class="form-label">填报周次</label>
+            <div class="pf-controls">
+                <div class="pf-ctl">
+                    <label class="form-label"><span class="required">*</span>填报周次</label>
                     <select class="form-select" id="pf-week" onchange="pRenderFillRows()"></select>
                 </div>
-                <div style="flex:1; display:none;" id="pf-leader-wrap">
-                    <label class="form-label">施工队长</label>
+                <div class="pf-ctl" id="pf-leader-wrap" style="display:none;">
+                    <label class="form-label"><span class="required">*</span>施工队长</label>
                     <select class="form-select" id="pf-leader" onchange="pRenderFillRows()"></select>
                 </div>
+                <p class="pf-hint" id="pf-hint"></p>
             </div>
-            <p class="pf-hint" id="pf-hint"></p>
             <div id="pf-rows"></div>
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-progress-fill')">取消</button>
@@ -2022,17 +2054,19 @@
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">工程信息</div>
-                <div class="detail-field"><div class="detail-field-label">工程编码</div><div class="detail-field-value" id="pd-code"></div></div>
-                <div class="detail-field"><div class="detail-field-label">工程名称</div><div class="detail-field-value" id="pd-name"></div></div>
-                <div class="detail-field"><div class="detail-field-label">施工队长</div><div class="detail-field-value" id="pd-leader"></div></div>
-                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="pd-unit"></div></div>
-                <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="pd-manager"></div></div>
-                <div class="detail-field"><div class="detail-field-label">二级专业</div><div class="detail-field-value" id="pd-major"></div></div>
-                <div class="detail-field"><div class="detail-field-label">立项批复日期</div><div class="detail-field-value" id="pd-approval"></div></div>
-                <div class="detail-field"><div class="detail-field-label">MSS要求完工</div><div class="detail-field-value" id="pd-due"></div></div>
-                <div class="detail-field"><div class="detail-field-label">剩余天数</div><div class="detail-field-value" id="pd-left"></div></div>
-                <div class="detail-field"><div class="detail-field-label">当前完工进度</div><div class="detail-field-value" id="pd-progress"></div></div>
-                <div class="detail-field"><div class="detail-field-label">备注</div><div class="detail-field-value" id="pd-remark"></div></div>
+                <div class="detail-grid-2">
+                    <div class="detail-field detail-span2"><div class="detail-field-label">工程名称</div><div class="detail-field-value" id="pd-name"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">工程编码</div><div class="detail-field-value" id="pd-code"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">二级专业</div><div class="detail-field-value" id="pd-major"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">施工队长</div><div class="detail-field-value" id="pd-leader"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="pd-unit"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="pd-manager"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">立项批复日期</div><div class="detail-field-value" id="pd-approval"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">MSS要求完工</div><div class="detail-field-value" id="pd-due"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">剩余天数</div><div class="detail-field-value" id="pd-left"></div></div>
+                    <div class="detail-field detail-span2"><div class="detail-field-label">当前完工进度</div><div class="detail-field-value" id="pd-progress"></div></div>
+                    <div class="detail-field detail-span2"><div class="detail-field-label">备注</div><div class="detail-field-value" id="pd-remark"></div></div>
+                </div>
             </div>
             <div class="detail-section">
                 <div class="detail-section-title">周报记录</div>
@@ -6159,6 +6193,15 @@ const PROGRESS_TEAM_LEADERS = [
         }
         function pOwnedProjects() { return progressProjects.filter(p => pIsOwned(p)); }
 
+        // 施工单位简称（表格/卡片显示，tooltip 显示全名）
+        const P_UNIT_SHORT = {
+            '湖南省通信建设有限公司': '省通信建设',
+            '湖南天辰建设有限责任公司': '湖南天辰',
+            '湖南省康普通信技术有限责任公司': '湖南康普',
+            '中国通信建设第三工程局有限公司': '中通三局'
+        };
+        function pUnitShort(u) { return P_UNIT_SHORT[u] || u; }
+
         // ---------- 周报存取 ----------
         function pReportsOf(code) { return progressReports.filter(r => r.projectCode === code); }
         function pReportOf(code, weekKey) { return progressReports.find(r => r.projectCode === code && r.weekKey === weekKey); }
@@ -6267,21 +6310,21 @@ const PROGRESS_TEAM_LEADERS = [
                         : '<span class="badge badge-p-empty tip-cell" data-tip="' + escAttr(weekTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">未填报</span>');
                 const daysHtml = dl.cls
                     ? '<span class="p-days badge ' + dl.cls + '">' + dl.text + '</span>'
-                    : '<span class="p-days" style="color:var(--text-muted)">' + dl.text + '</span>';
+                    : '<span class="p-days p-due">' + dl.text + '</span>';
                 const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
                     + ((pIsOwned(p) || pIsAdmin()) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>' : '');
+                const subLine = escAttr(p.code) + (p.major ? ' · ' + escAttr(p.major) : '');
                 return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
-                    + '<td class="col-code">' + escAttr(p.code) + '</td>'
-                    + '<td class="col-name tip-cell" data-tip="' + escAttr(p.name) + '">' + escAttr(p.name) + '</td>'
+                    + '<td class="col-pname"><span class="p-name-main tip-cell" data-tip="' + escAttr(p.name) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(p.name) + '</span><span class="p-name-sub tip-cell" data-tip="' + escAttr(p.code) + '">' + subLine + '</span></td>'
                     + '<td class="col-reporter tip-cell" data-tip="' + escAttr(p.leaderPhone || p.leader || '') + '">' + escAttr(p.leader || '') + '</td>'
-                    + '<td class="col-unit tip-cell" data-tip="' + escAttr(p.unit) + '">' + escAttr(p.unit) + '</td>'
+                    + '<td class="col-punit tip-cell" data-tip="' + escAttr(p.unit) + '">' + escAttr(pUnitShort(p.unit)) + '</td>'
                     + '<td class="col-reporter">' + escAttr(p.manager || '') + '</td>'
-                    + '<td class="col-pdue">' + escAttr(p.dueDate || '—') + daysHtml + '</td>'
+                    + '<td class="col-pdue"><span class="p-due-date">' + escAttr(p.dueDate || '—') + '</span>' + daysHtml + '</td>'
                     + '<td class="col-pprog"><div class="' + pProgCls(pct) + '"><div class="p-prog-bar"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div></td>'
                     + '<td class="col-pweek">' + weekBadge + '</td>'
-                    + '<td class="col-actions">' + acts + '</td>'
+                    + '<td class="col-p-actions">' + acts + '</td>'
                     + '</tr>';
             }).join('');
 
@@ -6297,8 +6340,8 @@ const PROGRESS_TEAM_LEADERS = [
                     + '<div class="m-card-top"><div class="m-card-title">' + escAttr(p.name) + '</div>'
                     + '<div class="m-card-status">' + (r ? '<span class="badge badge-p-filled">已填报</span>' : (pct >= 100 ? '<span class="badge badge-p-done">已完工</span>' : '<span class="badge badge-p-empty">未填报</span>')) + '</div></div>'
                     + '<div class="m-card-sub"><b>编码</b> ' + escAttr(p.code) + '</div>'
-                    + '<div class="m-card-sub"><b>队长</b> ' + escAttr(p.leader || '') + ' | <b>单位</b> ' + escAttr(p.unit) + '</div>'
-                    + '<div class="m-card-sub"><b>管理员</b> ' + escAttr(p.manager || '') + ' | <b>完工期限</b> ' + escAttr(p.dueDate || '—') + ' <span style="' + (dl.cls ? 'color:var(--warning)' : 'color:var(--text-muted)') + '">' + dl.text + '</span></div>'
+                    + '<div class="m-card-sub"><b>队长</b> ' + escAttr(p.leader || '') + ' | <b>单位</b> ' + escAttr(pUnitShort(p.unit)) + '</div>'
+                    + '<div class="m-card-sub"><b>管理员</b> ' + escAttr(p.manager || '') + ' | <b>期限</b> ' + escAttr(p.dueDate || '—') + ' <span style="' + (dl.cls ? 'color:var(--warning)' : 'color:var(--text-muted)') + '">' + dl.text + '</span></div>'
                     + '<div class="m-card-sub"><div class="' + pProgCls(pct) + '" style="margin-top:4px;"><div class="p-prog-bar"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div></div>'
                     + (latest ? '<div class="m-card-desc">' + escAttr(latest.thisWeek || '') + '</div>' : '')
                     + '<div class="m-card-bottom"><div class="m-card-countdown">' + (r ? '第' + pWeekNo(wk) + '周已填报' : '本周未填报') + '</div><div class="m-card-actions">' + acts + '</div></div>'
@@ -6381,16 +6424,43 @@ const PROGRESS_TEAM_LEADERS = [
                 const pct = Math.round((r ? (r.progress || 0) : (p.progress || 0)) * 100);
                 _pfInit[p.code] = { pg: pct, this: r ? (r.thisWeek || '') : '', next: r ? (r.nextWeek || '') : '' };
                 return '<div class="pf-item" data-code="' + escAttr(p.code) + '">'
-                    + '<div class="pf-item-head"><div class="pf-item-name">' + escAttr(p.name)
+                    + '<div class="pf-item-head">'
+                    + '<div class="pf-item-titles"><div class="pf-item-name">' + escAttr(p.name) + '</div>'
                     + '<span class="pf-item-code">' + escAttr(p.code) + (p.dueDate ? ' · 完工期限 ' + escAttr(p.dueDate) : '') + '</span></div>'
+                    + '<div class="pf-item-aside">'
+                    + '<span class="pf-prog-ctl"><span class="pf-prog-label">完工进度</span><input type="number" class="form-input pf-progress" min="0" max="100" step="1" value="' + pct + '"><span class="pf-prog-unit">%</span></span>'
                     + (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>')
                     + '</div>'
+                    + '</div>'
                     + '<div class="pf-grid">'
-                    + '<div><label>完工进度(%)</label><input type="number" class="form-input pf-progress" min="0" max="100" step="1" value="' + pct + '"></div>'
-                    + '<div><label>本周工程进度</label><textarea class="form-textarea pf-this" placeholder="本周完成了哪些工作、遇到什么问题…">' + escAttr(r ? r.thisWeek : '') + '</textarea></div>'
-                    + '<div><label>下周施工计划</label><textarea class="form-textarea pf-next" placeholder="下周计划安排（进度100%可不填）">' + escAttr(r ? r.nextWeek : '') + '</textarea></div>'
+                    + '<div class="pf-field"><label>本周工程进度<em>*</em></label><textarea class="form-textarea pf-this" placeholder="本周完成了哪些工作、遇到什么问题…"></textarea></div>'
+                    + '<div class="pf-field"><label>下周施工计划<span class="pf-label-tip pf-next-tip">未完工必填</span></label><textarea class="form-textarea pf-next" placeholder="下周计划安排…"></textarea></div>'
                     + '</div></div>';
             }).join('');
+            // 回填已有内容（textarea 值经 value 赋值，避免转义问题）
+            list.forEach(p => {
+                const r = pReportOf(p.code, weekKey);
+                const it = rowsEl.querySelector('.pf-item[data-code="' + p.code + '"]');
+                if (it) {
+                    it.querySelector('.pf-this').value = r ? (r.thisWeek || '') : '';
+                    it.querySelector('.pf-next').value = r ? (r.nextWeek || '') : '';
+                }
+            });
+            // 进度联动：完工进度=100 时自动禁用"下周计划"输入
+            rowsEl.querySelectorAll('.pf-item').forEach(it => {
+                const pg = it.querySelector('.pf-progress');
+                const next = it.querySelector('.pf-next');
+                const tip = it.querySelector('.pf-next-tip');
+                const sync = () => {
+                    const v = parseInt(pg.value || '0', 10);
+                    const done = !isNaN(v) && v >= 100;
+                    next.disabled = done;
+                    next.classList.toggle('p-next-disabled', done);
+                    if (tip) tip.textContent = done ? '已完工，无需计划' : '未完工必填';
+                };
+                pg.addEventListener('input', sync);
+                sync();
+            });
         }
 
         async function pSubmitFill() {
