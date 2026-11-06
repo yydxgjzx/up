@@ -1351,6 +1351,7 @@
                     <input type="text" class="filter-input" id="p-filter-search" placeholder="搜索工程名称/编码/队长..." autocomplete="off" oninput="pRenderTable()">
                 </div>
                 <div class="toolbar-right">
+                    <button class="btn btn-ghost btn-sm" id="p-btn-mine" style="display:none" onclick="pToggleMine()">只看我的</button>
                     <button class="btn btn-ghost btn-sm" onclick="pClearAllFilters()">清除筛选</button>
                 </div>
             </div>
@@ -2547,6 +2548,7 @@
         function onLoginSuccess() {
             document.getElementById('auth-login').classList.remove('active');
             document.getElementById('auth-register').classList.remove('active');
+            pMineTouched = false; // 重新登录：按新身份重算默认视图
             updateHeaderForUser();
             renderAll();
             if (_currentBorrowingTab === 'progress') pRenderAll();
@@ -2655,7 +2657,9 @@
         function logout() {
             currentUser = null;
             saveSession(null);
+            pMineTouched = false; // 退出：重置默认视图标记
             updateHeaderForUser();
+            pRenderAll(); // 按无登录态口径刷新进度视图与按钮
             showLogin();
         }
 
@@ -6127,6 +6131,10 @@ const PROGRESS_TEAM_LEADERS = [
         let progressReports = [];
         let _progressSha = null;
         let _pfInit = {};
+        // 默认视图（2026-11-06 与小程序对齐）：登录后默认只看与登录账号相关的工程
+        let pMineOnly = false;    // true=只看登录人相关工程（队长本人/工程管理员本人负责）
+        let pMineTouched = false; // 用户手动切换过视图（数据刷新后不重置，重新登录/退出重置）
+        let pHasMine = false;     // 登录人是否有相关工程（无则默认全部、不显示切换按钮）
         const PROGRESS_SEED_WEEK = '2026-10-26'; // 施工小队管理表"2026年10月31日第四周"数据
 
         // ---------- 周日期工具 ----------
@@ -6276,7 +6284,26 @@ const PROGRESS_TEAM_LEADERS = [
         function pProgCls(pct) { return 'p-prog' + (pct >= 90 ? ' high' : (pct > 0 && pct < 30 ? ' low' : '')); }
 
         // ---------- 渲染 ----------
+        function pApplyMineView() {
+            // 有相关工程（队长本人/工程管理员本人负责）则默认只看我的；admin 与无相关工程者默认全部
+            pHasMine = !!currentUser && progressProjects.some(p => pIsOwned(p) || pIsMgrOf(p));
+            if (!pMineTouched) pMineOnly = pHasMine;
+            const btn = document.getElementById('p-btn-mine');
+            if (btn) {
+                btn.style.display = pHasMine ? '' : 'none';
+                btn.textContent = pMineOnly ? '显示全部' : '只看我的';
+                btn.classList.toggle('btn-primary', pMineOnly);
+                btn.classList.toggle('btn-ghost', !pMineOnly);
+            }
+        }
+        function pToggleMine() {
+            pMineTouched = true; // 手动切换后刷新不重置
+            pMineOnly = !pMineOnly;
+            pApplyMineView(); // 同步按钮文案/样式
+            pRenderTable();
+        }
         function pRenderAll() {
+            pApplyMineView();
             pRenderFilters();
             pRenderTable();
             updateHeaderForUser();
@@ -6327,6 +6354,8 @@ const PROGRESS_TEAM_LEADERS = [
             const status = document.getElementById('p-filter-status').value;
             const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
             return progressProjects.filter(p => {
+                // 只看登录人相关工程（2026-11-06 默认视图，与小程序一致）
+                if (pMineOnly && !pIsOwned(p) && !pIsMgrOf(p)) return false;
                 if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
