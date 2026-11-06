@@ -1046,6 +1046,12 @@
         .p-report-meta { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
         .p-report-field { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 4px; }
         .p-report-field b { color: var(--text-primary); }
+        .badge-p-hist { background: rgba(148,163,184,0.14); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+        .p-report-hist { margin-top: 8px; border-top: 1px dashed var(--card-border); padding-top: 6px; }
+        .p-report-hist summary { font-size: 12px; color: var(--text-muted); cursor: pointer; user-select: none; padding: 2px 0; font-weight: 600; }
+        .p-report-hist summary:hover { color: var(--primary); }
+        .p-report-hist-item { padding: 6px 0 4px 14px; border-left: 2px solid var(--card-border); margin: 6px 0 2px 2px; }
+        .p-report-hist-item .p-report-field { font-size: 12px; }
         .p-detail-list { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
         @media (max-width: 768px) {
             .pf-controls { grid-template-columns: 1fr; }
@@ -6229,10 +6235,18 @@ const PROGRESS_TEAM_LEADERS = [
 
         // ---------- 周报存取 ----------
         function pReportsOf(code) { return progressReports.filter(r => r.projectCode === code); }
-        function pReportOf(code, weekKey) { return progressReports.find(r => r.projectCode === code && r.weekKey === weekKey); }
+        function pRepTime(r) { return (r.updateTime || r.createTime || 0); }
+        // 某周的全部版本（含历史），按时间降序（第一条为当前版本）
+        function pRepVersionsOf(code, weekKey) {
+            return progressReports
+                .filter(r => r.projectCode === code && r.weekKey === weekKey)
+                .sort((a, b) => pRepTime(b) - pRepTime(a));
+        }
+        // 某周的周报 = 同周多版本中的最新一条（历史版本保存在数组中不覆盖不删除）
+        function pReportOf(code, weekKey) { return pRepVersionsOf(code, weekKey)[0] || null; }
         function pLatestReport(code) {
             const list = pReportsOf(code).sort((a, b) =>
-                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || (b.updateTime || b.createTime || 0) - (a.updateTime || a.createTime || 0));
+                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || pRepTime(b) - pRepTime(a));
             return list[0] || null;
         }
         function pIsReportedThisWeek(p) { return !!pReportOf(p.code, pCurrentWeekKey()); }
@@ -6537,6 +6551,7 @@ const PROGRESS_TEAM_LEADERS = [
             if (items.length === 0) { showToast('没有可填报的工程', true); return; }
             const now = Date.now();
             let count = 0;
+            let revised = 0;
             let firstError = '';
             items.forEach(it => {
                 if (firstError) return;
@@ -6555,18 +6570,15 @@ const PROGRESS_TEAM_LEADERS = [
                 if (pgRaw === '' || isNaN(pct) || pct < 0 || pct > 100) { firstError = '【' + label + '】完工进度需在0-100之间'; return; }
                 const pg = pct / 100;
                 if (pg < 1 && !nextW) { firstError = '【' + label + '】未完工工程需填写下周施工计划'; return; }
-                let rep = pReportOf(code, weekKey);
-                if (rep) {
-                    rep.progress = pg; rep.thisWeek = thisW; rep.nextWeek = nextW;
-                    rep.updateTime = now;
-                    if (!rep.reporter) rep.reporter = reporter;
-                } else {
-                    progressReports.push({
-                        id: 'W' + now + '-' + code, projectCode: code, weekKey: weekKey,
-                        progress: pg, thisWeek: thisW, nextWeek: nextW,
-                        reporter: reporter, createTime: now, updateTime: now
-                    });
-                }
+                // 周报为追加式历史记录：重复填报不覆盖，生成新版本（rev 序号），旧版本永久保留
+                const versions = progressReports.filter(x => x.projectCode === code && x.weekKey === weekKey);
+                const rev = versions.length + 1;
+                progressReports.push({
+                    id: 'W' + now + '-' + code + '-v' + rev, projectCode: code, weekKey: weekKey, rev: rev,
+                    progress: pg, thisWeek: thisW, nextWeek: nextW,
+                    reporter: reporter, createTime: now, updateTime: now
+                });
+                if (rev > 1) revised++;
                 count++;
             });
             if (firstError) { showToast(firstError, true); return; }
@@ -6584,7 +6596,7 @@ const PROGRESS_TEAM_LEADERS = [
             try { await saveProgressData(); } catch (e) { return; }
             closeModal('modal-progress-fill');
             pRenderAll();
-            showToast('已提交 ' + count + ' 个工程的第' + pWeekNo(weekKey) + '周周报');
+            showToast('已提交 ' + count + ' 个工程的第' + pWeekNo(weekKey) + '周周报' + (revised > 0 ? '（其中 ' + revised + ' 个为修订，历史版本已保留）' : ''));
         }
 
         // ---------- 工程详情 ----------
@@ -6617,17 +6629,39 @@ const PROGRESS_TEAM_LEADERS = [
             confirmBtn.style.display = (!p.doneConfirmed && pct >= 100 && (pIsAdmin() || isMgr)) ? 'inline-flex' : 'none';
             document.getElementById('pd-progress').innerHTML = '<div class="' + pProgCls(pct) + '"><div class="p-prog-bar" style="min-width:120px;"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div>';
             document.getElementById('pd-remark').textContent = p.remark || '—';
-            const list = pReportsOf(code).sort((a, b) =>
-                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || (b.updateTime || 0) - (a.updateTime || 0));
-            document.getElementById('pd-reports').innerHTML = list.length === 0
+            // 周报按周分组：每周显示当前版本；历史修订版本折叠在"历史版本"中，不覆盖不删除
+            const byWeek = {};
+            pReportsOf(code).forEach(r => {
+                (byWeek[r.weekKey] = byWeek[r.weekKey] || []).push(r);
+            });
+            const weekKeys = Object.keys(byWeek).sort((a, b) => String(b).localeCompare(String(a)));
+            const curWeek = pCurrentWeekKey();
+            document.getElementById('pd-reports').innerHTML = weekKeys.length === 0
                 ? '<div class="empty-state" style="padding:12px;"><p style="margin:0;">暂无周报记录</p></div>'
-                : list.map(r => '<div class="p-report-item">'
-                    + '<div class="p-report-week"><span>第' + pWeekNo(r.weekKey) + '周 · ' + pWeekLabel(r.weekKey) + '</span>'
-                    + '<span class="badge ' + (Math.round((r.progress || 0) * 100) >= 100 ? 'badge-p-done' : 'badge-p-filled') + '">' + Math.round((r.progress || 0) * 100) + '%</span></div>'
-                    + '<div class="p-report-meta">填报人：' + escAttr(r.reporter || '—') + (r.updateTime ? ' · ' + formatTime(r.updateTime) : '') + (r.seeded ? ' · 初始导入' : '') + '</div>'
-                    + '<div class="p-report-field"><b>本周工程进度：</b>' + escAttr(r.thisWeek || '—') + '</div>'
-                    + '<div class="p-report-field"><b>下周施工计划：</b>' + escAttr(r.nextWeek || '—') + '</div>'
-                    + '</div>').join('');
+                : weekKeys.map(k => {
+                    const group = byWeek[k].sort((a, b) => pRepTime(b) - pRepTime(a));
+                    const cur = group[0];
+                    const hist = group.slice(1);
+                    const pctR = Math.round((cur.progress || 0) * 100);
+                    return '<div class="p-report-item">'
+                        + '<div class="p-report-week"><span>第' + pWeekNo(k) + '周 · ' + pWeekLabel(k) + (k === curWeek ? ' · 本周' : '') + '</span>'
+                        + '<span style="display:flex;align-items:center;gap:6px;">'
+                        + (hist.length > 0 ? '<span class="badge badge-p-hist">已修订' + (hist.length + 1) + '次</span>' : '')
+                        + '<span class="badge ' + (pctR >= 100 ? 'badge-p-done' : 'badge-p-filled') + '">' + pctR + '%</span></span></div>'
+                        + '<div class="p-report-meta">填报人：' + escAttr(cur.reporter || '—') + (pRepTime(cur) ? ' · ' + formatTime(pRepTime(cur)) : '') + (cur.seeded ? ' · 初始导入' : '') + '</div>'
+                        + '<div class="p-report-field"><b>本周工程进度：</b>' + escAttr(cur.thisWeek || '—') + '</div>'
+                        + '<div class="p-report-field"><b>下周施工计划：</b>' + escAttr(cur.nextWeek || '—') + '</div>'
+                        + (hist.length > 0
+                            ? '<details class="p-report-hist"><summary>历史版本 ' + hist.length + ' 条（点击展开）</summary>'
+                            + hist.map((r, hi) => '<div class="p-report-hist-item">'
+                                + '<div class="p-report-meta"><span class="badge badge-p-hist">v' + (hist.length - hi) + '</span> ' + (r.rev ? '第' + r.rev + '次填报 · ' : '') + escAttr(r.reporter || '—') + (pRepTime(r) ? ' · ' + formatTime(pRepTime(r)) : '') + ' · 进度 ' + Math.round((r.progress || 0) * 100) + '%</div>'
+                                + '<div class="p-report-field"><b>本周工程进度：</b>' + escAttr(r.thisWeek || '—') + '</div>'
+                                + '<div class="p-report-field"><b>下周施工计划：</b>' + escAttr(r.nextWeek || '—') + '</div>'
+                                + '</div>').join('')
+                            + '</details>'
+                            : '')
+                        + '</div>';
+                }).join('');
             openModal('modal-progress-detail');
         }
 
@@ -6718,6 +6752,7 @@ const PROGRESS_TEAM_LEADERS = [
                     '队长电话': p.leaderPhone || '', '施工单位': p.unit, '工程管理员': p.manager || '',
                     '二级专业': p.major || '', '立项批复日期': p.approvalDate || '', '要求完工日期': p.dueDate || '',
                     '剩余天数': d === null ? '' : d, '完工进度(%)': Math.round((p.progress || 0) * 100),
+                    '本周修订次数': progressReports.filter(x => x.projectCode === p.code && x.weekKey === wk).length,
                     '完工确认': doneState,
                     '本周周报': pipsafe(cur ? '已填报' : '未填报'), '本周工程进度': pipsafe(cur ? cur.thisWeek : ''),
                     '下周施工计划': pipsafe(cur ? cur.nextWeek : ''),
