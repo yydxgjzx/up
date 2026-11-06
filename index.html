@@ -457,6 +457,12 @@
             border-color: var(--primary);
         }
 
+        /* 工程管理员补录模式下只读字段的视觉提示 */
+        .form-input:disabled, .form-select:disabled, .form-textarea:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
         .form-textarea {
             resize: vertical;
             min-height: 100px;
@@ -2585,7 +2591,8 @@
             const isBorrowTab = _currentBorrowingTab === 'borrowing';
             const isProgTab = _currentBorrowingTab === 'progress';
             const isTeamLeader = currentUser.role === 'user' && pOwnedProjects().length > 0;
-            const canProgFill = currentUser.role === 'admin' || isTeamLeader;
+            const isMgrOfAny = currentUser.role === 'manager' && progressProjects.some(p => p.manager === currentUser.name);
+            const canProgFill = currentUser.role === 'admin' || isTeamLeader || isMgrOfAny;
 
             if (currentUser.role === 'admin') {
                 badge.className = 'user-badge admin';
@@ -6197,6 +6204,20 @@ const PROGRESS_TEAM_LEADERS = [
             pRenderAll();
         }
 
+        // 补录/编辑队长后确保其账号存在（账号=姓名、密码=电话；仅补缺不覆盖，与 seedTeamLeaderAccounts 同规则）
+        async function ensureLeaderAccount(name, phone, unit) {
+            try {
+                if (!name || !phone) return;
+                const users = await loadUsersAsync();
+                if (users.some(u => u.name === name)) return;
+                users.push({
+                    account: name, password: phone, name: name, phone: phone,
+                    unit: unit || '', unitType: 'construction', status: 'approved', registerTime: Date.now()
+                });
+                await saveUsersAsync(users);
+            } catch (e) { console.error('队长账号开通失败:', e); }
+        }
+
         // ---------- 队长账号预置（账号=姓名、密码=电话，与既有规则一致） ----------
         async function seedTeamLeaderAccounts() {
             try {
@@ -6218,6 +6239,8 @@ const PROGRESS_TEAM_LEADERS = [
 
         // ---------- 权限 ----------
         function pIsAdmin() { return !!currentUser && currentUser.role === 'admin'; }
+        // 工程管理员（manager）对其名下工程：可代填周报、可补录施工小队（2026-11-06 起）
+        function pIsMgrOf(p) { return !!currentUser && currentUser.role === 'manager' && !!p && p.manager === currentUser.name; }
         function pIsOwned(p) {
             if (!currentUser) return false;
             return p.leader === currentUser.name && (!p.leaderPhone || !currentUser.phone || p.leaderPhone === currentUser.phone);
@@ -6376,8 +6399,9 @@ const PROGRESS_TEAM_LEADERS = [
                 const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
                     + (canConfirm
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">确认完工</button>'
-                        : ((pIsOwned(p) || pIsAdmin()) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
-                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>' : '');
+                        : ((pIsOwned(p) || pIsAdmin() || pIsMgrOf(p)) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
+                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
+                        : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
                     + '<td class="col-code tip-cell" data-tip="' + escAttr(p.code) + '">' + escAttr(p.code) + '</td>'
@@ -6403,8 +6427,9 @@ const PROGRESS_TEAM_LEADERS = [
                 const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
                     + (canConfirm
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">确认完工</button>'
-                        : ((pIsOwned(p) || pIsAdmin()) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
-                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>' : '');
+                        : ((pIsOwned(p) || pIsAdmin() || pIsMgrOf(p)) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
+                    + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
+                        : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 const statusBadge = p.doneConfirmed ? '<span class="badge badge-p-done">已确认完工</span>'
                     : (pendingDone ? '<span class="badge badge-p-confirm">待确认完工</span>'
                         : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>'));
@@ -6446,7 +6471,9 @@ const PROGRESS_TEAM_LEADERS = [
         function pOpenFillModal(focusCode) {
             if (!currentUser) { showToast('请先登录', true); return; }
             const admin = pIsAdmin();
-            if (!admin && pOwnedProjects().length === 0) { showToast('您当前没有负责的工程，无需填报周报', true); return; }
+            const mgr = currentUser.role === 'manager';
+            if (!admin && !mgr && pOwnedProjects().length === 0) { showToast('您当前没有负责的工程，无需填报周报', true); return; }
+            if (mgr && !progressProjects.some(p => p.manager === currentUser.name)) { showToast('您当前没有负责的工程', true); return; }
             const wkSel = document.getElementById('pf-week');
             wkSel.innerHTML = pWeekOptions().map(k => {
                 const cur = k === pCurrentWeekKey();
@@ -6476,6 +6503,10 @@ const PROGRESS_TEAM_LEADERS = [
                 if (!lname) return [];
                 return progressProjects.filter(p => p.leader === lname);
             }
+            // 工程管理员：代填本人负责的工程（含尚未补录队长的工程，已确认完工的不填）
+            if (currentUser && currentUser.role === 'manager') {
+                return progressProjects.filter(p => p.manager === currentUser.name && !p.doneConfirmed);
+            }
             return pOwnedProjects();
         }
 
@@ -6490,7 +6521,9 @@ const PROGRESS_TEAM_LEADERS = [
                 hintEl.textContent = pIsAdmin() ? '请先选择施工队长，再逐项填报该队长的工程周报。' : '您当前没有负责的工程。';
                 return;
             }
-            hintEl.textContent = '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。';
+            const isMgrMode = !!currentUser && currentUser.role === 'manager' && !pIsAdmin();
+            hintEl.textContent = (isMgrMode ? '您正在为本人负责的工程代填周报（填报人将记录为对应队长）。' : '')
+                + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。';
             rowsEl.innerHTML = list.map(p => {
                 const r = pReportOf(p.code, weekKey);
                 const pct = Math.round((r ? (r.progress || 0) : (p.progress || 0)) * 100);
@@ -6498,7 +6531,7 @@ const PROGRESS_TEAM_LEADERS = [
                 return '<div class="pf-item" data-code="' + escAttr(p.code) + '">'
                     + '<div class="pf-item-head">'
                     + '<div class="pf-item-titles"><div class="pf-item-name">' + escAttr(p.name) + '</div>'
-                    + '<span class="pf-item-code">' + escAttr(p.code) + (p.dueDate ? ' · 完工期限 ' + escAttr(p.dueDate) : '') + '</span></div>'
+                    + '<span class="pf-item-code">' + escAttr(p.code) + (p.dueDate ? ' · 完工期限 ' + escAttr(p.dueDate) : '') + (isMgrMode ? ' · 队长 ' + escAttr(p.leader || '待补录') : '') + '</span></div>'
                     + '<div class="pf-item-aside">'
                     + '<span class="pf-prog-ctl"><span class="pf-prog-label">完工进度</span><input type="number" class="form-input pf-progress" min="0" max="100" step="1" value="' + pct + '"><span class="pf-prog-unit">%</span></span>'
                     + (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>')
@@ -6545,7 +6578,7 @@ const PROGRESS_TEAM_LEADERS = [
                 reporter = document.getElementById('pf-leader').value;
                 if (!reporter) { showToast('请选择施工队长', true); return; }
             } else {
-                reporter = currentUser.name;
+                reporter = currentUser.name;  // 队长本人；工程管理员代填时按工程记录为对应队长（见下方 push）
             }
             const items = document.querySelectorAll('#pf-rows .pf-item');
             if (items.length === 0) { showToast('没有可填报的工程', true); return; }
@@ -6576,7 +6609,9 @@ const PROGRESS_TEAM_LEADERS = [
                 progressReports.push({
                     id: 'W' + now + '-' + code + '-v' + rev, projectCode: code, weekKey: weekKey, rev: rev,
                     progress: pg, thisWeek: thisW, nextWeek: nextW,
-                    reporter: reporter, createTime: now, updateTime: now
+                    // 工程管理员代填：填报人记录为该工程队长（未补录队长时记录管理员本人）
+                    reporter: (!admin && currentUser.role === 'manager' && p && p.leader) ? p.leader : reporter,
+                    createTime: now, updateTime: now
                 });
                 if (rev > 1) revised++;
                 count++;
@@ -6772,14 +6807,24 @@ const PROGRESS_TEAM_LEADERS = [
         let _peMode = 'add';
         let _peCodeOrig = '';
         function pOpenEditModal(code) {
-            if (!pIsAdmin()) { showToast('仅管理员可管理工程', true); return; }
-            _peMode = code ? 'edit' : 'add';
-            _peCodeOrig = code || '';
-            document.getElementById('pe-title').textContent = code ? '编辑工程' : '新增工程';
-            document.getElementById('pe-delete-btn').style.display = code ? 'inline-flex' : 'none';
-            const undoneBtn = document.getElementById('pe-undone-btn');
             const p = code ? progressProjects.find(x => x.code === code) : null;
-            undoneBtn.style.display = (p && p.doneConfirmed) ? 'inline-flex' : 'none';
+            const admin = pIsAdmin();
+            if (!admin) {
+                // 工程管理员（manager）仅可补录本人负责工程的施工小队信息，不能新增/删除工程
+                if (!currentUser || currentUser.role !== 'manager' || !p || !pIsMgrOf(p)) {
+                    showToast('仅管理员可管理工程；工程管理员可补录本人负责的工程', true); return;
+                }
+            }
+            _peMode = admin ? (code ? 'edit' : 'add') : 'mgr';
+            _peCodeOrig = code || '';
+            document.getElementById('pe-title').textContent = admin ? (code ? '编辑工程' : '新增工程') : '补录施工小队信息';
+            document.getElementById('pe-delete-btn').style.display = (admin && code) ? 'inline-flex' : 'none';
+            const undoneBtn = document.getElementById('pe-undone-btn');
+            undoneBtn.style.display = (admin && p && p.doneConfirmed) ? 'inline-flex' : 'none';
+            // 工程管理员补录模式：仅 队长/电话/施工单位 可编辑，其余字段只读
+            ['pe-code', 'pe-name', 'pe-manager', 'pe-major', 'pe-progress', 'pe-approval', 'pe-due', 'pe-remark'].forEach(id => {
+                document.getElementById(id).disabled = !admin;
+            });
             document.getElementById('pe-code').value = p ? p.code : '';
             document.getElementById('pe-name').value = p ? p.name : '';
             document.getElementById('pe-leader').value = p ? (p.leader || '') : '';
@@ -6795,6 +6840,27 @@ const PROGRESS_TEAM_LEADERS = [
         }
 
         async function pSaveProject() {
+            // 工程管理员补录施工小队：仅保存 队长/电话/施工单位 三个字段，其余信息不动
+            if (_peMode === 'mgr') {
+                if (!currentUser || currentUser.role !== 'manager') { showToast('无权限', true); return; }
+                const p = progressProjects.find(x => x.code === _peCodeOrig);
+                if (!p || !pIsMgrOf(p)) { showToast('仅可补录您负责的工程', true); return; }
+                const leader = document.getElementById('pe-leader').value.trim();
+                const phone = document.getElementById('pe-phone').value.trim();
+                const unit = document.getElementById('pe-unit').value;
+                if (!leader) { showToast('请填写施工队长姓名', true); return; }
+                if (!unit) { showToast('请选择施工单位', true); return; }
+                const oldLeader = p.leader || '';
+                const oldPhone = p.leaderPhone || '';
+                p.leader = leader; p.leaderPhone = phone; p.unit = unit;
+                try { await saveProgressData(); } catch (e) { return; }
+                // 新队长自动开通账号（账号=姓名、密码=电话），补录后队长即可登录填报
+                if (leader !== oldLeader || phone !== oldPhone) await ensureLeaderAccount(leader, phone, unit);
+                closeModal('modal-progress-edit');
+                pRenderAll();
+                showToast('施工小队已补录，队长可用姓名+电话号码登录填报');
+                return;
+            }
             if (!pIsAdmin()) { showToast('仅管理员可管理工程', true); return; }
             const code = document.getElementById('pe-code').value.trim();
             const name = document.getElementById('pe-name').value.trim();
@@ -6845,6 +6911,8 @@ const PROGRESS_TEAM_LEADERS = [
                 }
             }
             try { await saveProgressData(); } catch (e) { return; }
+            // 新队长自动开通账号（账号=姓名、密码=电话，仅补缺不覆盖已有账号）
+            await ensureLeaderAccount(leader, phone, unit);
             closeModal('modal-progress-edit');
             pRenderAll();
             showToast(_peMode === 'add' ? '工程已新增，队长登录密码为其电话号码' : '工程信息已保存');
