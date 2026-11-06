@@ -6254,7 +6254,6 @@ const PROGRESS_TEAM_LEADERS = [
 
         // ---------- 渲染 ----------
         function pRenderAll() {
-            pRenderStats();
             pRenderFilters();
             pRenderTable();
             updateHeaderForUser();
@@ -6262,19 +6261,19 @@ const PROGRESS_TEAM_LEADERS = [
 
         function pRenderStats() {
             const wk = pCurrentWeekKey();
-            // 已确认完工的工程不在网页展示（仍可导出），统计口径为在管工程
-            const visible = progressProjects.filter(p => !p.doneConfirmed);
+            // 汇总口径与表格一致：跟随当前筛选（队长/单位/管理员/状态/搜索）实时变化
+            const filtered = pGetFiltered();
             const codes = new Set(progressReports.filter(r => r.weekKey === wk).map(r => r.projectCode));
-            const total = visible.length;
-            const reported = visible.filter(p => codes.has(p.code)).length;
+            const total = filtered.length;
+            const reported = filtered.filter(p => codes.has(p.code)).length;
             let due = 0, overdue = 0, pending = 0;
-            visible.forEach(p => {
+            filtered.forEach(p => {
                 const d = pDaysLeft(p);
                 if (d !== null) {
                     if (d < 0) overdue++;
                     else if (d <= 30) due++;
                 }
-                if ((p.progress || 0) >= 0.999) pending++;
+                if ((p.progress || 0) >= 0.999 && !p.doneConfirmed) pending++;
             });
             document.getElementById('p-stat-total').textContent = total;
             document.getElementById('p-stat-pending').textContent = pending;
@@ -6335,6 +6334,7 @@ const PROGRESS_TEAM_LEADERS = [
         }
 
         function pRenderTable() {
+            pRenderStats();  // 汇总卡与表格同口径：任何筛选变化都同步刷新6项汇总
             const filtered = pGetFiltered();
             const tbody = document.getElementById('progress-table-body');
             const mobileEl = document.getElementById('progress-mobile-cards');
