@@ -1012,6 +1012,7 @@
         .col-pweek { width: 210px; max-width: 240px; text-align: left; }
         .col-pstatus { width: 110px; text-align: center; white-space: nowrap; }
         .p-week-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+        .p-week-date { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
         .p-week-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; color: var(--text); line-height: 1.5; cursor: pointer; }
         .p-week-text:hover { color: var(--primary); }
         .p-week-next { display: -webkit-box; margin-top: 2px; font-size: 14px; color: var(--text); line-height: 1.5; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -6423,10 +6424,12 @@ const PROGRESS_TEAM_LEADERS = [
                     : '';
                 const weekHtml = '<td class="col-pweek">'
                     + (r
-                        ? '<div class="p-week-text" data-tip="' + escAttr(weekFullTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(r.thisWeek || '—') + '</div>'
+                        ? '<div class="p-week-date">填写日期 ' + formatTime(r.updateTime || r.createTime) + '</div>'
+                          + '<div class="p-week-text" data-tip="' + escAttr(weekFullTip) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(r.thisWeek || '—') + '</div>'
                           + (r.nextWeek ? '<div class="p-week-next">下周计划：' + escAttr(r.nextWeek) + '</div>' : '')
                         : (latest
-                            ? '<div class="p-week-text" data-tip="' + escAttr('【' + pWeekLabel(latest.weekKey) + ' 最近周报】\n' + (latest.thisWeek || '—') + (latest.nextWeek ? '\n【下周施工计划】\n' + latest.nextWeek : '')) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(latest.thisWeek || '—') + '</div>'
+                            ? '<div class="p-week-date">填写日期 ' + formatTime(latest.updateTime || latest.createTime) + '</div>'
+                              + '<div class="p-week-text" data-tip="' + escAttr('【' + pWeekLabel(latest.weekKey) + ' 最近周报】\n' + (latest.thisWeek || '—') + (latest.nextWeek ? '\n【下周施工计划】\n' + latest.nextWeek : '')) + '" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(latest.thisWeek || '—') + '</div>'
                               + (latest.nextWeek ? '<div class="p-week-next">下周计划：' + escAttr(latest.nextWeek) + '</div>' : '')
                             : '<div class="p-week-text" style="color:var(--text-muted);">—</div>'))
                     + '</td>';
