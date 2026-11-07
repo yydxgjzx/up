@@ -6554,8 +6554,9 @@ const PROGRESS_TEAM_LEADERS = [
             hintEl.textContent = (isMgrMode ? '您正在为本人负责的工程代填周报（填报人将记录为对应队长）。' : '')
                 + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。';
             rowsEl.innerHTML = list.map(p => {
-                const r = pReportOf(p.code, weekKey);
-                const pct = Math.round((r ? (r.progress || 0) : (p.progress || 0)) * 100);
+                const latest = pLatestReport(p.code);   // 最近一期已报（进度默认值，2026-11-06 用户要求）
+                const r = pReportOf(p.code, weekKey);    // 本周周报（本周文案/已报状态）
+                const pct = Math.round((latest ? (latest.progress || 0) : (p.progress || 0)) * 100);
                 _pfInit[p.code] = { pg: pct, this: r ? (r.thisWeek || '') : '', next: r ? (r.nextWeek || '') : '' };
                 return '<div class="pf-item" data-code="' + escAttr(p.code) + '">'
                     + '<div class="pf-item-head">'
