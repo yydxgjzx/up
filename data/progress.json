@@ -2189,6 +2189,18 @@
       "reporter": "湛海波",
       "createTime": 1794126444968,
       "updateTime": 1794126444968
+    },
+    {
+      "id": "W1794126801953-0-26HN004110001-v2",
+      "projectCode": "26HN004110001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.95,
+      "thisWeek": "加电报告已打1",
+      "nextWeek": "等封网结束后再加电",
+      "reporter": "周立",
+      "createTime": 1794126801953,
+      "updateTime": 1794126801953
     }
   ],
   "meta": {
