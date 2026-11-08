@@ -1973,6 +1973,78 @@
       "reporter": "湛海波",
       "createTime": 1794126312714,
       "updateTime": 1794126312714
+    },
+    {
+      "id": "W1794126363139-0-26HN004678001-v2",
+      "projectCode": "26HN004678001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0,
+      "thisWeek": "电池未到货。",
+      "nextWeek": "等电池到货施工。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
+    },
+    {
+      "id": "W1794126363139-1-26HN003756001-v2",
+      "projectCode": "26HN003756001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.5,
+      "thisWeek": "土建，消防，走线架，电池安装已完成。",
+      "nextWeek": "布放电源线。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
+    },
+    {
+      "id": "W1794126363139-2-26HN004090001-v2",
+      "projectCode": "26HN004090001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.9,
+      "thisWeek": "剩余最后一次割接。",
+      "nextWeek": "等封网结束完成割接。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
+    },
+    {
+      "id": "W1794126363139-3-26HN002005001-v2",
+      "projectCode": "26HN002005001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.7,
+      "thisWeek": "湖滨新局，郭镇局，临港新局已完成，金凤桥局正在施工中，新中心医院局未交付施工不了。",
+      "nextWeek": "金凤桥局施工。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
+    },
+    {
+      "id": "W1794126363139-4-26HN002007001-v2",
+      "projectCode": "26HN002007001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.5,
+      "thisWeek": "胜峰局已完成。",
+      "nextWeek": "章华政府局未交付，施工不了。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
+    },
+    {
+      "id": "W1794126363139-5-26HN003757001-v2",
+      "projectCode": "26HN003757001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0.9,
+      "thisWeek": "剩余最后一次割接。",
+      "nextWeek": "等封网结束完成最后割接。",
+      "reporter": "湛海波",
+      "createTime": 1794126363139,
+      "updateTime": 1794126363139
     }
   ],
   "meta": {
