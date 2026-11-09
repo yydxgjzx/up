@@ -6516,8 +6516,11 @@ const PROGRESS_TEAM_LEADERS = [
         function pWeekOptions() {
             const opts = [];
             const base = pMondayOf(new Date());
-            for (let i = 3; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - 7 * i); opts.push(pFmtDate(d)); }
-            return opts; // 升序，最后一项为本周
+            // 2026-11-09 用户要求：周六前本周不可填报，周次下拉不出现本周（周一~周五仅往周，补填不受限）
+            const gd = new Date().getDay();
+            const includeCur = gd === 6 || gd === 0;
+            for (let i = 3; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - 7 * i); if (!includeCur && i === 0) continue; opts.push(pFmtDate(d)); }
+            return opts; // 升序；周六/日末项为本周，周一~周五仅往周
         }
 
         function pOpenFillModal(focusCode) {
@@ -6527,11 +6530,13 @@ const PROGRESS_TEAM_LEADERS = [
             if (!admin && !mgr && pOwnedProjects().length === 0) { showToast('您当前没有负责的工程，无需填报周报', true); return; }
             if (mgr && !progressProjects.some(p => p.manager === currentUser.name)) { showToast('您当前没有负责的工程', true); return; }
             const wkSel = document.getElementById('pf-week');
-            wkSel.innerHTML = pWeekOptions().map(k => {
+            const wkOpts = pWeekOptions();
+            wkSel.innerHTML = wkOpts.map(k => {
                 const cur = k === pCurrentWeekKey();
                 return '<option value="' + k + '">' + (cur ? '本周 ' : '') + pWeekLabel(k) + '（第' + pWeekNo(k) + '周）</option>';
             }).join('');
-            wkSel.value = pCurrentWeekKey();
+            // 2026-11-09：周六前选项不含本周，默认选中最后一项（周六前=最近往周，周六/日=本周）
+            wkSel.value = wkOpts[wkOpts.length - 1] || '';
             const wrap = document.getElementById('pf-leader-wrap');
             const leaderSel = document.getElementById('pf-leader');
             if (admin) {
