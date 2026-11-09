@@ -985,11 +985,11 @@
         /* ===== Progress Management Styles ===== */
         .progress-view { display: none; }
         .progress-view.active { display: block; }
-        /* 统计卡：数值居中（仅进度视图），六列 */
+        /* 统计卡：数值居中（仅进度视图），七列一行（2026-11-09 第七卡并入） */
         .progress-view .b-stat-card { text-align: center; }
-        .progress-view .b-stats-row { grid-template-columns: repeat(6, 1fr) !important; }
+        .progress-view .b-stats-row { grid-template-columns: repeat(7, 1fr) !important; }
         @media (max-width: 900px) {
-            .progress-view .b-stats-row { grid-template-columns: repeat(3, 1fr) !important; }
+            .progress-view .b-stats-row { grid-template-columns: repeat(4, 1fr) !important; }
         }
         /* 进度条 */
         .p-prog { display: flex; align-items: center; gap: 6px; }
