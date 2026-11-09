@@ -2297,6 +2297,18 @@
       "reporter": "刘峰",
       "createTime": 1794197972826,
       "updateTime": 1794197972826
+    },
+    {
+      "id": "W1794235455299-0-26HN004470001-v2",
+      "projectCode": "26HN004470001",
+      "weekKey": "2026-11-02",
+      "rev": 2,
+      "progress": 0,
+      "thisWeek": "材料没到1",
+      "nextWeek": "材料没到",
+      "reporter": "周立",
+      "createTime": 1794235455299,
+      "updateTime": 1794235455299
     }
   ],
   "meta": {
