@@ -1323,6 +1323,10 @@
                     <div class="stat-label">已超期</div>
                     <div class="stat-value" id="p-stat-overdue">0</div>
                 </div>
+                <div class="b-stat-card rejected" onclick="pClickStat('lastunreported')">
+                    <div class="stat-label">上周未填报</div>
+                    <div class="stat-value" id="p-stat-lastmiss">0</div>
+                </div>
             </div>
 
             <!-- Toolbar -->
@@ -1350,6 +1354,7 @@
                         <option value="unreported">本周未填报</option>
                         <option value="due">30天内到期</option>
                         <option value="overdue">已超期</option>
+                        <option value="lastunreported">上周未填报</option>
                         <option value="unfinished">未完工</option>
                     </select>
                     <input type="text" class="filter-input" id="p-filter-search" placeholder="搜索工程名称/编码/队长..." autocomplete="off" oninput="pRenderTable()">
@@ -6147,6 +6152,7 @@ const PROGRESS_TEAM_LEADERS = [
         function pFmtDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
         function pMondayOf(d) { const dt = new Date(d); const day = (dt.getDay() + 6) % 7; dt.setHours(0, 0, 0, 0); dt.setDate(dt.getDate() - day); return dt; }
         function pCurrentWeekKey() { return pFmtDate(pMondayOf(new Date())); }
+        function pLastWeekKey() { const m = pMondayOf(new Date()); m.setDate(m.getDate() - 7); return pFmtDate(m); }
         function pWeekEnd(key) { const e = pParseKey(key); e.setDate(e.getDate() + 6); return e; }
         function pWeekLabel(key) {
             const s = pParseKey(key), e = pWeekEnd(key);
@@ -6336,6 +6342,9 @@ const PROGRESS_TEAM_LEADERS = [
             document.getElementById('p-stat-unreported').textContent = total - reported;
             document.getElementById('p-stat-due').textContent = due;
             document.getElementById('p-stat-overdue').textContent = overdue;
+            const lastWk = pLastWeekKey();
+            const lastCodes = new Set(progressReports.filter(r => r.weekKey === lastWk).map(r => r.projectCode));
+            document.getElementById('p-stat-lastmiss').textContent = filtered.filter(p => !lastCodes.has(p.code)).length;
         }
 
         function pRenderFilters() {
@@ -6370,6 +6379,8 @@ const PROGRESS_TEAM_LEADERS = [
                 if (status === 'pendingdone') { if ((p.progress || 0) < 0.999) return false; }
                 if (status === 'reported' && !pIsReportedThisWeek(p)) return false;
                 if (status === 'unreported' && pIsReportedThisWeek(p)) return false;
+                // 上周未填报（2026-11-09 第七统计卡口径，与小程序一致）
+                if (status === 'lastunreported' && pReportsOf(p.code).some(r => r.weekKey === pLastWeekKey())) return false;
                 if (status === 'unfinished' && (p.progress || 0) >= 0.999) return false;
                 if (status === 'due' || status === 'overdue') {
                     const d = pDaysLeft(p);
@@ -6564,7 +6575,7 @@ const PROGRESS_TEAM_LEADERS = [
             }
             const isMgrMode = !!currentUser && currentUser.role === 'manager' && !pIsAdmin();
             hintEl.textContent = (isMgrMode ? '您正在为本人负责的工程代填周报（填报人将记录为对应队长）。' : '')
-                + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。';
+                + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。本周周报自星期六起开放填报。';
             rowsEl.innerHTML = list.map(p => {
                 const latest = pLatestReport(p.code);   // 最近一期已报（进度默认值，2026-11-06 用户要求）
                 const r = pReportOf(p.code, weekKey);    // 本周周报（本周文案/已报状态）
@@ -6615,6 +6626,10 @@ const PROGRESS_TEAM_LEADERS = [
             const admin = pIsAdmin();
             const weekKey = document.getElementById('pf-week').value;
             if (!weekKey) { showToast('请选择填报周次', true); return; }
+            // 2026-11-07 用户要求：本周周报周六起才可填报（周六/周日可填，周一~周五拦截）
+            if (weekKey === pCurrentWeekKey() && new Date().getDay() !== 6 && new Date().getDay() !== 0) {
+                showToast('本周周报自星期六起开放填报，请周六后再提交', true); return;
+            }
             let reporter = '';
             if (admin) {
                 reporter = document.getElementById('pf-leader').value;
@@ -6797,6 +6812,7 @@ const PROGRESS_TEAM_LEADERS = [
                 if (status === 'pendingdone' && !((p.progress || 0) >= 0.999 && !p.doneConfirmed)) return false;
                 if (status === 'reported' && !pIsReportedThisWeek(p)) return false;
                 if (status === 'unreported' && pIsReportedThisWeek(p)) return false;
+                if (status === 'lastunreported' && pReportsOf(p.code).some(r => r.weekKey === pLastWeekKey())) return false;
                 if (status === 'unfinished' && (p.progress || 0) >= 0.999) return false;
                 if (status === 'due' || status === 'overdue') {
                     const d = pDaysLeft(p);
