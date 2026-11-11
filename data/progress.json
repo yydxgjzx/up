@@ -987,6 +987,22 @@
       "dueDate": "2026-12-14",
       "progress": 0.9,
       "remark": ""
+    },
+    {
+      "code": "26HN004969001",
+      "name": "2026年岳阳分公司云溪区第一中学等政企应急光缆工程",
+      "manager": "陈凌",
+      "unit": "湖南天辰建设有限责任公司",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "政企组网型专线光缆和设备",
+      "approvalDate": "2026-11-09",
+      "dueDate": "2027-05-23",
+      "progress": 0,
+      "remark": "",
+      "autoAdded": true,
+      "designApprovalDate": "2026-11-10",
+      "autoAddedAt": 1794359114240
     }
   ],
   "reports": [
