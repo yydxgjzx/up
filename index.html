@@ -1300,7 +1300,7 @@
             <!-- Stats -->
             <div class="stats-row b-stats-row">
                 <div class="b-stat-card checking" onclick="pClickStat('')">
-                    <div class="stat-label">在管工程</div>
+                    <div class="stat-label">在建工程</div>
                     <div class="stat-value" id="p-stat-total">0</div>
                 </div>
                 <div class="b-stat-card checked" onclick="pClickStat('pendingdone')">
@@ -1346,7 +1346,7 @@
                         <option value="">全部管理员</option>
                     </select>
                     <select class="filter-select" id="p-filter-status" onchange="pRenderTable()">
-                        <option value="">在管工程</option>
+                        <option value="">在建工程</option>
                         <option value="pendingdone">待确认完工</option>
                         <option value="confirmed">已确认完工</option>
                         <option value="all">全部（含已完工）</option>
@@ -6842,7 +6842,7 @@ const PROGRESS_TEAM_LEADERS = [
                 const cur = pReportOf(p.code, wk);
                 const latest = cur || pLatestReport(p.code);
                 const d = pDaysLeft(p);
-                let doneState = '在管';
+                let doneState = '在建';
                 if (p.doneConfirmed) { doneState = '已确认完工' + (p.doneConfirmBy ? '(' + p.doneConfirmBy + (p.doneConfirmTime ? '·' + formatTime(p.doneConfirmTime) : '') + ')' : ''); confirmedCnt++; }
                 else if ((p.progress || 0) >= 0.999) doneState = '待确认完工';
                 return {
