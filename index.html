@@ -1004,6 +1004,7 @@
         .p-name-main:hover { color: var(--primary); }
         .p-name-sub { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .col-punit { width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92px; }
+        .col-pregion { width: 70px; white-space: nowrap; }
         .col-pdue { width: 108px; white-space: nowrap; font-size: 12px; }
         .col-pdue .p-due-date { display: block; color: var(--text-secondary); }
         .col-pdue .p-days { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 8px; margin-top: 4px; border-radius: 10px; line-height: 1.6; }
@@ -1345,6 +1346,9 @@
                     <select class="filter-select" id="p-filter-manager" onchange="pRenderTable()">
                         <option value="">全部管理员</option>
                     </select>
+                    <select class="filter-select" id="p-filter-region" onchange="pRenderTable()">
+                        <option value="">全部区域</option>
+                    </select>
                     <select class="filter-select" id="p-filter-status" onchange="pRenderTable()">
                         <option value="">在建工程</option>
                         <option value="pendingdone">待确认完工</option>
@@ -1373,6 +1377,7 @@
                             <th class="col-serial">序号</th>
                             <th class="col-code">工程编码</th>
                             <th class="col-pname">工程名称</th>
+                            <th class="col-pregion">区域</th>
                             <th class="col-reporter">队长</th>
                             <th class="col-punit">施工单位</th>
                             <th class="col-reporter">管理员</th>
@@ -2100,6 +2105,7 @@
                     <div class="detail-field"><div class="detail-field-label">施工队长</div><div class="detail-field-value" id="pd-leader"></div></div>
                     <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="pd-unit"></div></div>
                     <div class="detail-field"><div class="detail-field-label">工程管理员</div><div class="detail-field-value" id="pd-manager"></div></div>
+                    <div class="detail-field"><div class="detail-field-label">区域</div><div class="detail-field-value" id="pd-region"></div></div>
                     <div class="detail-field"><div class="detail-field-label">立项批复日期</div><div class="detail-field-value" id="pd-approval"></div></div>
                     <div class="detail-field"><div class="detail-field-label">MSS要求完工</div><div class="detail-field-value" id="pd-due"></div></div>
                     <div class="detail-field"><div class="detail-field-label">剩余天数</div><div class="detail-field-value" id="pd-left"></div></div>
@@ -6359,12 +6365,19 @@ const PROGRESS_TEAM_LEADERS = [
             const mgrs = [...new Set(progressProjects.map(p => p.manager).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
             mgrSel.innerHTML = '<option value="">全部管理员</option>' + mgrs.map(m => '<option>' + escAttr(m) + '</option>').join('');
             mgrSel.value = mgrs.includes(mgrVal) ? mgrVal : '';
+
+            const regionSel = document.getElementById('p-filter-region');
+            const regionVal = regionSel.value;
+            const regions = [...new Set(progressProjects.map(p => p.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
+            regionSel.innerHTML = '<option value="">全部区域</option>' + regions.map(rg => '<option>' + escAttr(rg) + '</option>').join('');
+            regionSel.value = regions.includes(regionVal) ? regionVal : '';
         }
 
         function pGetFiltered() {
             const leader = document.getElementById('p-filter-leader').value;
             const unit = document.getElementById('p-filter-unit').value;
             const manager = document.getElementById('p-filter-manager').value;
+            const region = document.getElementById('p-filter-region').value;
             const status = document.getElementById('p-filter-status').value;
             const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
             return progressProjects.filter(p => {
@@ -6373,6 +6386,7 @@ const PROGRESS_TEAM_LEADERS = [
                 if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
+                if (region && (p.region || '') !== region) return false;
                 // 完工确认过滤：已确认完工的工程默认不展示（导出仍包含）
                 if (status === 'confirmed') { if (!p.doneConfirmed) return false; }
                 else if (status !== 'all' && p.doneConfirmed) return false;
@@ -6389,7 +6403,7 @@ const PROGRESS_TEAM_LEADERS = [
                     if (status === 'overdue' && d >= 0) return false;
                 }
                 if (search) {
-                    const hay = (p.code + ' ' + p.name + ' ' + p.leader + ' ' + p.manager + ' ' + p.unit + ' ' + (p.major || '')).toLowerCase();
+                    const hay = (p.code + ' ' + p.name + ' ' + p.leader + ' ' + p.manager + ' ' + p.unit + ' ' + (p.major || '') + ' ' + (p.region || '')).toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -6407,7 +6421,7 @@ const PROGRESS_TEAM_LEADERS = [
             const tbody = document.getElementById('progress-table-body');
             const mobileEl = document.getElementById('progress-mobile-cards');
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><p>暂无工程数据</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><p>暂无工程数据</p></div></td></tr>';
                 mobileEl.innerHTML = '<div class="mobile-empty"><p>暂无工程数据</p></div>';
                 return;
             }
@@ -6457,6 +6471,7 @@ const PROGRESS_TEAM_LEADERS = [
                     + '<td class="col-serial">' + (i + 1) + '</td>'
                     + '<td class="col-code tip-cell" data-tip="' + escAttr(p.code) + '">' + escAttr(p.code) + '</td>'
                     + '<td class="col-pname"><span class="p-name-main" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">' + escAttr(p.name) + '</span></td>'
+                    + '<td class="col-pregion">' + escAttr(p.region || '—') + '</td>'
                     + '<td class="col-reporter tip-cell" data-tip="' + escAttr(p.leaderPhone || p.leader || '') + '">' + escAttr(p.leader || '') + '</td>'
                     + '<td class="col-punit tip-cell" data-tip="' + escAttr(p.unit) + '">' + escAttr(pUnitShort(p.unit)) + '</td>'
                     + '<td class="col-reporter">' + escAttr(p.manager || '') + '</td>'
@@ -6490,7 +6505,7 @@ const PROGRESS_TEAM_LEADERS = [
                     + '<div class="m-card-status">' + statusBadge + '</div></div>'
                     + '<div class="m-card-sub"><b>编码</b> ' + escAttr(p.code) + '</div>'
                     + '<div class="m-card-sub"><b>队长</b> ' + escAttr(p.leader || '') + ' | <b>单位</b> ' + escAttr(pUnitShort(p.unit)) + '</div>'
-                    + '<div class="m-card-sub"><b>管理员</b> ' + escAttr(p.manager || '') + ' | <b>期限</b> ' + escAttr(p.dueDate || '—') + ' <span style="' + (dl.cls ? 'color:var(--warning)' : 'color:var(--text-muted)') + '">' + dl.text + '</span></div>'
+                    + '<div class="m-card-sub"><b>管理员</b> ' + escAttr(p.manager || '') + ' | <b>区域</b> ' + escAttr(p.region || '—') + ' | <b>期限</b> ' + escAttr(p.dueDate || '—') + ' <span style="' + (dl.cls ? 'color:var(--warning)' : 'color:var(--text-muted)') + '">' + dl.text + '</span></div>'>
                     + '<div class="m-card-sub"><div class="' + pProgCls(pct) + '" style="margin-top:4px;"><div class="p-prog-bar"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div></div>'
                     + (latest ? '<div class="m-card-desc">' + escAttr(latest.thisWeek || '') + '</div>' : '')
                     + '<div class="m-card-bottom"><div class="m-card-countdown">' + (p.doneConfirmed ? '已确认完工' : (r ? '第' + pWeekNo(wk) + '周已填报' : '本周未填报')) + '</div><div class="m-card-actions">' + acts + '</div></div>'
@@ -6507,7 +6522,7 @@ const PROGRESS_TEAM_LEADERS = [
         }
 
         function pClearAllFilters() {
-            ['p-filter-leader', 'p-filter-unit', 'p-filter-manager', 'p-filter-status'].forEach(id => { document.getElementById(id).value = ''; });
+            ['p-filter-leader', 'p-filter-unit', 'p-filter-manager', 'p-filter-region', 'p-filter-status'].forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('p-filter-search').value = '';
             pRenderTable();
         }
@@ -6706,6 +6721,7 @@ const PROGRESS_TEAM_LEADERS = [
             document.getElementById('pd-name').textContent = p.name;
             document.getElementById('pd-leader').textContent = (p.leader || '') + (p.leaderPhone ? '（' + p.leaderPhone + '）' : '');
             document.getElementById('pd-unit').textContent = p.unit || '';
+            document.getElementById('pd-region').textContent = p.region || '—';
             document.getElementById('pd-manager').textContent = p.manager || '';
             document.getElementById('pd-major').textContent = p.major || '—';
             document.getElementById('pd-approval').textContent = p.approvalDate || '—';
@@ -6806,6 +6822,7 @@ const PROGRESS_TEAM_LEADERS = [
             const leader = document.getElementById('p-filter-leader').value;
             const unit = document.getElementById('p-filter-unit').value;
             const manager = document.getElementById('p-filter-manager').value;
+            const region = document.getElementById('p-filter-region').value;
             const status = document.getElementById('p-filter-status').value;
             const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
             const wk = pCurrentWeekKey();
@@ -6813,6 +6830,7 @@ const PROGRESS_TEAM_LEADERS = [
                 if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
+                if (region && (p.region || '') !== region) return false;
                 if (status === 'confirmed' && !p.doneConfirmed) return false;
                 if (status === 'pendingdone' && !((p.progress || 0) >= 0.999 && !p.doneConfirmed)) return false;
                 if (status === 'reported' && !pIsReportedThisWeek(p)) return false;
@@ -6826,7 +6844,7 @@ const PROGRESS_TEAM_LEADERS = [
                     if (status === 'overdue' && d >= 0) return false;
                 }
                 if (search) {
-                    const hay = (p.code + ' ' + p.name + ' ' + p.leader + ' ' + p.manager + ' ' + p.unit + ' ' + (p.major || '')).toLowerCase();
+                    const hay = (p.code + ' ' + p.name + ' ' + p.leader + ' ' + p.manager + ' ' + p.unit + ' ' + (p.major || '') + ' ' + (p.region || '')).toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -6846,7 +6864,7 @@ const PROGRESS_TEAM_LEADERS = [
                 if (p.doneConfirmed) { doneState = '已确认完工' + (p.doneConfirmBy ? '(' + p.doneConfirmBy + (p.doneConfirmTime ? '·' + formatTime(p.doneConfirmTime) : '') + ')' : ''); confirmedCnt++; }
                 else if ((p.progress || 0) >= 0.999) doneState = '待确认完工';
                 return {
-                    '序号': i + 1, '工程编码': p.code, '工程名称': p.name, '施工队长': p.leader || '',
+                    '序号': i + 1, '工程编码': p.code, '工程名称': p.name, '区域': p.region || '', '施工队长': p.leader || '',
                     '队长电话': p.leaderPhone || '', '施工单位': p.unit, '工程管理员': p.manager || '',
                     '二级专业': p.major || '', '立项批复日期': p.approvalDate || '', '要求完工日期': p.dueDate || '',
                     '剩余天数': d === null ? '' : d, '完工进度(%)': Math.round((p.progress || 0) * 100),
@@ -6858,7 +6876,7 @@ const PROGRESS_TEAM_LEADERS = [
                 };
             });
             const ws = XLSX.utils.json_to_sheet(data);
-            ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 40 }, { wch: 10 }, { wch: 13 }, { wch: 18 }, { wch: 10 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 45 }, { wch: 40 }, { wch: 18 }];
+            ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 13 }, { wch: 18 }, { wch: 10 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 45 }, { wch: 40 }, { wch: 18 }];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, '施工进度');
             const dateStr = new Date().toISOString().slice(0, 10);
