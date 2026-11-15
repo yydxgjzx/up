@@ -11,7 +11,8 @@
       "approvalDate": "2026-07-23",
       "dueDate": "2027-06-28",
       "progress": 0.2,
-      "remark": ""
+      "remark": "",
+      "region": "湘阴县"
     },
     {
       "code": "26HN003540001",
@@ -24,7 +25,8 @@
       "approvalDate": "2026-07-15",
       "dueDate": "2027-06-20",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "湘阴县"
     },
     {
       "code": "26HN003541001",
@@ -37,7 +39,8 @@
       "approvalDate": "2026-07-15",
       "dueDate": "2027-06-20",
       "progress": 0.95,
-      "remark": ""
+      "remark": "",
+      "region": "湘阴县"
     },
     {
       "code": "26HN003648001",
@@ -50,7 +53,8 @@
       "approvalDate": "2026-07-23",
       "dueDate": "2027-06-28",
       "progress": 0.95,
-      "remark": ""
+      "remark": "",
+      "region": "云溪区"
     },
     {
       "code": "26HN002849001",
@@ -63,7 +67,8 @@
       "approvalDate": "2026-06-08",
       "dueDate": "2026-12-20",
       "progress": 0,
-      "remark": "缺光缆"
+      "remark": "缺光缆",
+      "region": "汨罗市"
     },
     {
       "code": "26HN004383001",
@@ -76,7 +81,8 @@
       "approvalDate": "2026-09-13",
       "dueDate": "2027-04-21",
       "progress": 0.3,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN004406001",
@@ -89,7 +95,8 @@
       "approvalDate": "2026-09-14",
       "dueDate": "2027-04-22",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN003649001",
@@ -102,7 +109,8 @@
       "approvalDate": "2026-07-23",
       "dueDate": "2027-02-03",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004405001",
@@ -115,7 +123,8 @@
       "approvalDate": "2026-09-14",
       "dueDate": "2027-04-22",
       "progress": 0.6,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN002848001",
@@ -128,7 +137,8 @@
       "approvalDate": "2026-06-08",
       "dueDate": "2026-12-20",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN002435001",
@@ -141,7 +151,8 @@
       "approvalDate": "2026-05-22",
       "dueDate": "2026-12-03",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN000038001",
@@ -154,7 +165,8 @@
       "approvalDate": "2026-01-15",
       "dueDate": "2026-08-23",
       "progress": 0.7,
-      "remark": "农田未收一直未施工故超期"
+      "remark": "农田未收一直未施工故超期",
+      "region": "湘阴县"
     },
     {
       "code": "25HN001171001",
@@ -167,7 +179,8 @@
       "approvalDate": "2025-06-04",
       "dueDate": "2025-12-16",
       "progress": 0.7,
-      "remark": "缺光缆"
+      "remark": "缺光缆",
+      "region": "汨罗市"
     },
     {
       "code": "25HN001175001",
@@ -180,7 +193,8 @@
       "approvalDate": "2025-06-04",
       "dueDate": "2025-12-16",
       "progress": 0.7,
-      "remark": "缺光缆"
+      "remark": "缺光缆",
+      "region": "汨罗市"
     },
     {
       "code": "26HN002850001",
@@ -193,7 +207,8 @@
       "approvalDate": "2026-06-08",
       "dueDate": "2026-12-20",
       "progress": 0.7,
-      "remark": "缺光缆"
+      "remark": "缺光缆",
+      "region": "汨罗市"
     },
     {
       "code": "26HN002851001",
@@ -206,7 +221,8 @@
       "approvalDate": "2026-06-08",
       "dueDate": "2026-12-20",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004281001",
@@ -219,7 +235,8 @@
       "approvalDate": "2026-09-03",
       "dueDate": "2027-04-11",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004282001",
@@ -232,7 +249,8 @@
       "approvalDate": "2026-09-03",
       "dueDate": "2027-03-17",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004284001",
@@ -245,7 +263,8 @@
       "approvalDate": "2026-09-03",
       "dueDate": "2027-03-17",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004404001",
@@ -258,7 +277,8 @@
       "approvalDate": "2026-09-14",
       "dueDate": "2027-04-22",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN002982001",
@@ -271,7 +291,8 @@
       "approvalDate": "2026-06-16",
       "dueDate": "2026-12-13",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004187001",
@@ -284,7 +305,8 @@
       "approvalDate": "2026-08-28",
       "dueDate": "2027-03-11",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "25HN000534001",
@@ -297,7 +319,8 @@
       "approvalDate": "2025-01-26",
       "dueDate": "2025-09-03",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004408001",
@@ -310,7 +333,8 @@
       "approvalDate": "2026-09-14",
       "dueDate": "2027-04-22",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳县"
     },
     {
       "code": "26HN002398001",
@@ -323,7 +347,8 @@
       "approvalDate": "2026-05-21",
       "dueDate": "2026-12-02",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004186001",
@@ -336,7 +361,8 @@
       "approvalDate": "2026-08-28",
       "dueDate": "2027-03-11",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN002844001",
@@ -349,7 +375,8 @@
       "approvalDate": "2026-06-08",
       "dueDate": "2027-01-14",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN001239001",
@@ -362,7 +389,8 @@
       "approvalDate": "2026-03-24",
       "dueDate": "2026-10-30",
       "progress": 0.9,
-      "remark": "移动光缆割接中"
+      "remark": "移动光缆割接中",
+      "region": "汨罗市"
     },
     {
       "code": "25HN000992001",
@@ -375,7 +403,8 @@
       "approvalDate": "2025-02-26",
       "dueDate": "2025-10-04",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳县"
     },
     {
       "code": "24HN001639001",
@@ -388,7 +417,8 @@
       "approvalDate": "2024-04-26",
       "dueDate": "2024-10-23",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "君山区"
     },
     {
       "code": "24HN003594001",
@@ -401,7 +431,8 @@
       "approvalDate": "2024-07-16",
       "dueDate": "2025-02-21",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "24HN005175001",
@@ -414,7 +445,8 @@
       "approvalDate": "2024-10-23",
       "dueDate": "2025-05-31",
       "progress": 0.95,
-      "remark": ""
+      "remark": "",
+      "region": "云溪区"
     },
     {
       "code": "25HN001080001",
@@ -427,7 +459,8 @@
       "approvalDate": "2025-05-28",
       "dueDate": "2025-12-09",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳县"
     },
     {
       "code": "26HN004619001",
@@ -440,7 +473,8 @@
       "approvalDate": "2026-10-16",
       "dueDate": "2027-04-29",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳县"
     },
     {
       "code": "26HN004470001",
@@ -453,7 +487,8 @@
       "approvalDate": "2026-09-20",
       "dueDate": "2027-06-27",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "汨罗市"
     },
     {
       "code": "26HN004678001",
@@ -466,7 +501,8 @@
       "approvalDate": "2026-10-23",
       "dueDate": "2027-09-28",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN004690001",
@@ -479,7 +515,8 @@
       "approvalDate": "2026-10-23",
       "dueDate": "2027-05-31",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN004688001",
@@ -492,7 +529,8 @@
       "approvalDate": "2026-10-23",
       "dueDate": "2027-06-05",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN004689001",
@@ -505,7 +543,8 @@
       "approvalDate": "2026-10-23",
       "dueDate": "2027-06-05",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN003885001",
@@ -518,7 +557,8 @@
       "approvalDate": "2026-08-05",
       "dueDate": "2027-03-13",
       "progress": 0.4,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN001916001",
@@ -531,7 +571,8 @@
       "approvalDate": "2026-04-29",
       "dueDate": "2026-12-10",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN002023001",
@@ -544,7 +585,8 @@
       "approvalDate": "2026-05-06",
       "dueDate": "2026-12-12",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN003274001",
@@ -557,7 +599,8 @@
       "approvalDate": "2026-06-29",
       "dueDate": "2027-02-04",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN002963001",
@@ -570,7 +613,8 @@
       "approvalDate": "2026-06-16",
       "dueDate": "2027-05-02",
       "progress": 0.6,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN003756001",
@@ -583,7 +627,8 @@
       "approvalDate": "2026-07-29",
       "dueDate": "2027-06-24",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "华容县"
     },
     {
       "code": "25HN006376001",
@@ -596,7 +641,8 @@
       "approvalDate": "2025-12-05",
       "dueDate": "2026-07-18",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "25HN006377001",
@@ -609,7 +655,8 @@
       "approvalDate": "2025-12-05",
       "dueDate": "2026-07-18",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN004090001",
@@ -622,7 +669,8 @@
       "approvalDate": "2026-08-25",
       "dueDate": "2027-07-21",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "25HN005181001",
@@ -635,7 +683,8 @@
       "approvalDate": "2025-09-28",
       "dueDate": "2026-05-06",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN001354001",
@@ -648,7 +697,8 @@
       "approvalDate": "2026-03-27",
       "dueDate": "2027-01-01",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN001355001",
@@ -661,7 +711,8 @@
       "approvalDate": "2026-03-27",
       "dueDate": "2027-01-01",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳县"
     },
     {
       "code": "26HN001510001",
@@ -674,7 +725,8 @@
       "approvalDate": "2026-04-03",
       "dueDate": "2027-02-17",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "26HN002005001",
@@ -687,7 +739,8 @@
       "approvalDate": "2026-05-06",
       "dueDate": "2027-04-11",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002007001",
@@ -700,7 +753,8 @@
       "approvalDate": "2026-05-06",
       "dueDate": "2027-04-11",
       "progress": 0.5,
-      "remark": ""
+      "remark": "",
+      "region": "华容县"
     },
     {
       "code": "26HN003757001",
@@ -713,7 +767,8 @@
       "approvalDate": "2026-07-29",
       "dueDate": "2027-06-24",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN002321001",
@@ -726,7 +781,8 @@
       "approvalDate": "2026-05-19",
       "dueDate": "2026-12-30",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "平江县"
     },
     {
       "code": "26HN004110001",
@@ -739,7 +795,8 @@
       "approvalDate": "2026-08-26",
       "dueDate": "2027-08-21",
       "progress": 0.95,
-      "remark": ""
+      "remark": "",
+      "region": ""
     },
     {
       "code": "25HN006806001",
@@ -752,7 +809,8 @@
       "approvalDate": "2025-12-17",
       "dueDate": "2026-07-25",
       "progress": 0.2,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "25HN003432001",
@@ -765,7 +823,8 @@
       "approvalDate": "2025-06-09",
       "dueDate": "2026-01-15",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "26HN004354001",
@@ -778,7 +837,8 @@
       "approvalDate": "2026-09-09",
       "dueDate": "2027-10-04",
       "progress": 0.8,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "25HN006719001",
@@ -791,7 +851,8 @@
       "approvalDate": "2025-12-15",
       "dueDate": "2026-07-23",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "云溪区"
     },
     {
       "code": "25HN001840001",
@@ -804,7 +865,8 @@
       "approvalDate": "2025-03-29",
       "dueDate": "2025-11-04",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "26HN004558001",
@@ -817,7 +879,8 @@
       "approvalDate": "2026-10-09",
       "dueDate": "2027-05-17",
       "progress": 0,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002903001",
@@ -830,7 +893,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-07",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002904001",
@@ -843,7 +907,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-07",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002907001",
@@ -856,7 +921,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-22",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002908001",
@@ -869,7 +935,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-22",
       "progress": 0.7,
-      "remark": "中心医院机房未建设"
+      "remark": "中心医院机房未建设",
+      "region": "岳阳楼区"
     },
     {
       "code": "26HN002495001",
@@ -882,7 +949,8 @@
       "approvalDate": "2026-05-25",
       "dueDate": "2026-12-06",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "26HN002683001",
@@ -895,7 +963,8 @@
       "approvalDate": "2026-05-29",
       "dueDate": "2026-11-25",
       "progress": 0.7,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "26HN002910001",
@@ -908,7 +977,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-22",
       "progress": 0.7,
-      "remark": "前期管道城管阻工"
+      "remark": "前期管道城管阻工",
+      "region": "临湘市"
     },
     {
       "code": "26HN002728001",
@@ -921,7 +991,8 @@
       "approvalDate": "2026-06-02",
       "dueDate": "2026-12-14",
       "progress": 0.9,
-      "remark": "等县分机房设备割接后，才能进行光缆割接"
+      "remark": "等县分机房设备割接后，才能进行光缆割接",
+      "region": "云溪区"
     },
     {
       "code": "26HN002682001",
@@ -934,7 +1005,8 @@
       "approvalDate": "2026-05-29",
       "dueDate": "2026-11-25",
       "progress": 0.9,
-      "remark": "前期管道城管阻工"
+      "remark": "前期管道城管阻工",
+      "region": "临湘市"
     },
     {
       "code": "26HN002906001",
@@ -947,7 +1019,8 @@
       "approvalDate": "2026-06-10",
       "dueDate": "2026-12-22",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "临湘市"
     },
     {
       "code": "26HN001704001",
@@ -960,7 +1033,8 @@
       "approvalDate": "2026-04-19",
       "dueDate": "2026-10-31",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "华容县"
     },
     {
       "code": "26HN002350001",
@@ -973,7 +1047,8 @@
       "approvalDate": "2026-05-20",
       "dueDate": "2026-11-16",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "华容县"
     },
     {
       "code": "26HN002737001",
@@ -986,7 +1061,8 @@
       "approvalDate": "2026-06-02",
       "dueDate": "2026-12-14",
       "progress": 0.9,
-      "remark": ""
+      "remark": "",
+      "region": "华容县"
     },
     {
       "code": "26HN004969001",
@@ -1002,7 +1078,8 @@
       "remark": "",
       "autoAdded": true,
       "designApprovalDate": "2026-11-10",
-      "autoAddedAt": 1794359114240
+      "autoAddedAt": 1794359114240,
+      "region": "云溪区"
     }
   ],
   "reports": [
