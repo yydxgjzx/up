@@ -2782,11 +2782,12 @@
                 if (sa !== sb) return sa - sb;
                 return (b.registerTime || 0) - (a.registerTime || 0);
             });
+            window._reviewShown = sortedUsers; // 2026-11-15：按钮 onclick 传索引从此处取用户，修复姓名含单引号（如 zhang'shang）时 onclick 语法被破坏
 
             // 分组标题：待审核 / 已拒绝 / 已通过
             const groupTitle = { pending: '待审核', rejected: '已拒绝', approved: '已通过' };
             let lastGroup = null;
-            const rowsHtml = sortedUsers.map(u => {
+            const rowsHtml = sortedUsers.map((u, i) => {
                 const group = groupTitle[u.status] || '其他';
                 let html = '';
                 if (group !== lastGroup) {
@@ -2798,20 +2799,20 @@
                 let unitDisplay = u.unit || '—';
                 let actions = '';
                 if (u.status === 'pending') {
-                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">通过</button> '
-                        + '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">拒绝</button>';
+                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(' + i + ',\'approved\')">通过</button> '
+                        + '<button class="btn btn-danger btn-sm" onclick="reviewUser(' + i + ',\'rejected\')">拒绝</button>';
                 } else if (u.status === 'approved') {
-                    actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(\'' + u.name + '\',\'rejected\')">禁用</button>';
+                    actions = '<button class="btn btn-danger btn-sm" onclick="reviewUser(' + i + ',\'rejected\')">禁用</button>';
                 } else {
-                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(\'' + u.name + '\',\'approved\')">恢复</button>';
+                    actions = '<button class="btn btn-success btn-sm" onclick="reviewUser(' + i + ',\'approved\')">恢复</button>';
                 }
-                actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(\'' + u.name + '\')">编辑</button>';
-                actions += ' <button class="btn btn-ghost btn-sm" onclick="openResetPassword(\'' + u.name + '\')">改密</button>';
-                actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(\'' + u.name + '\')">删除</button>';
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="openEditUser(' + i + ')">编辑</button>';
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="openResetPassword(' + i + ')">改密</button>';
+                actions += ' <button class="btn btn-ghost btn-sm" onclick="deleteUser(' + i + ')">删除</button>';
                 html += '<tr>'
-                    + '<td>' + u.name + '</td>'
-                    + '<td>' + (u.phone || '') + '</td>'
-                    + '<td>' + unitDisplay + '</td>'
+                    + '<td>' + escAttr(u.name) + '</td>'
+                    + '<td>' + escAttr(u.phone || '') + '</td>'
+                    + '<td>' + escAttr(unitDisplay) + '</td>'
                     + '<td style="font-size:12px;color:var(--text-muted);">' + formatTime(u.registerTime) + '</td>'
                     + '<td><span class="badge ' + s.cls + '">' + s.label + '</span></td>'
                     + '<td style="white-space:nowrap;">' + actions + '</td>'
@@ -2826,7 +2827,10 @@
                 + '</tbody></table>';
         }
 
-        async function reviewUser(name, status) {
+        async function reviewUser(idx, status) {
+            const su = window._reviewShown && window._reviewShown[idx];
+            if (!su) return;
+            const name = su.name; // 按索引取（2026-11-15：姓名可含单引号，勿再拼进 onclick）
             const users = await loadUsersAsync();
             const user = users.find(u => u.name === name);
             if (!user) return;
@@ -2837,8 +2841,11 @@
             showToast(status === 'approved' ? '已通过该用户' : '已拒绝该用户');
         }
 
-        async function deleteUser(name) {
+        async function deleteUser(idx) {
             if (!currentUser || currentUser.role !== 'admin') return;
+            const su = window._reviewShown && window._reviewShown[idx];
+            if (!su) return;
+            const name = su.name;
             if (!confirm('确定删除用户「' + name + '」吗？\n\n删除后该用户将无法登录，且注册信息不可恢复。')) return;
             const users = await loadUsersAsync();
             const filtered = users.filter(u => u.name !== name);
@@ -2851,8 +2858,11 @@
         // ========== Admin Edit User ==========
         let _editUserName = null;
 
-        async function openEditUser(name) {
+        async function openEditUser(idx) {
             if (!currentUser || currentUser.role !== 'admin') return;
+            const su = window._reviewShown && window._reviewShown[idx];
+            if (!su) return;
+            const name = su.name;
             const users = await loadUsersAsync();
             const u = users.find(x => x.name === name);
             if (!u) return;
@@ -2954,8 +2964,11 @@
         // ========== Admin Reset Password ==========
         let _resetPwdUserName = null;
 
-        async function openResetPassword(name) {
+        async function openResetPassword(idx) {
             if (!currentUser || currentUser.role !== 'admin') return;
+            const su = window._reviewShown && window._reviewShown[idx];
+            if (!su) return;
+            const name = su.name;
             const users = await loadUsersAsync();
             const u = users.find(x => x.name === name);
             if (!u) return;
