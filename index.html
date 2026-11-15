@@ -1730,6 +1730,9 @@
                 <h2>用户审核管理</h2>
                 <button class="modal-close" onclick="closeModal('modal-admin')">&times;</button>
             </div>
+            <div style="padding:8px 16px 0 16px;">
+                <input type="text" class="form-input" id="review-search" placeholder="搜索姓名 / 手机号 / 单位..." autocomplete="off" oninput="renderAdminReview()" style="margin-bottom:4px;">
+            </div>
             <div id="admin-review-body"></div>
             <div class="form-actions">
                 <button class="btn btn-ghost" onclick="closeModal('modal-admin')">关闭</button>
@@ -2755,9 +2758,13 @@
         function renderAdminReview() {
             const users = loadUsers();
             const body = document.getElementById('admin-review-body');
+            const q = (document.getElementById('review-search') && document.getElementById('review-search').value || '').trim().toLowerCase();
+            const shownUsers = q
+                ? users.filter(u => ((u.name || '') + (u.phone || '') + (u.unit || '')).toLowerCase().includes(q))
+                : users;
 
-            if (users.length === 0) {
-                body.innerHTML = '<div class="empty-state"><p>暂无注册用户</p></div>';
+            if (shownUsers.length === 0) {
+                body.innerHTML = '<div class="empty-state"><p>' + (q ? '未找到匹配"' + escAttr(q) + '"的人员' : '暂无注册用户') + '</p></div>';
                 return;
             }
 
@@ -2769,7 +2776,7 @@
 
             // 待审核排在最前，其余按注册时间倒序
             const statusOrder = { pending: 0, rejected: 1, approved: 2 };
-            const sortedUsers = [...users].sort((a, b) => {
+            const sortedUsers = [...shownUsers].sort((a, b) => {
                 const sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 3;
                 const sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 3;
                 if (sa !== sb) return sa - sb;
