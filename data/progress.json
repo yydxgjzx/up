@@ -1112,7 +1112,10 @@
       "remark": "",
       "region": "平江县",
       "autoAdded": false,
-      "_test": true
+      "_test": true,
+      "doneConfirmed": true,
+      "doneConfirmBy": "张爱华",
+      "doneConfirmTime": 1795015021738
     }
   ],
   "reports": [
