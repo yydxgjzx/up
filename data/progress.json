@@ -1097,6 +1097,22 @@
       "designApprovalDate": "2026-11-16",
       "autoAddedAt": 1794877522300,
       "region": "华容县"
+    },
+    {
+      "code": "TESTDUALV2",
+      "name": "(临时验证工程-即将删除)",
+      "manager": "李力",
+      "unit": "湖南天辰建设有限责任公司",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "传输",
+      "approvalDate": "2026-11-01",
+      "dueDate": "2026-12-31",
+      "progress": 1,
+      "remark": "",
+      "region": "平江县",
+      "autoAdded": false,
+      "_test": true
     }
   ],
   "reports": [
