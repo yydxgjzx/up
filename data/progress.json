@@ -1116,9 +1116,7 @@
       "doneConfirmed": true,
       "doneConfirmBy": "张爱华",
       "doneConfirmTime": 1795015021738,
-      "mgrConfirmed": true,
-      "mgrConfirmBy": "李四",
-      "mgrConfirmTime": 1795015084064
+      "mgrConfirmed": false
     }
   ],
   "reports": [
