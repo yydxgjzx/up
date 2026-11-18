@@ -6284,6 +6284,11 @@ const PROGRESS_TEAM_LEADERS = [
 
         // ---------- 权限 ----------
         function pIsAdmin() { return !!currentUser && currentUser.role === 'admin'; }
+
+        // 2026-11-16 完工双确认：第一步工程管理员确认（mgrConfirmed）→ 第二步监理张爱华最终确认（doneConfirmed）
+        const P_SUPERVISOR = '张爱华';
+        function pIsSupervisor() { return !!currentUser && currentUser.name === P_SUPERVISOR; }
+        function pIsSupervisorConcerned(p) { return pIsSupervisor() && !!p && !!p.mgrConfirmed && !p.doneConfirmed; }
         // 工程管理员（manager）对其名下工程：可代填周报、可补录施工小队（2026-11-06 起）
         function pIsMgrOf(p) { return !!currentUser && currentUser.role === 'manager' && !!p && p.manager === currentUser.name; }
         function pIsOwned(p) {
@@ -6322,8 +6327,8 @@ const PROGRESS_TEAM_LEADERS = [
 
         // ---------- 渲染 ----------
         function pApplyMineView() {
-            // 有相关工程（队长本人/工程管理员本人负责）则默认只看我的；admin 与无相关工程者默认全部
-            pHasMine = !!currentUser && progressProjects.some(p => pIsOwned(p) || pIsMgrOf(p));
+            // 有相关工程（队长本人/工程管理员本人负责/待本人监理确认）则默认只看我的；admin 与无相关工程者默认全部
+            pHasMine = !!currentUser && progressProjects.some(p => pIsOwned(p) || pIsMgrOf(p) || pIsSupervisorConcerned(p));
             if (!pMineTouched) pMineOnly = pHasMine;
             const btn = document.getElementById('p-btn-mine');
             if (btn) {
@@ -6402,7 +6407,7 @@ const PROGRESS_TEAM_LEADERS = [
             const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
             return progressProjects.filter(p => {
                 // 只看登录人相关工程（2026-11-06 默认视图，与小程序一致）
-                if (pMineOnly && !pIsOwned(p) && !pIsMgrOf(p)) return false;
+                if (pMineOnly && !pIsOwned(p) && !pIsMgrOf(p) && !pIsSupervisorConcerned(p)) return false;
                 if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
@@ -6458,7 +6463,9 @@ const PROGRESS_TEAM_LEADERS = [
                 const weekBadge = p.doneConfirmed
                     ? '<span class="badge badge-p-done" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已确认完工</span>'
                     : (pendingDone
-                        ? '<span class="badge badge-p-confirm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">待确认完工</span>'
+                        ? (p.mgrConfirmed
+                            ? '<span class="badge badge-p-mgrconf" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">待监理确认</span>'
+                            : '<span class="badge badge-p-confirm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">待确认完工</span>')
                         : (r
                             ? '<span class="badge badge-p-filled" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已填报</span>'
                             : '<span class="badge badge-p-empty" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">未填报</span>'));
@@ -6482,9 +6489,13 @@ const PROGRESS_TEAM_LEADERS = [
                     ? '<span class="p-days badge ' + dl.cls + '">' + dl.text + '</span>'
                     : '<span class="p-days p-due">' + dl.text + '</span>';
                 const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
-                    + (canConfirm
-                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">确认完工</button>'
-                        : ((pIsOwned(p) || pIsAdmin() || pIsMgrOf(p)) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
+                    + (pendingDone && !p.mgrConfirmed && (pIsAdmin() || isMgr)
+                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
+                        : '')
+                    + (p.mgrConfirmed && !p.doneConfirmed && pIsSupervisor()
+                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">监理确认</button>'
+                        : '')
+                    + ((!pendingDone && !p.mgrConfirmed && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
                         : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 return '<tr>'
@@ -6512,13 +6523,17 @@ const PROGRESS_TEAM_LEADERS = [
                 const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
                 const canConfirm = pendingDone && (pIsAdmin() || isMgr);
                 const acts = '<button class="btn btn-ghost btn-sm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">详情</button>'
-                    + (canConfirm
-                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">确认完工</button>'
-                        : ((pIsOwned(p) || pIsAdmin() || pIsMgrOf(p)) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : ''))
+                    + (pendingDone && !p.mgrConfirmed && (pIsAdmin() || isMgr)
+                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
+                        : '')
+                    + (p.mgrConfirmed && !p.doneConfirmed && pIsSupervisor()
+                        ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">监理确认</button>'
+                        : '')
+                    + ((!pendingDone && !p.mgrConfirmed && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
                         : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 const statusBadge = p.doneConfirmed ? '<span class="badge badge-p-done">已确认完工</span>'
-                    : (pendingDone ? '<span class="badge badge-p-confirm">待确认完工</span>'
+                    : (pendingDone ? (p.mgrConfirmed ? '<span class="badge badge-p-mgrconf">待监理确认</span>' : '<span class="badge badge-p-confirm">待确认完工</span>')
                         : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>'));
                 return '<div class="m-card">'
                     + '<div class="m-card-top"><div class="m-card-title">' + escAttr(p.name) + '</div>'
@@ -6715,14 +6730,21 @@ const PROGRESS_TEAM_LEADERS = [
             });
             if (firstError) { showToast(firstError, true); return; }
             if (count === 0) { showToast('请至少填写一个工程的周报', true); return; }
-            // 按最新一期周报同步工程当前进度；进度回退到100%以下时撤销完工确认
+            // 按最新一期周报同步工程当前进度；进度回退到100%以下时撤销两级确认
             progressProjects.forEach(p => {
                 const latest = pLatestReport(p.code);
                 if (latest) p.progress = latest.progress;
-                if ((p.progress || 0) < 0.999 && p.doneConfirmed) {
-                    p.doneConfirmed = false;
-                    delete p.doneConfirmBy;
-                    delete p.doneConfirmTime;
+                if ((p.progress || 0) < 0.999) {
+                    if (p.doneConfirmed) {
+                        p.doneConfirmed = false;
+                        delete p.doneConfirmBy;
+                        delete p.doneConfirmTime;
+                    }
+                    if (p.mgrConfirmed) {
+                        p.mgrConfirmed = false;
+                        delete p.mgrConfirmBy;
+                        delete p.mgrConfirmTime;
+                    }
                 }
             });
             try { await saveProgressData(); } catch (e) { return; }
@@ -6751,7 +6773,9 @@ const PROGRESS_TEAM_LEADERS = [
             // 完工确认状态与确认按钮
             const pdDone = document.getElementById('pd-done');
             if (p.doneConfirmed) {
-                pdDone.innerHTML = '<span class="badge badge-p-done">已确认完工</span> 确认人：' + escAttr(p.doneConfirmBy || '—') + (p.doneConfirmTime ? ' · ' + formatTime(p.doneConfirmTime) : '');
+                pdDone.innerHTML = '<span class="badge badge-p-done">已确认完工</span><br><span style="font-size:12px;color:var(--text-muted);">管理员确认：' + escAttr(p.mgrConfirmBy || '—') + (p.mgrConfirmTime ? ' · ' + formatTime(p.mgrConfirmTime) : '') + '<br>监理确认：' + escAttr(p.doneConfirmBy || '—') + (p.doneConfirmTime ? ' · ' + formatTime(p.doneConfirmTime) : '') + '</span>';
+            } else if (pct >= 100 && p.mgrConfirmed) {
+                pdDone.innerHTML = '<span class="badge badge-p-mgrconf">待监理确认</span> 管理员已确认（' + escAttr(p.mgrConfirmBy || '—') + (p.mgrConfirmTime ? ' · ' + formatTime(p.mgrConfirmTime) : '') + '），待监理张爱华最终确认';
             } else if (pct >= 100) {
                 pdDone.innerHTML = '<span class="badge badge-p-confirm">待确认完工</span> 待工程管理员（' + escAttr(p.manager || '—') + '）确认';
             } else {
@@ -6759,7 +6783,10 @@ const PROGRESS_TEAM_LEADERS = [
             }
             const confirmBtn = document.getElementById('pd-confirm-btn');
             const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
-            confirmBtn.style.display = (!p.doneConfirmed && pct >= 100 && (pIsAdmin() || isMgr)) ? 'inline-flex' : 'none';
+            const canMgrStep = !p.doneConfirmed && !p.mgrConfirmed && pct >= 100 && (pIsAdmin() || isMgr);
+            const canFinalStep = !p.doneConfirmed && !!p.mgrConfirmed && pct >= 100 && pIsSupervisor();
+            confirmBtn.style.display = (canMgrStep || canFinalStep) ? 'inline-flex' : 'none';
+            confirmBtn.textContent = canFinalStep ? '监理确认完工' : '管理员确认完工';
             document.getElementById('pd-progress').innerHTML = '<div class="' + pProgCls(pct) + '"><div class="p-prog-bar" style="min-width:120px;"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div>';
             document.getElementById('pd-remark').textContent = p.remark || '—';
             // 周报按周分组：每周显示当前版本；历史修订版本折叠在"历史版本"中，不覆盖不删除
@@ -6798,7 +6825,7 @@ const PROGRESS_TEAM_LEADERS = [
             openModal('modal-progress-detail');
         }
 
-        // ---------- 完工确认（工程管理员/管理员） ----------
+        // ---------- 完工双确认（2026-11-16：第一步工程管理员确认 → 第二步监理张爱华最终确认） ----------
         function pCanConfirm(p) {
             if (!currentUser || !p) return false;
             const isMgr = currentUser.role === 'manager' && p.manager === currentUser.name;
@@ -6808,32 +6835,57 @@ const PROGRESS_TEAM_LEADERS = [
         async function pConfirmDone(code) {
             const p = progressProjects.find(x => x.code === code);
             if (!p) return;
-            if (!pCanConfirm(p)) { showToast('仅该工程的工程管理员可确认完工', true); return; }
             if ((p.progress || 0) < 0.999) { showToast('该工程完工进度未达100%，暂不能确认', true); return; }
             if (p.doneConfirmed) { showToast('该工程已确认完工', true); return; }
-            const tip = '确认该工程完工？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n施工队长：' + (p.leader || '') + '\n\n确认后该工程将不再显示在进度列表（仍可在筛选“已确认完工”中查看、并可导出）。';
+            // 第二步：监理张爱华最终确认
+            if (pIsSupervisor()) {
+                if (!p.mgrConfirmed) { showToast('需工程管理员先确认，再由监理张爱华最终确认', true); return; }
+                const tip = '监理确认完工？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n施工队长：' + (p.leader || '') + '\n工程管理员已确认：' + (p.mgrConfirmBy || '—') + '\n\n确认后该工程将不再显示在进度列表（仍可在筛选“已确认完工”中查看、并可导出）。';
+                if (!confirm(tip)) return;
+                p.doneConfirmed = true;
+                p.doneConfirmBy = currentUser.name;
+                p.doneConfirmTime = Date.now();
+                try { await saveProgressData(); } catch (e) { return; }
+                closeModal('modal-progress-detail');
+                pRenderAll();
+                showToast('已确认完工：' + p.name);
+                return;
+            }
+            // 第一步：工程管理员确认（写 mgrConfirmed，转“待监理确认”）
+            if (!pCanConfirm(p)) { showToast('仅该工程的工程管理员可确认', true); return; }
+            if (p.mgrConfirmed) { showToast('管理员已确认，待监理张爱华最终确认', true); return; }
+            const tip = '确认该工程完工？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n施工队长：' + (p.leader || '') + '\n\n确认后转为“待监理确认”，需监理张爱华最终确认后才算完工。';
             if (!confirm(tip)) return;
-            p.doneConfirmed = true;
-            p.doneConfirmBy = currentUser.name;
-            p.doneConfirmTime = Date.now();
+            p.mgrConfirmed = true;
+            p.mgrConfirmBy = currentUser.name;
+            p.mgrConfirmTime = Date.now();
             try { await saveProgressData(); } catch (e) { return; }
             closeModal('modal-progress-detail');
             pRenderAll();
-            showToast('已确认完工：' + p.name);
+            showToast('已完成管理员确认，待监理张爱华最终确认：' + p.name);
         }
 
         async function pUnconfirmDone() {
             if (!pIsAdmin()) { showToast('仅管理员可撤销完工确认', true); return; }
             const p = progressProjects.find(x => x.code === _peCodeOrig);
-            if (!p || !p.doneConfirmed) return;
-            if (!confirm('确定撤销该工程的完工确认吗？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n\n撤销后将重新显示在进度列表中。')) return;
-            p.doneConfirmed = false;
-            delete p.doneConfirmBy;
-            delete p.doneConfirmTime;
+            if (!p || (!p.doneConfirmed && !p.mgrConfirmed)) return;
+            const what = p.doneConfirmed ? '完工确认（监理）' : '管理员确认';
+            const back = p.doneConfirmed ? '回“待监理确认”（保留管理员确认）' : '回“待确认完工”';
+            if (!confirm('确定撤销该工程的' + what + '吗？\n\n工程编码：' + p.code + '\n工程名称：' + p.name + '\n\n撤销后' + back + '，重新显示在进度列表中。')) return;
+            if (p.doneConfirmed) {
+                p.doneConfirmed = false;
+                delete p.doneConfirmBy;
+                delete p.doneConfirmTime;
+                // 保留 mgrConfirmed：回“待监理确认”
+            } else {
+                p.mgrConfirmed = false;
+                delete p.mgrConfirmBy;
+                delete p.mgrConfirmTime;
+            }
             try { await saveProgressData(); } catch (e) { return; }
             closeModal('modal-progress-edit');
             pRenderAll();
-            showToast('已撤销完工确认：' + p.name);
+            showToast('已撤销' + what + '：' + p.name);
         }
 
         // ---------- 导出Excel ----------
@@ -6881,7 +6933,8 @@ const PROGRESS_TEAM_LEADERS = [
                 const latest = cur || pLatestReport(p.code);
                 const d = pDaysLeft(p);
                 let doneState = '在建';
-                if (p.doneConfirmed) { doneState = '已确认完工' + (p.doneConfirmBy ? '(' + p.doneConfirmBy + (p.doneConfirmTime ? '·' + formatTime(p.doneConfirmTime) : '') + ')' : ''); confirmedCnt++; }
+                if (p.doneConfirmed) { doneState = '已确认完工(管理员' + (p.mgrConfirmBy ? ':' + p.mgrConfirmBy : '') + '·监理' + (p.doneConfirmBy ? ':' + p.doneConfirmBy : '') + (p.doneConfirmTime ? '·' + formatTime(p.doneConfirmTime) : '') + ')'; confirmedCnt++; }
+                else if (p.mgrConfirmed) { doneState = '管理员已确认(' + (p.mgrConfirmBy || '') + ')·待监理确认'; }
                 else if ((p.progress || 0) >= 0.999) doneState = '待确认完工';
                 return {
                     '序号': i + 1, '工程编码': p.code, '工程名称': p.name, '区域': p.region || '', '施工队长': p.leader || '',
@@ -6921,7 +6974,7 @@ const PROGRESS_TEAM_LEADERS = [
             document.getElementById('pe-title').textContent = admin ? (code ? '编辑工程' : '新增工程') : '补录施工小队信息';
             document.getElementById('pe-delete-btn').style.display = (admin && code) ? 'inline-flex' : 'none';
             const undoneBtn = document.getElementById('pe-undone-btn');
-            undoneBtn.style.display = (admin && p && p.doneConfirmed) ? 'inline-flex' : 'none';
+            undoneBtn.style.display = (admin && p && (p.doneConfirmed || p.mgrConfirmed)) ? 'inline-flex' : 'none';
             // 工程管理员补录模式：仅 队长/电话/施工单位 可编辑，其余字段只读
             ['pe-code', 'pe-name', 'pe-manager', 'pe-major', 'pe-progress', 'pe-approval', 'pe-due', 'pe-remark'].forEach(id => {
                 document.getElementById(id).disabled = !admin;
@@ -7003,11 +7056,18 @@ const PROGRESS_TEAM_LEADERS = [
                     p.code = code; p.name = name; p.manager = manager; p.unit = unit;
                     p.leader = leader; p.leaderPhone = phone; p.major = major;
                     p.approvalDate = approval; p.dueDate = due; p.progress = pg; p.remark = remark;
-                    // 进度改回100%以下时自动撤销完工确认
-                    if (pg < 0.999 && p.doneConfirmed) {
-                        p.doneConfirmed = false;
-                        delete p.doneConfirmBy;
-                        delete p.doneConfirmTime;
+                    // 进度改回100%以下时自动撤销两级完工确认
+                    if (pg < 0.999) {
+                        if (p.doneConfirmed) {
+                            p.doneConfirmed = false;
+                            delete p.doneConfirmBy;
+                            delete p.doneConfirmTime;
+                        }
+                        if (p.mgrConfirmed) {
+                            p.mgrConfirmed = false;
+                            delete p.mgrConfirmBy;
+                            delete p.mgrConfirmTime;
+                        }
                     }
                 }
             }
