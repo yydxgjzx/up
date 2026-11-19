@@ -6497,7 +6497,7 @@ const PROGRESS_TEAM_LEADERS = [
                         : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
-                        : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
+                        : ((pIsMgrOf(p) || pIsSupervisor()) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 return '<tr>'
                     + '<td class="col-serial">' + (i + 1) + '</td>'
                     + '<td class="col-code tip-cell" data-tip="' + escAttr(p.code) + '">' + escAttr(p.code) + '</td>'
@@ -6531,7 +6531,7 @@ const PROGRESS_TEAM_LEADERS = [
                         : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
-                        : (pIsMgrOf(p) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
+                        : ((pIsMgrOf(p) || pIsSupervisor()) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 const statusBadge = p.mgrConfirmed ? '<span class="badge badge-p-done">已确认完工</span>'
                     : (pendingDone ? (p.doneConfirmed ? '<span class="badge badge-p-mgrconf">待管理员确认</span>' : '<span class="badge badge-p-confirm">待确认完工</span>')
                         : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>'));
@@ -6964,9 +6964,11 @@ const PROGRESS_TEAM_LEADERS = [
             const p = code ? progressProjects.find(x => x.code === code) : null;
             const admin = pIsAdmin();
             if (!admin) {
-                // 工程管理员（manager）仅可补录本人负责工程的施工小队信息，不能新增/删除工程
-                if (!currentUser || currentUser.role !== 'manager' || !p || !pIsMgrOf(p)) {
-                    showToast('仅管理员可管理工程；工程管理员可补录本人负责的工程', true); return;
+                // 工程管理员（manager）仅可补录本人负责工程的施工小队信息；监理张爱华可补录全部工程（2026-11-19）
+                const canMgr = !!currentUser && currentUser.role === 'manager' && !!p && pIsMgrOf(p);
+                const canSupervisor = pIsSupervisor() && !!p;
+                if (!canMgr && !canSupervisor) {
+                    showToast('仅管理员可管理工程；工程管理员可补录本人负责的工程，监理张爱华可补录全部工程', true); return;
                 }
             }
             _peMode = admin ? (code ? 'edit' : 'add') : 'mgr';
@@ -6994,11 +6996,15 @@ const PROGRESS_TEAM_LEADERS = [
         }
 
         async function pSaveProject() {
-            // 工程管理员补录施工小队：仅保存 队长/电话/施工单位 三个字段，其余信息不动
+            // 补录施工小队（工程管理员本人工程/监理张爱华全部工程）：仅保存 队长/电话/施工单位 三个字段，其余信息不动
             if (_peMode === 'mgr') {
-                if (!currentUser || currentUser.role !== 'manager') { showToast('无权限', true); return; }
                 const p = progressProjects.find(x => x.code === _peCodeOrig);
-                if (!p || !pIsMgrOf(p)) { showToast('仅可补录您负责的工程', true); return; }
+                if (!p) { showToast('工程不存在', true); return; }
+                // 工程管理员仅可补录本人负责的工程；监理张爱华可补录全部工程（2026-11-19）
+                if (!pIsSupervisor()) {
+                    if (!currentUser || currentUser.role !== 'manager') { showToast('无权限', true); return; }
+                    if (!pIsMgrOf(p)) { showToast('仅可补录您负责的工程', true); return; }
+                }
                 const leader = document.getElementById('pe-leader').value.trim();
                 const phone = document.getElementById('pe-phone').value.trim();
                 const unit = document.getElementById('pe-unit').value;
