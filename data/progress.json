@@ -1097,6 +1097,40 @@
       "designApprovalDate": "2026-11-16",
       "autoAddedAt": 1794877522300,
       "region": "华容县"
+    },
+    {
+      "code": "26HN005072001",
+      "name": "2026年岳阳分公司岳阳楼区黄杨水库等基站光缆配套工程",
+      "manager": "丰中山",
+      "unit": "湖南天辰建设有限责任公司",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "无线网接入光缆和无源波分",
+      "approvalDate": "2026-11-17",
+      "dueDate": "2027-05-31",
+      "progress": 0,
+      "remark": "",
+      "autoAdded": true,
+      "designApprovalDate": "2026-11-19",
+      "autoAddedAt": 1795081271497,
+      "region": "岳阳楼区"
+    },
+    {
+      "code": "26HN005073001",
+      "name": "2026年岳阳分公司汨罗市上任村联通等基站光缆配套工程",
+      "manager": "蒋志昭",
+      "unit": "湖南省通信建设有限公司",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "无线网接入光缆和无源波分",
+      "approvalDate": "2026-11-17",
+      "dueDate": "2027-05-31",
+      "progress": 0,
+      "remark": "",
+      "autoAdded": true,
+      "designApprovalDate": "2026-11-19",
+      "autoAddedAt": 1795081271501,
+      "region": "汨罗市"
     }
   ],
   "reports": [
