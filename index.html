@@ -6382,8 +6382,12 @@ const PROGRESS_TEAM_LEADERS = [
             const leaderSel = document.getElementById('p-filter-leader');
             const leaderVal = leaderSel.value;
             const leaders = [...new Set(progressProjects.map(p => p.leader).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh'));
-            leaderSel.innerHTML = '<option value="">全部队长</option>' + leaders.map(l => '<option>' + escAttr(l) + '</option>').join('');
-            leaderSel.value = leaders.includes(leaderVal) ? leaderVal : '';
+            // 2026-11-19：存在未补录队长的工程时，下拉提供“空”选项（筛选队长为空/待补录的工程）
+            const hasEmptyLeader = progressProjects.some(p => !p.leader);
+            leaderSel.innerHTML = '<option value="">全部队长</option>'
+                + (hasEmptyLeader ? '<option>空</option>' : '')
+                + leaders.map(l => '<option>' + escAttr(l) + '</option>').join('');
+            leaderSel.value = (leaderVal === '空' && hasEmptyLeader) || leaders.includes(leaderVal) ? leaderVal : '';
 
             const mgrSel = document.getElementById('p-filter-manager');
             const mgrVal = mgrSel.value;
@@ -6408,7 +6412,8 @@ const PROGRESS_TEAM_LEADERS = [
             return progressProjects.filter(p => {
                 // 只看登录人相关工程（2026-11-06 默认视图，与小程序一致）
                 if (pMineOnly && !pIsOwned(p) && !pIsMgrOf(p) && !pIsSupervisorConcerned(p)) return false;
-                if (leader && p.leader !== leader) return false;
+                if (leader === '空') { if (p.leader) return false; }
+                else if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
                 if (region && (p.region || '') !== region) return false;
@@ -6899,7 +6904,8 @@ const PROGRESS_TEAM_LEADERS = [
             const search = document.getElementById('p-filter-search').value.trim().toLowerCase();
             const wk = pCurrentWeekKey();
             const list = progressProjects.filter(p => {
-                if (leader && p.leader !== leader) return false;
+                if (leader === '空') { if (p.leader) return false; }
+                else if (leader && p.leader !== leader) return false;
                 if (unit && p.unit !== unit) return false;
                 if (manager && p.manager !== manager) return false;
                 if (region && (p.region || '') !== region) return false;
