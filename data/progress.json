@@ -1145,29 +1145,6 @@
       "designApprovalDate": "2026-11-19",
       "autoAddedAt": 1795081271501,
       "region": "汨罗市"
-    },
-    {
-      "code": "TESTREJ1",
-      "name": "(临时验证工程-即将删除)",
-      "manager": "李力",
-      "unit": "湖南天辰建设有限责任公司",
-      "leader": "测试队长",
-      "leaderPhone": "13000000099",
-      "major": "传输",
-      "approvalDate": "2026-11-01",
-      "dueDate": "2026-12-31",
-      "progress": 0.8,
-      "remark": "",
-      "region": "平江县",
-      "autoAdded": false,
-      "_test": true,
-      "rejected": {
-        "by": "张爱华",
-        "at": 1795254553411,
-        "reason": "线上验证：现场核验未完成",
-        "fromPct": 100,
-        "toPct": 80
-      }
     }
   ],
   "reports": [
@@ -3990,30 +3967,6 @@
       "reporter": "周立",
       "createTime": 1795254115157,
       "updateTime": 1795254115157
-    },
-    {
-      "id": "WTEST-r1",
-      "projectCode": "TESTREJ1",
-      "weekKey": "2026-11-09",
-      "rev": 1,
-      "progress": 0.8,
-      "thisWeek": "上期80%",
-      "nextWeek": "",
-      "reporter": "测试队长",
-      "createTime": 1795168141047,
-      "updateTime": 1795168141047
-    },
-    {
-      "id": "WTEST-r2",
-      "projectCode": "TESTREJ1",
-      "weekKey": "2026-11-16",
-      "rev": 1,
-      "progress": 1,
-      "thisWeek": "本期完工100%",
-      "nextWeek": "",
-      "reporter": "测试队长",
-      "createTime": 1795254541047,
-      "updateTime": 1795254541047
     }
   ],
   "meta": {
