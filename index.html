@@ -2143,9 +2143,9 @@
                 <div id="pr-name" style="font-size:13px;color:var(--text-secondary);padding:8px 0;line-height:1.6;"></div>
             </div>
             <div class="form-group">
-                <label class="form-label"><span class="required">*</span>退回后完工进度（%）</label>
-                <input type="number" class="form-input" id="pr-progress" min="0" max="99" step="1" placeholder="0-99，如 90">
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">退回后工程回到在建状态，队长需重新填报周报推进至100%再走确认流程</div>
+                <label class="form-label">进度自动回退</label>
+                <div id="pr-autopct" style="font-size:14px;color:#fb923c;padding:8px 0;line-height:1.6;font-weight:600;"></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">退回后进度自动回退到上周进度，工程回到在建状态；队长需按退回反馈整改后重新填报周报推进至100%再走确认流程</div>
             </div>
             <div class="form-group">
                 <label class="form-label"><span class="required">*</span>退回反馈情况</label>
@@ -6836,11 +6836,11 @@ const PROGRESS_TEAM_LEADERS = [
             const rejectedWrap = document.getElementById('pd-rejected-wrap');
             const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
             const canSupervisorStep = !p.doneConfirmed && !p.mgrConfirmed && pct >= 100 && pIsSupervisor();
-            // 2026-11-21：管理员确认按钮在待确认完工阶段即显示（未监理确认时点击由顺序校验拦截提示）
+            // 管理员确认按钮在待确认完工阶段即显示（提前可见，未监理确认时点击由顺序校验拦截）
             const canMgrStep = !p.mgrConfirmed && pct >= 100 && (pIsAdmin() || isMgr);
             confirmBtn.style.display = (canSupervisorStep || canMgrStep) ? 'inline-flex' : 'none';
             confirmBtn.textContent = canSupervisorStep ? '监理确认完工' : '管理员确认完工';
-            // 退回按钮与退回反馈行（2026-11-21：监理张爱华/工程管理员/admin 在确认环节可退回）
+            // 退回按钮（双方均可：任一方单方退回即生效，进度自动回退上周进度）
             const canRejectStep = pct >= 100 && !p.mgrConfirmed && (pIsSupervisor() || pIsAdmin() || isMgr);
             rejectBtn.style.display = canRejectStep ? 'inline-flex' : 'none';
             if (p.rejected && p.rejected.at) {
@@ -6950,7 +6950,17 @@ const PROGRESS_TEAM_LEADERS = [
             showToast('已撤销' + what + '：' + p.name);
         }
 
-        // ---------- 退回完工确认（2026-11-21：监理张爱华/工程管理员可退回并更改进度+反馈情况） ----------
+        // ---------- 退回完工确认（2026-11-21 终版：任一方单方退回即生效；进度自动回退到上周进度） ----------
+        function pLastNonFullPct(code) {
+            // 最近一期非100%周报的进度；无则默认90%（与云函数同口径）
+            const reps = pReportsOf(code).sort((a, b) =>
+                String(b.weekKey || '').localeCompare(String(a.weekKey || '')) || pRepTime(b) - pRepTime(a));
+            for (let i = 0; i < reps.length; i++) {
+                if ((reps[i].progress || 0) < 0.999) return Math.round((reps[i].progress || 0) * 100);
+            }
+            return 90;
+        }
+
         function pRejectDone(code) {
             const p = progressProjects.find(x => x.code === code);
             if (!p) return;
@@ -6960,7 +6970,7 @@ const PROGRESS_TEAM_LEADERS = [
             if (!pIsAdmin() && !isMgr && !pIsSupervisor()) { showToast('仅监理张爱华、该工程的工程管理员可退回', true); return; }
             window._prCode = code;
             document.getElementById('pr-name').textContent = p.code + ' · ' + p.name + '（' + (p.leader || '待补录') + '）';
-            document.getElementById('pr-progress').value = '90';
+            document.getElementById('pr-autopct').textContent = '进度将自动回退至 ' + pLastNonFullPct(code) + '%（上周进度）';
             document.getElementById('pr-reason').value = '';
             openModal('modal-progress-reject');
         }
@@ -6969,21 +6979,19 @@ const PROGRESS_TEAM_LEADERS = [
             const code = window._prCode || '';
             const p = progressProjects.find(x => x.code === code);
             if (!p) return;
-            const prRaw = document.getElementById('pr-progress').value.trim();
             const reason = document.getElementById('pr-reason').value.trim();
-            if (prRaw === '') { showToast('请填写退回后的完工进度', true); return; }
-            const pct = parseFloat(prRaw);
-            if (isNaN(pct) || pct < 0 || pct >= 100) { showToast('退回后进度需在0-99之间', true); return; }
             if (!reason) { showToast('请填写退回反馈情况', true); return; }
-            p.progress = Math.round(pct) / 100;
+            // 进度自动回退到上周进度（最近一期非100%周报；无则默认90%）
+            const toPct = pLastNonFullPct(code);
+            p.progress = toPct / 100;
             if (p.doneConfirmed) { p.doneConfirmed = false; delete p.doneConfirmBy; delete p.doneConfirmTime; }
             if (p.mgrConfirmed) { p.mgrConfirmed = false; delete p.mgrConfirmBy; delete p.mgrConfirmTime; }
-            p.rejected = { by: currentUser.name, at: Date.now(), reason: reason, fromPct: 100, toPct: Math.round(pct) };
+            p.rejected = { by: currentUser.name, at: Date.now(), reason: reason, fromPct: 100, toPct: toPct };
             try { await saveProgressData(); } catch (e) { return; }
             closeModal('modal-progress-reject');
             closeModal('modal-progress-detail');
             pRenderAll();
-            showToast('已退回：' + p.name + '（进度改至 ' + Math.round(pct) + '%，反馈已记录）');
+            showToast('已退回：' + p.name + '（进度自动回退至 ' + toPct + '%，反馈已记录）');
         }
 
         // ---------- 导出Excel ----------
