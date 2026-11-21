@@ -1025,6 +1025,7 @@
         .badge-p-empty { background: rgba(148,163,184,0.14); color: #b6c2d4; border: 1px solid rgba(148,163,184,0.3); cursor: pointer; }
         .badge-p-done { background: rgba(6,182,212,0.15); color: var(--info); border: 1px solid rgba(6,182,212,0.3); cursor: pointer; }
         .badge-p-confirm { background: rgba(139,92,246,0.16); color: #a78bfa; border: 1px solid rgba(139,92,246,0.35); cursor: pointer; }
+        .badge-p-reject { background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.35); cursor: pointer; }
         .badge-p-due { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
         .badge-p-overdue { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         /* 填报弹窗：顶部控制区 */
@@ -2113,6 +2114,7 @@
                     <div class="detail-field"><div class="detail-field-label">MSS要求完工</div><div class="detail-field-value" id="pd-due"></div></div>
                     <div class="detail-field"><div class="detail-field-label">剩余天数</div><div class="detail-field-value" id="pd-left"></div></div>
                     <div class="detail-field detail-span2"><div class="detail-field-label">完工确认</div><div class="detail-field-value" id="pd-done"></div></div>
+                    <div class="detail-field detail-span2" id="pd-rejected-wrap"><div class="detail-field-label">退回反馈</div><div class="detail-field-value" id="pd-rejected"></div></div>
                     <div class="detail-field detail-span2"><div class="detail-field-label">当前完工进度</div><div class="detail-field-value" id="pd-progress"></div></div>
                     <div class="detail-field detail-span2"><div class="detail-field-label">备注</div><div class="detail-field-value" id="pd-remark"></div></div>
                 </div>
@@ -2123,7 +2125,35 @@
             </div>
             <div class="form-actions">
                 <button class="btn btn-success" id="pd-confirm-btn" onclick="pConfirmDone(window._pdCode || '')" style="display:none;">确认完工</button>
+                <button class="btn btn-danger" id="pd-reject-btn" onclick="pRejectDone(window._pdCode || '')" style="display:none;">退回</button>
                 <button class="btn btn-ghost" onclick="closeModal('modal-progress-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Project Reject Modal (2026-11-21 退回完工确认) -->
+    <div class="modal-overlay" id="modal-progress-reject">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2>退回完工确认</h2>
+                <button class="modal-close" onclick="closeModal('modal-progress-reject')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">工程</label>
+                <div id="pr-name" style="font-size:13px;color:var(--text-secondary);padding:8px 0;line-height:1.6;"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>退回后完工进度（%）</label>
+                <input type="number" class="form-input" id="pr-progress" min="0" max="99" step="1" placeholder="0-99，如 90">
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">退回后工程回到在建状态，队长需重新填报周报推进至100%再走确认流程</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>退回反馈情况</label>
+                <textarea class="form-textarea" id="pr-reason" rows="3" placeholder="退回原因，如：现场核验未完成、存在尾工等（队长可见）"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-danger" onclick="pSubmitReject()">确认退回</button>
+                <button class="btn btn-ghost" onclick="closeModal('modal-progress-reject')">取消</button>
             </div>
         </div>
     </div>
@@ -6324,6 +6354,12 @@ const PROGRESS_TEAM_LEADERS = [
         }
         function pIsReportedThisWeek(p) { return !!pReportOf(p.code, pCurrentWeekKey()); }
         function pProgCls(pct) { return 'p-prog' + (pct >= 90 ? ' high' : (pct > 0 && pct < 30 ? ' low' : '')); }
+        // 退回标记（2026-11-21）：最近一次退回晚于最新周报时显示“已退回”，队长重新填报后自动恢复
+        function pIsRejected(p) {
+            if (!p || !p.rejected || !p.rejected.at) return false;
+            const latest = pLatestReport(p.code);
+            return !latest || p.rejected.at > (latest.updateTime || latest.createTime || 0);
+        }
 
         // ---------- 渲染 ----------
         function pApplyMineView() {
@@ -6464,16 +6500,18 @@ const PROGRESS_TEAM_LEADERS = [
                 const pendingDone = pct >= 100 && !p.mgrConfirmed;
                 const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
                 const canConfirm = pendingDone && (pIsAdmin() || isMgr);
-                // 填报状态独立成列（2026-11-07 用户要求）：已确认完工/待确认完工/已填报/未填报
+                // 填报状态独立成列（2026-11-07 用户要求）：已确认完工/待确认完工/已退回/已填报/未填报
                 const weekBadge = p.mgrConfirmed
                     ? '<span class="badge badge-p-done" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已确认完工</span>'
                     : (pendingDone
                         ? (p.doneConfirmed
                             ? '<span class="badge badge-p-mgrconf" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">待管理员确认</span>'
                             : '<span class="badge badge-p-confirm" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">待确认完工</span>')
-                        : (r
-                            ? '<span class="badge badge-p-filled" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已填报</span>'
-                            : '<span class="badge badge-p-empty" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">未填报</span>'));
+                        : (pIsRejected(p)
+                            ? '<span class="badge badge-p-reject" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已退回</span>'
+                            : (r
+                                ? '<span class="badge badge-p-filled" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">已填报</span>'
+                                : '<span class="badge badge-p-empty" onclick="pOpenDetail(\'' + escAttr(p.code) + '\')">未填报</span>')));
                 const statusTd = '<td class="col-pstatus">' + weekBadge + '</td>';
                 // 周报列：仅正文（本周/最近，2行截断，悬浮显示完整）；未填报周报列显示"—"
                 const weekFullTip = r
@@ -6499,6 +6537,9 @@ const PROGRESS_TEAM_LEADERS = [
                         : '')
                     + (pendingDone && (pIsAdmin() || isMgr)
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
+                        : '')
+                    + (pendingDone && (pIsAdmin() || isMgr || pIsSupervisor())
+                        ? '<button class="btn btn-danger btn-sm" onclick="pRejectDone(\'' + escAttr(p.code) + '\')">退回</button>'
                         : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
@@ -6534,12 +6575,16 @@ const PROGRESS_TEAM_LEADERS = [
                     + (pendingDone && (pIsAdmin() || isMgr)
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
                         : '')
+                    + (pendingDone && (pIsAdmin() || isMgr || pIsSupervisor())
+                        ? '<button class="btn btn-danger btn-sm" onclick="pRejectDone(\'' + escAttr(p.code) + '\')">退回</button>'
+                        : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
                     + (pIsAdmin() ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">管理</button>'
                         : ((pIsMgrOf(p) || pIsSupervisor()) ? '<button class="btn btn-info btn-sm" onclick="pOpenEditModal(\'' + escAttr(p.code) + '\')">补录队长</button>' : ''));
                 const statusBadge = p.mgrConfirmed ? '<span class="badge badge-p-done">已确认完工</span>'
                     : (pendingDone ? (p.doneConfirmed ? '<span class="badge badge-p-mgrconf">待管理员确认</span>' : '<span class="badge badge-p-confirm">待确认完工</span>')
-                        : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>'));
+                        : (pIsRejected(p) ? '<span class="badge badge-p-reject">已退回</span>'
+                            : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>')));
                 return '<div class="m-card">'
                     + '<div class="m-card-top"><div class="m-card-title">' + escAttr(p.name) + '</div>'
                     + '<div class="m-card-status">' + statusBadge + '</div></div>'
@@ -6787,12 +6832,23 @@ const PROGRESS_TEAM_LEADERS = [
                 pdDone.textContent = '未达100%，无需确认';
             }
             const confirmBtn = document.getElementById('pd-confirm-btn');
+            const rejectBtn = document.getElementById('pd-reject-btn');
+            const rejectedWrap = document.getElementById('pd-rejected-wrap');
             const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
             const canSupervisorStep = !p.doneConfirmed && !p.mgrConfirmed && pct >= 100 && pIsSupervisor();
             // 2026-11-21：管理员确认按钮在待确认完工阶段即显示（未监理确认时点击由顺序校验拦截提示）
             const canMgrStep = !p.mgrConfirmed && pct >= 100 && (pIsAdmin() || isMgr);
             confirmBtn.style.display = (canSupervisorStep || canMgrStep) ? 'inline-flex' : 'none';
             confirmBtn.textContent = canSupervisorStep ? '监理确认完工' : '管理员确认完工';
+            // 退回按钮与退回反馈行（2026-11-21：监理张爱华/工程管理员/admin 在确认环节可退回）
+            const canRejectStep = pct >= 100 && !p.mgrConfirmed && (pIsSupervisor() || pIsAdmin() || isMgr);
+            rejectBtn.style.display = canRejectStep ? 'inline-flex' : 'none';
+            if (p.rejected && p.rejected.at) {
+                rejectedWrap.style.display = '';
+                document.getElementById('pd-rejected').innerHTML = '<span style="color:#fb923c;">' + escAttr(p.rejected.reason || '—') + '</span><br><span style="font-size:12px;color:var(--text-muted);">' + escAttr(p.rejected.by || '—') + (p.rejected.at ? ' · ' + formatTime(p.rejected.at) : '') + ' · 进度退回至 ' + (p.rejected.toPct != null ? p.rejected.toPct : '—') + '%</span>';
+            } else {
+                rejectedWrap.style.display = 'none';
+            }
             document.getElementById('pd-progress').innerHTML = '<div class="' + pProgCls(pct) + '"><div class="p-prog-bar" style="min-width:120px;"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div>';
             document.getElementById('pd-remark').textContent = p.remark || '—';
             // 周报按周分组：每周显示当前版本；历史修订版本折叠在"历史版本"中，不覆盖不删除
@@ -6892,6 +6948,42 @@ const PROGRESS_TEAM_LEADERS = [
             closeModal('modal-progress-edit');
             pRenderAll();
             showToast('已撤销' + what + '：' + p.name);
+        }
+
+        // ---------- 退回完工确认（2026-11-21：监理张爱华/工程管理员可退回并更改进度+反馈情况） ----------
+        function pRejectDone(code) {
+            const p = progressProjects.find(x => x.code === code);
+            if (!p) return;
+            if ((p.progress || 0) < 0.999) { showToast('该工程完工进度未达100%，无需退回', true); return; }
+            if (p.mgrConfirmed) { showToast('该工程已确认完工，请先在编辑中撤销确认', true); return; }
+            const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
+            if (!pIsAdmin() && !isMgr && !pIsSupervisor()) { showToast('仅监理张爱华、该工程的工程管理员可退回', true); return; }
+            window._prCode = code;
+            document.getElementById('pr-name').textContent = p.code + ' · ' + p.name + '（' + (p.leader || '待补录') + '）';
+            document.getElementById('pr-progress').value = '90';
+            document.getElementById('pr-reason').value = '';
+            openModal('modal-progress-reject');
+        }
+
+        async function pSubmitReject() {
+            const code = window._prCode || '';
+            const p = progressProjects.find(x => x.code === code);
+            if (!p) return;
+            const prRaw = document.getElementById('pr-progress').value.trim();
+            const reason = document.getElementById('pr-reason').value.trim();
+            if (prRaw === '') { showToast('请填写退回后的完工进度', true); return; }
+            const pct = parseFloat(prRaw);
+            if (isNaN(pct) || pct < 0 || pct >= 100) { showToast('退回后进度需在0-99之间', true); return; }
+            if (!reason) { showToast('请填写退回反馈情况', true); return; }
+            p.progress = Math.round(pct) / 100;
+            if (p.doneConfirmed) { p.doneConfirmed = false; delete p.doneConfirmBy; delete p.doneConfirmTime; }
+            if (p.mgrConfirmed) { p.mgrConfirmed = false; delete p.mgrConfirmBy; delete p.mgrConfirmTime; }
+            p.rejected = { by: currentUser.name, at: Date.now(), reason: reason, fromPct: 100, toPct: Math.round(pct) };
+            try { await saveProgressData(); } catch (e) { return; }
+            closeModal('modal-progress-reject');
+            closeModal('modal-progress-detail');
+            pRenderAll();
+            showToast('已退回：' + p.name + '（进度改至 ' + Math.round(pct) + '%，反馈已记录）');
         }
 
         // ---------- 导出Excel ----------
