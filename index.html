@@ -6497,7 +6497,7 @@ const PROGRESS_TEAM_LEADERS = [
                     + (pendingDone && !p.doneConfirmed && pIsSupervisor()
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">监理确认</button>'
                         : '')
-                    + (pendingDone && !!p.doneConfirmed && (pIsAdmin() || isMgr)
+                    + (pendingDone && (pIsAdmin() || isMgr)
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
                         : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
@@ -6531,7 +6531,7 @@ const PROGRESS_TEAM_LEADERS = [
                     + (pendingDone && !p.doneConfirmed && pIsSupervisor()
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">监理确认</button>'
                         : '')
-                    + (pendingDone && !!p.doneConfirmed && (pIsAdmin() || isMgr)
+                    + (pendingDone && (pIsAdmin() || isMgr)
                         ? '<button class="btn btn-success btn-sm" onclick="pConfirmDone(\'' + escAttr(p.code) + '\')">管理员确认</button>'
                         : '')
                     + ((!pendingDone && (pIsOwned(p) || pIsAdmin() || pIsMgrOf(p))) ? '<button class="btn btn-primary btn-sm" onclick="pOpenFillModal(\'' + escAttr(p.code) + '\')">填报</button>' : '')
@@ -6789,7 +6789,8 @@ const PROGRESS_TEAM_LEADERS = [
             const confirmBtn = document.getElementById('pd-confirm-btn');
             const isMgr = !!currentUser && currentUser.role === 'manager' && p.manager === currentUser.name;
             const canSupervisorStep = !p.doneConfirmed && !p.mgrConfirmed && pct >= 100 && pIsSupervisor();
-            const canMgrStep = !p.mgrConfirmed && !!p.doneConfirmed && pct >= 100 && (pIsAdmin() || isMgr);
+            // 2026-11-21：管理员确认按钮在待确认完工阶段即显示（未监理确认时点击由顺序校验拦截提示）
+            const canMgrStep = !p.mgrConfirmed && pct >= 100 && (pIsAdmin() || isMgr);
             confirmBtn.style.display = (canSupervisorStep || canMgrStep) ? 'inline-flex' : 'none';
             confirmBtn.textContent = canSupervisorStep ? '监理确认完工' : '管理员确认完工';
             document.getElementById('pd-progress').innerHTML = '<div class="' + pProgCls(pct) + '"><div class="p-prog-bar" style="min-width:120px;"><div class="p-prog-fill" style="width:' + Math.min(100, Math.max(0, pct)) + '%"></div></div><span class="p-prog-pct">' + pct + '%</span></div>';
