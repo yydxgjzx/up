@@ -1156,11 +1156,18 @@
       "major": "传输",
       "approvalDate": "2026-11-01",
       "dueDate": "2026-12-31",
-      "progress": 1,
+      "progress": 0.8,
       "remark": "",
       "region": "平江县",
       "autoAdded": false,
-      "_test": true
+      "_test": true,
+      "rejected": {
+        "by": "张爱华",
+        "at": 1795254553411,
+        "reason": "线上验证：现场核验未完成",
+        "fromPct": 100,
+        "toPct": 80
+      }
     }
   ],
   "reports": [
