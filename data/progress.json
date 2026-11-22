@@ -1175,7 +1175,7 @@
       "major": "传输",
       "approvalDate": "2026-11-01",
       "dueDate": "2026-12-31",
-      "progress": 0.5
+      "progress": 0.6
     }
   ],
   "reports": [
@@ -4274,6 +4274,18 @@
       "reporter": "测试队长A",
       "createTime": 1,
       "updateTime": 1
+    },
+    {
+      "id": "W1795338014990-0-TESTREJ3-v1",
+      "projectCode": "TESTREJ3",
+      "weekKey": "2026-11-15",
+      "rev": 1,
+      "progress": 0.6,
+      "thisWeek": "验证全量同步",
+      "nextWeek": "验证",
+      "reporter": "测试队长B",
+      "createTime": 1795338014990,
+      "updateTime": 1795338014990
     }
   ],
   "meta": {
