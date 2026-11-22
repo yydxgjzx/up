@@ -1145,37 +1145,6 @@
       "designApprovalDate": "2026-11-19",
       "autoAddedAt": 1795081271501,
       "region": "汨罗市"
-    },
-    {
-      "code": "TESTREJ2",
-      "name": "(临时验证A-即将删除)",
-      "manager": "李力",
-      "unit": "湖南天辰建设有限责任公司",
-      "leader": "测试队长A",
-      "leaderPhone": "13000000099",
-      "major": "传输",
-      "approvalDate": "2026-11-01",
-      "dueDate": "2026-12-31",
-      "progress": 0.9,
-      "rejected": {
-        "by": "张爱华",
-        "at": 1795337244417,
-        "reason": "线上验证退回豁免-临时数据",
-        "fromPct": 100,
-        "toPct": 90
-      }
-    },
-    {
-      "code": "TESTREJ3",
-      "name": "(临时验证B-即将删除)",
-      "manager": "李力",
-      "unit": "湖南天辰建设有限责任公司",
-      "leader": "测试队长B",
-      "leaderPhone": "13000000098",
-      "major": "传输",
-      "approvalDate": "2026-11-01",
-      "dueDate": "2026-12-31",
-      "progress": 0.6
     }
   ],
   "reports": [
@@ -4238,66 +4207,6 @@
       "reporter": "陈建",
       "createTime": 1795337183263,
       "updateTime": 1795337183263
-    },
-    {
-      "id": "WTEST-A-1",
-      "projectCode": "TESTREJ2",
-      "weekKey": "2026-11-15",
-      "rev": 1,
-      "progress": 1,
-      "thisWeek": "临时100%",
-      "nextWeek": "",
-      "reporter": "测试队长A",
-      "createTime": 1,
-      "updateTime": 1
-    },
-    {
-      "id": "W1795337277827-0-TESTREJ3-v1",
-      "projectCode": "TESTREJ3",
-      "weekKey": "2026-11-15",
-      "rev": 1,
-      "progress": 0.6,
-      "thisWeek": "验证全量同步",
-      "nextWeek": "验证",
-      "reporter": "测试队长B",
-      "createTime": 1795337277827,
-      "updateTime": 1795337277827
-    },
-    {
-      "id": "W1795337286696-0-TESTREJ3-v2",
-      "projectCode": "TESTREJ3",
-      "weekKey": "2026-11-15",
-      "rev": 2,
-      "progress": 0.6,
-      "thisWeek": "验证全量同步",
-      "nextWeek": "验证",
-      "reporter": "测试队长B",
-      "createTime": 1795337286696,
-      "updateTime": 1795337286696
-    },
-    {
-      "id": "W1795337295385-0-TESTREJ3-v3",
-      "projectCode": "TESTREJ3",
-      "weekKey": "2026-11-15",
-      "rev": 3,
-      "progress": 0.6,
-      "thisWeek": "验证全量同步",
-      "nextWeek": "验证",
-      "reporter": "测试队长B",
-      "createTime": 1795337295385,
-      "updateTime": 1795337295385
-    },
-    {
-      "id": "W1795337304307-0-TESTREJ3-v4",
-      "projectCode": "TESTREJ3",
-      "weekKey": "2026-11-15",
-      "rev": 4,
-      "progress": 0.6,
-      "thisWeek": "验证全量同步",
-      "nextWeek": "验证",
-      "reporter": "测试队长B",
-      "createTime": 1795337304307,
-      "updateTime": 1795337304307
     }
   ],
   "meta": {
