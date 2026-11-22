@@ -4286,6 +4286,18 @@
       "reporter": "测试队长B",
       "createTime": 1795338014990,
       "updateTime": 1795338014990
+    },
+    {
+      "id": "W1795338023879-0-TESTREJ3-v2",
+      "projectCode": "TESTREJ3",
+      "weekKey": "2026-11-15",
+      "rev": 2,
+      "progress": 0.6,
+      "thisWeek": "验证全量同步",
+      "nextWeek": "验证",
+      "reporter": "测试队长B",
+      "createTime": 1795338023879,
+      "updateTime": 1795338023879
     }
   ],
   "meta": {
