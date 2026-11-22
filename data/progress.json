@@ -1156,7 +1156,14 @@
       "major": "传输",
       "approvalDate": "2026-11-01",
       "dueDate": "2026-12-31",
-      "progress": 1
+      "progress": 0.9,
+      "rejected": {
+        "by": "张爱华",
+        "at": 1795337244417,
+        "reason": "线上验证退回豁免-临时数据",
+        "fromPct": 100,
+        "toPct": 90
+      }
     },
     {
       "code": "TESTREJ3",
