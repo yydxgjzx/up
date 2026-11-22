@@ -6353,6 +6353,14 @@ const PROGRESS_TEAM_LEADERS = [
             return list[0] || null;
         }
         function pIsReportedThisWeek(p) { return !!pReportOf(p.code, pCurrentWeekKey()); }
+        // 2026-11-22 退回豁免：退回后未重新填报（最新周报早于退回时间）的工程，其“最新周报”
+        // 是退回前的旧版本，不能作为进度默认值/同步依据；返回 null 时调用方回退用工程当前进度（退回回退值）
+        function pEffectiveLatest(p) {
+            const latest = pLatestReport(p.code);
+            if (!latest) return null;
+            if (!p.rejected || !p.rejected.at) return latest;
+            return pRepTime(latest) >= p.rejected.at ? latest : null;
+        }
         function pProgCls(pct) { return 'p-prog' + (pct >= 90 ? ' high' : (pct > 0 && pct < 30 ? ' low' : '')); }
         // 退回标记（2026-11-21）：最近一次退回晚于最新周报时显示“已退回”，队长重新填报后自动恢复
         function pIsRejected(p) {
@@ -6682,7 +6690,7 @@ const PROGRESS_TEAM_LEADERS = [
             hintEl.textContent = (isMgrMode ? '您正在为本人负责的工程代填周报（填报人将记录为对应队长）。' : '')
                 + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。本周周报自星期六起开放填报。';
             rowsEl.innerHTML = list.map(p => {
-                const latest = pLatestReport(p.code);   // 最近一期已报（进度默认值，2026-11-06 用户要求）
+                const latest = pEffectiveLatest(p);   // 最近一期有效已报（进度默认值，2026-11-06 用户要求；退回前周报不作数，2026-11-22）
                 const r = pReportOf(p.code, weekKey);    // 本周周报（本周文案/已报状态）
                 const pct = Math.round((latest ? (latest.progress || 0) : (p.progress || 0)) * 100);
                 _pfInit[p.code] = { pg: pct, this: r ? (r.thisWeek || '') : '', next: r ? (r.nextWeek || '') : '' };
@@ -6692,7 +6700,7 @@ const PROGRESS_TEAM_LEADERS = [
                     + '<span class="pf-item-code">' + escAttr(p.code) + (p.dueDate ? ' · 完工期限 ' + escAttr(p.dueDate) : '') + (isMgrMode ? ' · 队长 ' + escAttr(p.leader || '待补录') : '') + '</span></div>'
                     + '<div class="pf-item-aside">'
                     + '<span class="pf-prog-ctl"><span class="pf-prog-label">完工进度</span><input type="number" class="form-input pf-progress" min="0" max="100" step="1" value="' + pct + '"><span class="pf-prog-unit">%</span></span>'
-                    + (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>')
+                    + (pIsRejected(p) ? '<span class="badge badge-p-reject">已退回·待重新填报</span>' : (r ? '<span class="badge badge-p-filled">已填报</span>' : '<span class="badge badge-p-empty">未填报</span>'))
                     + '</div>'
                     + '</div>'
                     + '<div class="pf-grid">'
@@ -6781,8 +6789,9 @@ const PROGRESS_TEAM_LEADERS = [
             if (firstError) { showToast(firstError, true); return; }
             if (count === 0) { showToast('请至少填写一个工程的周报', true); return; }
             // 按最新一期周报同步工程当前进度；进度回退到100%以下时撤销两级确认
+            // 2026-11-22 退回豁免：退回后未重新填报（最新周报早于退回时间）的工程不同步，防止退回被打回100%
             progressProjects.forEach(p => {
-                const latest = pLatestReport(p.code);
+                const latest = pEffectiveLatest(p);
                 if (latest) p.progress = latest.progress;
                 if ((p.progress || 0) < 0.999) {
                     if (p.doneConfirmed) {
