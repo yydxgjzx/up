@@ -1549,10 +1549,13 @@
             showLogin();
         }
 
-        function onLoginSuccess() {
+        async function onLoginSuccess() {
             document.getElementById('auth-login').classList.remove('active');
             document.getElementById('auth-register').classList.remove('active');
             updateHeaderForUser();
+            // 首次登录时 initApp 未拉取云端数据，这里补拉后再渲染（loadBorrowings 内部会触发渲染）
+            if (!_inventoryLoaded) { await loadInventory(); }
+            if (!borrowings || borrowings.length === 0) { await loadBorrowings(); }
             bRenderAll();
         }
 
