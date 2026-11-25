@@ -1196,6 +1196,23 @@
       "designApprovalDate": "2026-11-24",
       "autoAddedAt": 1795525238185,
       "region": "华容县"
+    },
+    {
+      "code": "26HN005161001",
+      "name": "2026年岳阳分公司云溪区应伯贩桥北东侧新建光缆配套工程",
+      "manager": "丰中山",
+      "unit": "湖南天辰建设有限责任公司",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "无线网接入光缆和无源波分",
+      "approvalDate": "2026-11-23",
+      "dueDate": "2027-06-06",
+      "progress": 0,
+      "remark": "",
+      "autoAdded": true,
+      "designApprovalDate": "2026-11-24",
+      "autoAddedAt": 1795579466776,
+      "region": "云溪区"
     }
   ],
   "reports": [
