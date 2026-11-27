@@ -4727,6 +4727,18 @@
       "reporter": "测试闸门",
       "createTime": 1795784584043,
       "updateTime": 1795784584043
+    },
+    {
+      "id": "W1795784594238-0-TESTGATE1-v3",
+      "projectCode": "TESTGATE1",
+      "weekKey": "2026-11-23",
+      "rev": 3,
+      "progress": 0.4,
+      "thisWeek": "周五17:30后开放验证",
+      "nextWeek": "验证",
+      "reporter": "测试闸门",
+      "createTime": 1795784594238,
+      "updateTime": 1795784594238
     }
   ],
   "meta": {
