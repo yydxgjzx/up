@@ -1955,13 +1955,13 @@
             if (b.status === 'approved' && (isAdmin || isManager)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
-            if (b.status === 'pending' && (isReporter || isAdmin)) {
+            if (b.status === 'pending' && (isReporter || isAdmin || isManager)) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
             }
-            if (isAdmin && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
+            if ((isAdmin || isManager) && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             return btns;
@@ -2300,8 +2300,9 @@
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
             const isAdmin = currentUser.role === 'admin';
+            const isManager = currentUser.role === 'manager';
             const isReporter = b.reporter === currentUser.name;
-            if (!isAdmin && !(isReporter && b.status === 'pending')) {
+            if (!isAdmin && !isManager && !(isReporter && b.status === 'pending')) {
                 showToast('无权删除此记录', true);
                 return;
             }
