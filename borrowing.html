@@ -708,6 +708,59 @@
             flex-shrink: 0;
         }
 
+        /* Material searchable combobox */
+        .material-row .mat-combobox {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+        .material-row .mat-combobox .mat-search { width: 100%; padding-right: 26px; }
+        .material-row .mat-combobox .mat-caret {
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        .mat-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .4);
+            z-index: 30;
+        }
+        .mat-dropdown.open { display: block; }
+        .mat-option {
+            padding: 7px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mat-option:hover { background: rgba(59, 130, 246, .16); }
+        .mat-option .mat-opt-code {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-left: 6px;
+        }
+        .mat-option.mat-opt-hint {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-align: center;
+            cursor: default;
+        }
+        .mat-option.mat-opt-hint:hover { background: none; }
+
         /* Responsive */
         @media (max-width: 900px) {
             .stats-row {
@@ -2033,17 +2086,23 @@
             }
             const container = document.getElementById('material-rows');
             const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-            const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
-                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
-            }).join('');
             const div = document.createElement('div');
             div.className = 'material-row';
             div.id = rowId;
-            div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
-                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="0.01" step="0.01" value="1">'
+            div.innerHTML = buildMaterialRowHtml(rowId, 1);
+            container.appendChild(div);
+        }
+
+        function buildMaterialRowHtml(rowId, qty) {
+            return '<div class="mat-combobox">'
+                + '<input type="text" class="form-input mat-search" placeholder="输入名称/编码搜索物资" autocomplete="off" onfocus="filterMaterialOptions(this)" oninput="onMaterialSearch(this)">'
+                + '<input type="hidden" class="mat-code" value="">'
+                + '<span class="mat-caret">▾</span>'
+                + '<div class="mat-dropdown"></div>'
+                + '</div>'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="0.01" step="0.01" value="' + (qty || 1) + '">'
                 + '<span class="mat-info"></span>'
                 + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
-            container.appendChild(div);
         }
 
         function removeMaterialRow(rowId) {
@@ -2051,18 +2110,94 @@
             if (el) el.remove();
         }
 
-        function updateMaterialInfo(sel) {
-            const row = sel.closest('.material-row');
-            const opt = sel.selectedOptions[0];
-            const infoEl = row.querySelector('.mat-info');
-            if (opt && opt.value) {
-                const unit = opt.dataset.unit || '';
-                infoEl.textContent = opt.value + ' | 单位：' + unit;
-                infoEl.style.color = 'var(--text-muted)';
-            } else {
-                infoEl.textContent = '';
-            }
+        function onMaterialSearch(input) {
+            const box = input.closest('.mat-combobox');
+            box.querySelector('.mat-code').value = '';
+            const infoEl = box.closest('.material-row').querySelector('.mat-info');
+            if (infoEl) { infoEl.textContent = ''; infoEl.style.color = ''; }
+            filterMaterialOptions(input);
         }
+
+        function filterMaterialOptions(input) {
+            const box = input.closest('.mat-combobox');
+            const dd = box.querySelector('.mat-dropdown');
+            const kw = String(input.value || '').trim().toLowerCase();
+            const matched = inventory.filter(item => {
+                return !kw
+                    || (item.name || '').toLowerCase().indexOf(kw) >= 0
+                    || (item.code || '').toLowerCase().indexOf(kw) >= 0
+                    || (item.unit || '').toLowerCase().indexOf(kw) >= 0;
+            });
+            const MAX = 100;
+            let html = matched.slice(0, MAX).map(item => {
+                return '<div class="mat-option" data-code="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-price="' + item.price + '" onclick="pickMaterial(this)">'
+                    + escAttr(item.name) + '（' + escAttr(item.unit) + '）'
+                    + '<span class="mat-opt-code">' + escAttr(item.code) + '</span>'
+                    + '</div>';
+            }).join('');
+            if (matched.length === 0) {
+                html = '<div class="mat-option mat-opt-hint">无匹配物资，请调整关键字</div>';
+            } else if (matched.length > MAX) {
+                html += '<div class="mat-option mat-opt-hint">共 ' + matched.length + ' 条，请继续输入缩小范围</div>';
+            }
+            dd.innerHTML = html;
+            dd.classList.add('open');
+        }
+
+        function pickMaterial(el) {
+            const dd = el.closest('.mat-dropdown');
+            const box = dd.closest('.mat-combobox');
+            const input = box.querySelector('.mat-search');
+            box.querySelector('.mat-code').value = el.dataset.code || '';
+            input.value = el.dataset.name || '';
+            const infoEl = box.closest('.material-row').querySelector('.mat-info');
+            if (infoEl) {
+                infoEl.textContent = el.dataset.code + ' | 单位：' + (el.dataset.unit || '');
+                infoEl.style.color = 'var(--text-muted)';
+            }
+            dd.classList.remove('open');
+        }
+
+        function collectMaterials() {
+            const rows = document.querySelectorAll('#material-rows .material-row');
+            if (rows.length === 0) {
+                showToast('请至少添加一种借料物资', true);
+                return null;
+            }
+            const materials = [];
+            for (let r of rows) {
+                const codeInput = r.querySelector('.mat-code');
+                const qtyInput = r.querySelector('.mat-qty');
+                const qty = parseFloat(qtyInput.value);
+                if (!codeInput || !codeInput.value) {
+                    showToast('请选择物资（可输入关键字搜索后点选）', true);
+                    return null;
+                }
+                const item = inventory.find(x => x.code === codeInput.value);
+                if (!item) {
+                    showToast('所选物资不在库存中，请重新搜索选择', true);
+                    return null;
+                }
+                if (!qty || qty <= 0) {
+                    showToast('请填写有效数量', true);
+                    return null;
+                }
+                materials.push({
+                    code: item.code,
+                    name: item.name,
+                    unit: item.unit,
+                    price: parseFloat(item.price || 0),
+                    qty: qty
+                });
+            }
+            return materials;
+        }
+
+        document.addEventListener('click', function (e) {
+            document.querySelectorAll('.mat-dropdown.open').forEach(function (dd) {
+                if (!dd.parentElement.contains(e.target)) dd.classList.remove('open');
+            });
+        });
 
         function submitBorrowing() {
             if (_editingBorrowingId) { submitBorrowingEdit(); return; }
@@ -2079,34 +2214,8 @@
                 return;
             }
 
-            const rows = document.querySelectorAll('#material-rows .material-row');
-            if (rows.length === 0) {
-                showToast('请至少添加一种借料物资', true);
-                return;
-            }
-
-            const materials = [];
-            for (let r of rows) {
-                const sel = r.querySelector('.mat-select');
-                const qtyInput = r.querySelector('.mat-qty');
-                const opt = sel.selectedOptions[0];
-                const qty = parseFloat(qtyInput.value);
-                if (!opt || !opt.value) {
-                    showToast('请选择物资', true);
-                    return;
-                }
-                if (!qty || qty <= 0) {
-                    showToast('请填写有效数量', true);
-                    return;
-                }
-                materials.push({
-                    code: opt.value,
-                    name: opt.dataset.name,
-                    unit: opt.dataset.unit,
-                    price: parseFloat(opt.dataset.price || 0),
-                    qty: qty
-                });
-            }
+            const materials = collectMaterials();
+            if (!materials) return;
 
             const now = Date.now();
             const record = {
@@ -2148,7 +2257,7 @@
             document.getElementById('bf-warehouse').value = b.warehouse || '';
             document.getElementById('material-rows').innerHTML = '';
             (b.materials || []).forEach(m => {
-                addMaterialRowWithValue(m.code, m.qty);
+                addMaterialRowWithValue(m.code, m.qty, m.name, m.unit);
             });
             if ((b.materials || []).length === 0) addMaterialRow();
             document.getElementById('modal-borrowing-title').textContent = '编辑借料申请';
@@ -2157,24 +2266,29 @@
             setTimeout(() => document.getElementById('bf-code').focus(), 100);
         }
 
-        function addMaterialRowWithValue(code, qty) {
+        function addMaterialRowWithValue(code, qty, name, unit) {
             const container = document.getElementById('material-rows');
             const rowId = 'mat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-            const opts = '<option value="">请选择物资</option>' + inventory.map(item => {
-                return '<option value="' + escAttr(item.code) + '" data-name="' + escAttr(item.name) + '" data-unit="' + escAttr(item.unit) + '" data-stock="' + item.stock + '" data-price="' + item.price + '">' + escAttr(item.name) + '（' + escAttr(item.unit) + '）</option>';
-            }).join('');
             const div = document.createElement('div');
             div.className = 'material-row';
             div.id = rowId;
-            div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
-                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="0.01" step="0.01" value="' + (qty || 1) + '">'
-                + '<span class="mat-info"></span>'
-                + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
+            div.innerHTML = buildMaterialRowHtml(rowId, qty);
             container.appendChild(div);
             if (code) {
-                const sel = div.querySelector('.mat-select');
-                sel.value = code;
-                updateMaterialInfo(sel);
+                const item = inventory.find(x => x.code === code);
+                const box = div.querySelector('.mat-combobox');
+                const input = box.querySelector('.mat-search');
+                const infoEl = div.querySelector('.mat-info');
+                if (item) {
+                    box.querySelector('.mat-code').value = item.code;
+                    input.value = item.name;
+                    infoEl.textContent = item.code + ' | 单位：' + item.unit;
+                    infoEl.style.color = 'var(--text-muted)';
+                } else {
+                    input.value = name ? (name + '（' + code + '）') : code;
+                    infoEl.textContent = '该物资已不在库存中，请重新搜索选择';
+                    infoEl.style.color = '#f87171';
+                }
             }
         }
 
@@ -2191,24 +2305,8 @@
                 showToast('请选择仓库名称', true);
                 return;
             }
-            const rows = document.querySelectorAll('#material-rows .material-row');
-            if (rows.length === 0) {
-                showToast('请至少添加一种借料物资', true);
-                return;
-            }
-            const materials = [];
-            for (let r of rows) {
-                const sel = r.querySelector('.mat-select');
-                const qtyInput = r.querySelector('.mat-qty');
-                const opt = sel.selectedOptions[0];
-                const qty = parseFloat(qtyInput.value);
-                if (!opt || !opt.value) { showToast('请选择物资', true); return; }
-                if (!qty || qty <= 0) { showToast('请填写有效数量', true); return; }
-                materials.push({
-                    code: opt.value, name: opt.dataset.name,
-                    unit: opt.dataset.unit, price: parseFloat(opt.dataset.price || 0), qty: qty
-                });
-            }
+            const materials = collectMaterials();
+            if (!materials) return;
             const record = borrowings.find(x => x.id === _editingBorrowingId);
             if (!record) return;
             record.code = code;
