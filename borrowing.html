@@ -1955,8 +1955,8 @@
             if (b.status === 'approved' && (isAdmin || isManager)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
-            // 删除权限：管理员或借料管理员（支撑人员）可删除任意状态记录；借料人可删除自己的待审批记录
-            if (isAdmin || isManager || (isReporter && b.status === 'pending')) {
+            // 删除权限：仅系统管理员可删除任意状态记录
+            if (isAdmin) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
@@ -2298,10 +2298,8 @@
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
             const isAdmin = currentUser.role === 'admin';
-            const isManager = currentUser.role === 'manager';
-            const isReporter = b.reporter === currentUser.name;
-            if (!isAdmin && !isManager && !(isReporter && b.status === 'pending')) {
-                showToast('无权删除此记录', true);
+            if (!isAdmin) {
+                showToast('无权删除此记录，仅管理员可删除', true);
                 return;
             }
             if (!confirm('确定删除该借料记录吗？\n\n工单：' + b.name + '\n\n删除后不可恢复。')) return;
