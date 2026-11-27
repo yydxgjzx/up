@@ -1031,6 +1031,36 @@
         </div>
     </div>
 
+    <!-- Borrowing Check Modal -->
+    <div class="modal-overlay" id="modal-borrowing-check">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>核对借料申请</h2>
+                <button class="modal-close" onclick="closeModal('modal-borrowing-check')">&times;</button>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-title">申请信息</div>
+                <div class="detail-field"><div class="detail-field-label">工单编码</div><div class="detail-field-value" id="bc-code"></div></div>
+                <div class="detail-field"><div class="detail-field-label">工单名称</div><div class="detail-field-value" id="bc-name"></div></div>
+                <div class="detail-field"><div class="detail-field-label">物料编号</div><div class="detail-field-value" id="bc-matcode"></div></div>
+                <div class="detail-field"><div class="detail-field-label">仓库名称</div><div class="detail-field-value" id="bc-warehouse"></div></div>
+                <div class="detail-field"><div class="detail-field-label">施工单位</div><div class="detail-field-value" id="bc-unit"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料人</div><div class="detail-field-value" id="bc-reporter"></div></div>
+                <div class="detail-field"><div class="detail-field-label">申请时间</div><div class="detail-field-value" id="bc-time"></div></div>
+                <div class="detail-field"><div class="detail-field-label">借料物资</div><div class="detail-field-value" id="bc-materials"></div></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><span class="required">*</span>核对意见</label>
+                <textarea class="form-textarea" id="bf-check-opinion" placeholder="请填写核对意见..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-ghost" onclick="closeModal('modal-borrowing-check')">取消</button>
+                <button class="btn btn-success" onclick="submitBorrowingCheck('checked')">核对通过</button>
+                <button class="btn btn-danger" onclick="submitBorrowingCheck('rejected')">退回</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Borrowing Review Modal -->
     <div class="modal-overlay" id="modal-borrowing-review">
         <div class="modal">
@@ -1947,8 +1977,13 @@
             let btns = '';
             const isAdmin = currentUser && currentUser.role === 'admin';
             const isManager = currentUser && currentUser.role === 'manager';
+            const isDesigner = currentUser && currentUser.role === 'designer';
             const isReporter = currentUser && b.reporter === currentUser.name;
 
+            // 待核对：设计单位人员或admin可核对
+            if (b.status === 'pending' && (isDesigner || isAdmin)) {
+                btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingCheck(\'' + b.id + '\')">核对</button>';
+            }
             if ((b.status === 'pending' || b.status === 'checked') && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
             }
@@ -2192,6 +2227,54 @@
             _editingBorrowingId = null;
             document.getElementById('modal-borrowing-title').textContent = '新增借料申请';
             document.getElementById('modal-borrowing-submit-btn').textContent = '提交申请';
+        }
+
+        // ===== Borrowing Check (核对) =====
+        function openBorrowingCheck(id) {
+            const b = borrowings.find(x => x.id === id);
+            if (!b) return;
+            document.getElementById('bc-code').textContent = b.code;
+            document.getElementById('bc-name').textContent = b.name;
+            document.getElementById('bc-matcode').textContent = b.matCode || '';
+            document.getElementById('bc-warehouse').textContent = b.warehouse || '';
+            document.getElementById('bc-unit').textContent = b.unit;
+            document.getElementById('bc-reporter').textContent = b.reporter;
+            document.getElementById('bc-time').textContent = b.createTimeText || '';
+            document.getElementById('bc-materials').innerHTML = (b.materials || []).map(m =>
+                '<div>' + m.name + ' × ' + m.qty + m.unit + '</div>'
+            ).join('');
+            document.getElementById('bf-check-opinion').value = '';
+            openModal('modal-borrowing-check');
+            setTimeout(() => document.getElementById('bf-check-opinion').focus(), 100);
+        }
+
+        function submitBorrowingCheck(action) {
+            if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'designer')) {
+                showToast('无权核对此记录', true);
+                return;
+            }
+            const opinion = document.getElementById('bf-check-opinion').value.trim();
+            if (!opinion) { showToast('请填写核对意见', true); return; }
+            const code = document.getElementById('bc-code').textContent;
+            const record = borrowings.find(x => x.code === code);
+            if (!record) return;
+
+            if (action === 'checked') {
+                record.status = 'checked';
+                record.checkOpinion = opinion;
+                record.checkTime = Date.now();
+                record.timeline.push({ action: 'check', time: Date.now(), text: currentUser.name + ' 核对通过：' + opinion });
+                showToast('已核对通过，转入审批');
+            } else {
+                record.status = 'returned_to_borrower';
+                record.checkOpinion = opinion;
+                record.checkTime = Date.now();
+                record.timeline.push({ action: 'reject', time: Date.now(), text: currentUser.name + ' 核对退回：' + opinion });
+                showToast('已退回借料申请，借料人可修改后重新提交');
+            }
+            saveBorrowings();
+            bRenderAll();
+            closeModal('modal-borrowing-check');
         }
 
         // ===== Borrowing Review =====
