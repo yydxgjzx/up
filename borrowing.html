@@ -1970,12 +1970,6 @@
             if (parts.length <= 1) return escAttr(String(s).trim());
             return escAttr(parts[0]) + '等';
         }
-        function formatCodeList(s) {
-            if (s == null || s === '') return '';
-            const parts = splitCodes(s);
-            if (parts.length <= 1) return escAttr(String(s).trim());
-            return parts.map(p => '<div>' + escAttr(p) + '</div>').join('');
-        }
 
         function bRenderTable() {
             const filtered = bGetFilteredRecords();
@@ -1996,7 +1990,7 @@
                     + '<td class="col-serial">' + (i + 1) + '</td>'
                     + '<td class="col-code-first" title="' + escAttr(b.code) + '">' + formatCodeFirst(b.code) + '</td>'
                     + '<td class="col-name tip-cell" data-tip="' + escAttr(b.name) + '">' + (b.name || '') + '</td>'
-                    + '<td class="col-code-wrap">' + formatCodeList(b.matCode) + '</td>'
+                    + '<td class="col-code-first" title="' + escAttr(b.matCode || '') + '">' + formatCodeFirst(b.matCode) + '</td>'
                     + '<td class="col-unit">' + (b.warehouse || '') + '</td>'
                     + '<td class="col-unit">' + (b.unit || '') + '</td>'
                     + '<td class="col-reporter">' + (b.reporter || '') + '</td>'
@@ -2016,7 +2010,7 @@
                     + '<div class="m-card-top"><div class="m-card-title">' + (b.name || '') + '</div>'
                     + '<div class="m-card-status"><span class="badge ' + s.badge + '">' + s.label + '</span></div></div>'
                     + '<div class="m-card-sub"><b>编码</b> ' + formatCodeFirst(b.code) + '</div>'
-                    + '<div class="m-card-sub"><b>物料编号</b> ' + formatCodeList(b.matCode) + '</div>'
+                    + '<div class="m-card-sub"><b>物料编号</b> ' + formatCodeFirst(b.matCode) + '</div>'
                     + '<div class="m-card-sub"><b>仓库</b> ' + (b.warehouse || '') + '</div>'
                     + '<div class="m-card-sub"><b>施工</b> ' + (b.unit || '') + ' | <b>借料人</b> ' + (b.reporter || '') + '</div>'
                     + '<div class="m-card-desc" onclick="openBorrowingDetail(\'' + b.id + '\')">' + matText + '</div>'
