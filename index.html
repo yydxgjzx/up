@@ -6687,12 +6687,13 @@ const PROGRESS_TEAM_LEADERS = [
         // ---------- 周报填报 ----------
         function pWeekOptions() {
             const opts = [];
-            const base = pMondayOf(new Date());
-            // 2026-11-09 用户要求：周六前本周不可填报，周次下拉不出现本周（周一~周五仅往周，补填不受限）
-            const gd = new Date().getDay();
-            const includeCur = gd === 6 || gd === 0;
+            const now = new Date();
+            const base = pMondayOf(now);
+            // 2026-11-22 用户要求：本周周报周五17:30起开放（原周六起），周次下拉在开放前不出现本周（周一~周五17:30前仅往周，补填不受限）
+            const gd = now.getDay();
+            const includeCur = gd === 6 || gd === 0 || (gd === 5 && (now.getHours() * 60 + now.getMinutes()) >= 17 * 60 + 30);
             for (let i = 3; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - 7 * i); if (!includeCur && i === 0) continue; opts.push(pFmtDate(d)); }
-            return opts; // 升序；周六/日末项为本周，周一~周五仅往周
+            return opts; // 升序；周五17:30后及周六/日末项为本周，其余时间仅往周
         }
 
         function pOpenFillModal(focusCode) {
@@ -6707,7 +6708,7 @@ const PROGRESS_TEAM_LEADERS = [
                 const cur = k === pCurrentWeekKey();
                 return '<option value="' + k + '">' + (cur ? '本周 ' : '') + pWeekLabel(k) + '（第' + pWeekNo(k) + '周）</option>';
             }).join('');
-            // 2026-11-09：周六前选项不含本周，默认选中最后一项（周六前=最近往周，周六/日=本周）
+            // 2026-11-22：本周开放前（周五17:30前）选项不含本周，默认选中最后一项（开放前=最近往周，开放后=本周）
             wkSel.value = wkOpts[wkOpts.length - 1] || '';
             const wrap = document.getElementById('pf-leader-wrap');
             const leaderSel = document.getElementById('pf-leader');
@@ -6752,7 +6753,7 @@ const PROGRESS_TEAM_LEADERS = [
             }
             const isMgrMode = !!currentUser && currentUser.role === 'manager' && !pIsAdmin();
             hintEl.textContent = (isMgrMode ? '您正在为本人负责的工程代填周报（填报人将记录为对应队长）。' : '')
-                + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。本周周报自星期六起开放填报。';
+                + '每个周末填报一次：填写各工程的本周工程进度、下周施工计划与完工进度比例；完工进度达100%时下周计划可不填。本周周报自星期五下午5:30起开放填报。';
             rowsEl.innerHTML = list.map(p => {
                 const latest = pEffectiveLatest(p);   // 最近一期有效已报（进度默认值，2026-11-06 用户要求；退回前周报不作数，2026-11-22）
                 const r = pReportOf(p.code, weekKey);    // 本周周报（本周文案/已报状态）
@@ -6803,9 +6804,12 @@ const PROGRESS_TEAM_LEADERS = [
             const admin = pIsAdmin();
             const weekKey = document.getElementById('pf-week').value;
             if (!weekKey) { showToast('请选择填报周次', true); return; }
-            // 2026-11-07 用户要求：本周周报周六起才可填报（周六/周日可填，周一~周五拦截）
-            if (weekKey === pCurrentWeekKey() && new Date().getDay() !== 6 && new Date().getDay() !== 0) {
-                showToast('本周周报自星期六起开放填报，请周六后再提交', true); return;
+            // 2026-11-22 用户要求：本周周报周五17:30起开放（原周六起：周六/周日可填，周一~周五拦截）
+            const nowD = new Date();
+            const gdNow = nowD.getDay();
+            const thisWeekOpen = gdNow === 6 || gdNow === 0 || (gdNow === 5 && (nowD.getHours() * 60 + nowD.getMinutes()) >= 17 * 60 + 30);
+            if (weekKey === pCurrentWeekKey() && !thisWeekOpen) {
+                showToast('本周周报自星期五下午5:30起开放填报，请周五17:30后再提交', true); return;
             }
             let reporter = '';
             if (admin) {
