@@ -1292,7 +1292,7 @@
       "major": "传输",
       "approvalDate": "2026-11-01",
       "dueDate": "2026-12-31",
-      "progress": 0.3
+      "progress": 0.4
     }
   ],
   "reports": [
@@ -4703,6 +4703,18 @@
       "reporter": "曾豪",
       "createTime": 1795400552369,
       "updateTime": 1795400552369
+    },
+    {
+      "id": "W1795784576317-0-TESTGATE1-v1",
+      "projectCode": "TESTGATE1",
+      "weekKey": "2026-11-23",
+      "rev": 1,
+      "progress": 0.4,
+      "thisWeek": "周五17:30后开放验证",
+      "nextWeek": "验证",
+      "reporter": "测试闸门",
+      "createTime": 1795784576317,
+      "updateTime": 1795784576317
     }
   ],
   "meta": {
