@@ -2601,6 +2601,8 @@
             updateHeaderForUser();
             renderAll();
             if (_currentBorrowingTab === 'progress') pRenderAll();
+            // 登录后按新身份重渲染借料表格，避免残留上一位登录者的操作按钮
+            if (_currentBorrowingTab === 'borrowing') { loadInventory().then(() => loadBorrowings()); }
         }
 
         function updateHeaderForUser() {
