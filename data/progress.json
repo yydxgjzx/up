@@ -1281,18 +1281,6 @@
       "designApprovalDate": "2026-11-27",
       "autoAddedAt": 1795774272587,
       "region": "华容县"
-    },
-    {
-      "code": "TESTGATE1",
-      "name": "(临时验证闸门-即将删除)",
-      "manager": "李力",
-      "unit": "湖南天辰建设有限责任公司",
-      "leader": "测试闸门",
-      "leaderPhone": "13000000097",
-      "major": "传输",
-      "approvalDate": "2026-11-01",
-      "dueDate": "2026-12-31",
-      "progress": 0.4
     }
   ],
   "reports": [
@@ -4703,42 +4691,6 @@
       "reporter": "曾豪",
       "createTime": 1795400552369,
       "updateTime": 1795400552369
-    },
-    {
-      "id": "W1795784576317-0-TESTGATE1-v1",
-      "projectCode": "TESTGATE1",
-      "weekKey": "2026-11-23",
-      "rev": 1,
-      "progress": 0.4,
-      "thisWeek": "周五17:30后开放验证",
-      "nextWeek": "验证",
-      "reporter": "测试闸门",
-      "createTime": 1795784576317,
-      "updateTime": 1795784576317
-    },
-    {
-      "id": "W1795784584043-0-TESTGATE1-v2",
-      "projectCode": "TESTGATE1",
-      "weekKey": "2026-11-23",
-      "rev": 2,
-      "progress": 0.4,
-      "thisWeek": "周五17:30后开放验证",
-      "nextWeek": "验证",
-      "reporter": "测试闸门",
-      "createTime": 1795784584043,
-      "updateTime": 1795784584043
-    },
-    {
-      "id": "W1795784594238-0-TESTGATE1-v3",
-      "projectCode": "TESTGATE1",
-      "weekKey": "2026-11-23",
-      "rev": 3,
-      "progress": 0.4,
-      "thisWeek": "周五17:30后开放验证",
-      "nextWeek": "验证",
-      "reporter": "测试闸门",
-      "createTime": 1795784594238,
-      "updateTime": 1795784594238
     }
   ],
   "meta": {
