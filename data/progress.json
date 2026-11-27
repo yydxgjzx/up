@@ -1213,6 +1213,23 @@
       "designApprovalDate": "2026-11-24",
       "autoAddedAt": 1795579466776,
       "region": "云溪区"
+    },
+    {
+      "code": "26HN004740001",
+      "name": "中国电信岳阳分公司2026年4G复建室内分布系统（岳阳教育小区等站点）800M无源主设备安装单项工程（第六批）",
+      "manager": "曹毅",
+      "unit": "",
+      "leader": "",
+      "leaderPhone": "",
+      "major": "LTE",
+      "approvalDate": "2026-10-28",
+      "dueDate": "2027-06-05",
+      "progress": 0,
+      "remark": "",
+      "autoAdded": true,
+      "designApprovalDate": "2026-11-26",
+      "autoAddedAt": 1795741503996,
+      "region": ""
     }
   ],
   "reports": [
