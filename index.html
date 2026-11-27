@@ -4469,7 +4469,7 @@
             div.className = 'material-row';
             div.id = rowId;
             div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
-                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="1">'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="0.01" step="0.01" value="1">'
                 + '<span class="mat-info"></span>'
                 + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
             container.appendChild(div);
@@ -4518,7 +4518,7 @@
                 const sel = r.querySelector('.mat-select');
                 const qtyInput = r.querySelector('.mat-qty');
                 const opt = sel.selectedOptions[0];
-                const qty = parseInt(qtyInput.value);
+                const qty = parseFloat(qtyInput.value);
                 if (!opt || !opt.value) { showToast('请选择物资', true); return; }
                 if (!qty || qty <= 0) { showToast('请填写有效数量', true); return; }
                 materials.push({
@@ -4584,7 +4584,7 @@
             div.className = 'material-row';
             div.id = rowId;
             div.innerHTML = '<select class="form-select mat-select" onchange="updateMaterialInfo(this)">' + opts + '</select>'
-                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="1" value="' + (qty || 1) + '">'
+                + '<input type="number" class="form-input mat-qty" placeholder="数量" min="0.01" step="0.01" value="' + (qty || 1) + '">'
                 + '<span class="mat-info"></span>'
                 + '<button class="btn btn-danger btn-sm btn-remove" onclick="removeMaterialRow(\'' + rowId + '\')">&times;</button>';
             container.appendChild(div);
@@ -4619,7 +4619,7 @@
                 const sel = r.querySelector('.mat-select');
                 const qtyInput = r.querySelector('.mat-qty');
                 const opt = sel.selectedOptions[0];
-                const qty = parseInt(qtyInput.value);
+                const qty = parseFloat(qtyInput.value);
                 if (!opt || !opt.value) { showToast('请选择物资', true); return; }
                 if (!qty || qty <= 0) { showToast('请填写有效数量', true); return; }
                 materials.push({
@@ -4907,7 +4907,7 @@
                 const warehouse = String(row['仓库名称'] || '').trim();
                 const unit = String(row['施工单位'] || '').trim();
                 const matName = String(row['物资名称'] || '').trim();
-                const qty = parseInt(row['数量']) || 0;
+                const qty = parseFloat(row['数量']) || 0;
 
                 let status = '', statusColor = '';
                 const errors = [];
