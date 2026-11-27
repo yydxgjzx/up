@@ -4394,16 +4394,13 @@
             if (b.status === 'approved' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
-            // 删除权限：系统管理员或借料管理员（支撑人员）可删除
-            if (b.status === 'pending' && (isAdmin || isManager)) {
+            // 删除权限：系统管理员或借料管理员（支撑人员）可删除任意状态记录
+            if (isAdmin || isManager) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             // 待核对/已退回：借料人或admin可编辑修改后重新提交
             if ((b.status === 'pending' || b.status === 'returned_to_borrower') && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
-            }
-            if ((isAdmin || isManager) && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
-                btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             return btns;
         }
