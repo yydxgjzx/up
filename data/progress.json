@@ -1281,6 +1281,18 @@
       "designApprovalDate": "2026-11-27",
       "autoAddedAt": 1795774272587,
       "region": "华容县"
+    },
+    {
+      "code": "TESTGATE1",
+      "name": "(临时验证闸门-即将删除)",
+      "manager": "李力",
+      "unit": "湖南天辰建设有限责任公司",
+      "leader": "测试闸门",
+      "leaderPhone": "13000000097",
+      "major": "传输",
+      "approvalDate": "2026-11-01",
+      "dueDate": "2026-12-31",
+      "progress": 0.3
     }
   ],
   "reports": [
