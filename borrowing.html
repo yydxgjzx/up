@@ -1955,14 +1955,12 @@
             if (b.status === 'approved' && (isAdmin || isManager)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
-            if (b.status === 'pending' && (isReporter || isAdmin || isManager)) {
+            // 删除权限：管理员或借料管理员（支撑人员）可删除任意状态记录；借料人可删除自己的待审批记录
+            if (isAdmin || isManager || (isReporter && b.status === 'pending')) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             if (b.status === 'returned_to_borrower' && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
-            }
-            if ((isAdmin || isManager) && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
-                btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             return btns;
         }
