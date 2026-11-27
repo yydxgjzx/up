@@ -4394,15 +4394,15 @@
             if (b.status === 'approved' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
-            // 删除权限：仅管理员(yydxlily)可删除
-            if (b.status === 'pending' && isAdmin) {
+            // 删除权限：系统管理员或借料管理员（支撑人员）可删除
+            if (b.status === 'pending' && (isAdmin || isManager)) {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             // 待核对/已退回：借料人或admin可编辑修改后重新提交
             if ((b.status === 'pending' || b.status === 'returned_to_borrower') && (isReporter || isAdmin)) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingEdit(\'' + b.id + '\')">编辑</button>';
             }
-            if (isAdmin && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
+            if ((isAdmin || isManager) && b.status !== 'pending' && b.status !== 'returned_to_borrower') {
                 btns += '<button class="btn btn-danger btn-sm" onclick="deleteBorrowing(\'' + b.id + '\')">删除</button>';
             }
             return btns;
@@ -4809,7 +4809,8 @@
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
             const isAdmin = currentUser.role === 'admin';
-            if (!isAdmin) {
+            const isManager = currentUser.role === 'manager';
+            if (!isAdmin && !isManager) {
                 showToast('无权删除此记录，仅管理员可删除', true);
                 return;
             }
