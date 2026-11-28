@@ -4381,6 +4381,12 @@
             }).join('');
         }
 
+        // 可确认归还人员名单（已批准 → 确认归还）
+        const BORROW_RETURN_OWNERS = ['李力', '张治荣'];
+        function canConfirmBorrowingReturn() {
+            return !!currentUser && BORROW_RETURN_OWNERS.indexOf(currentUser.name) >= 0;
+        }
+
         function bGetActionButtons(b) {
             let btns = '';
             const isAdmin = currentUser && currentUser.role === 'admin';
@@ -4396,8 +4402,8 @@
             if (b.status === 'checked' && currentUser && currentUser.name === '李力') {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReview(\'' + b.id + '\')">审批</button>';
             }
-            // 已批准：仅李力可归还
-            if (b.status === 'approved' && currentUser && currentUser.name === '李力') {
+            // 已批准：李力或张治荣可归还
+            if (b.status === 'approved' && canConfirmBorrowingReturn()) {
                 btns += '<button class="btn btn-info btn-sm" onclick="openBorrowingReturn(\'' + b.id + '\')">归还</button>';
             }
             // 删除权限：仅系统管理员(yydxlily)可删除任意状态记录
@@ -4798,8 +4804,8 @@
         function openBorrowingReturn(id) {
             const b = borrowings.find(x => x.id === id);
             if (!b) return;
-            if (!currentUser || currentUser.name !== '李力') {
-                showToast('只有李力可以确认归还', true);
+            if (!canConfirmBorrowingReturn()) {
+                showToast('只有李力或张治荣可以确认归还', true);
                 return;
             }
             document.getElementById('bt-ticket').textContent = b.ticketNo || '';
@@ -4815,8 +4821,8 @@
         }
 
         function submitBorrowingReturn() {
-            if (!currentUser || currentUser.name !== '李力') {
-                showToast('只有李力可以确认归还', true);
+            if (!canConfirmBorrowingReturn()) {
+                showToast('只有李力或张治荣可以确认归还', true);
                 closeModal('modal-borrowing-return');
                 return;
             }
